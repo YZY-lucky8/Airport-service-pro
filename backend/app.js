@@ -1,7 +1,19 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+// ==================== 王晓恩添加位置 (开始) ====================
+// 引入刚刚安装的 bloom-filter 模块
+const BloomFilter = require('bloom-filter');
 
+// 初始化布隆过滤器：预计存储1000个IP，误差率0.01 (1%)
+const ipBlacklistFilter = new BloomFilter(1000, 0.01);
+
+// 模拟加载黑名单数据 (实际项目中通常从数据库读取)
+const bannedIPs = ['192.168.1.100', '10.0.0.5', '127.0.0.2'];
+bannedIPs.forEach(ip => {
+    ipBlacklistFilter.insert(ip);
+});
+// ==================== 王晓恩添加位置 (结束) ====================
 const app = express();
 const port = 3000;
 
@@ -113,7 +125,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
             GROUP BY command_text ORDER BY cnt DESC LIMIT 1
         `);
         const [unhandled] = await pool.query(`SELECT COUNT(*) as count FROM alerts WHERE status = 'unhandled'`);
-        
+
         res.json({
             success: true,
             data: {
@@ -255,4 +267,22 @@ app.listen(port, () => {
         .then(conn => { console.log('✅ Database connected'); conn.release(); })
         .catch(err => console.error('❌ Database connection failed:', err.message));
 });
-   
+
+// ==================== 王晓恩添加位置 (开始) ====================
+// 新增：布隆过滤器中间件，用于拦截黑名单IP
+app.use((req, res, next) => {
+    const clientIp = req.ip || req.connection.remoteAddress;
+
+    // 检查IP是否在布隆过滤器中
+    if (ipBlacklistFilter.has(clientIp)) {
+        console.warn(`🚫 拦截请求：IP ${clientIp} 在黑名单中`);
+        return res.status(403).json({
+            success: false,
+            error: 'Forbidden: Your IP is blocked.'
+        });
+    }
+
+    // 如果不在黑名单，继续处理请求
+    next();
+});
+// ==================== 王晓恩添加位置 (结束) ====================

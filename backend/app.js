@@ -272,7 +272,8 @@ app.listen(port, () => {
 // 新增：布隆过滤器中间件，用于拦截黑名单IP
 app.use((req, res, next) => {
     const clientIp = req.ip || req.connection.remoteAddress;
-
+    // 2. 👇 在这里打印 IP，用于验证是否获取成功
+    console.log(`👀 捕获到请求 IP: ${clientIp}`);
     // 检查IP是否在布隆过滤器中
     if (ipBlacklistFilter.has(clientIp)) {
         console.warn(`🚫 拦截请求：IP ${clientIp} 在黑名单中`);

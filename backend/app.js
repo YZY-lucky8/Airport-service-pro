@@ -1,7 +1,66 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+// ==================== 王晓恩添加位置 (开始) ====================
+// 🎯 生产级原生布隆过滤器（零依赖，机场正式环境推荐）
+class BloomFilter {
+    constructor(size = 10000, errorRate = 0.001) {
+        const m = Math.ceil(-size * Math.log(errorRate) / (Math.log(2) ** 2));
+        const k = Math.ceil((m / size) * Math.log(2));
+        this.size = m;
+        this.hashCount = k;
+        this.bits = new Uint8Array(Math.ceil(m / 8));
+    }
+    insert(item) {
+        let h1 = this._hash1(item);
+        let h2 = this._hash2(item);
+        for (let i = 0; i < this.hashCount; i++) {
+            const pos = (h1 + i * h2) % this.size;
+            const byte = Math.floor(pos / 8);
+            const bit = pos % 8;
+            this.bits[byte] |= 1 << bit;
+        }
+    }
+    has(item) {
+        let h1 = this._hash1(item);
+        let h2 = this._hash2(item);
+        for (let i = 0; i < this.hashCount; i++) {
+            const pos = (h1 + i * h2) % this.size;
+            const byte = Math.floor(pos / 8);
+            const bit = pos % 8;
+            if ((this.bits[byte] & (1 << bit)) === 0) return false;
+        }
+        return true;
+    }
+    _hash1(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+        }
+        return Math.abs(hash);
+    }
+    _hash2(str) {
+        let hash = 5381;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) + hash + str.charCodeAt(i)) | 0;
+        }
+        return Math.abs(hash);
+    }
+}
 
+// 初始化（生产环境可支持 10000 个黑名单 IP）
+const ipBlacklistFilter = new BloomFilter(10000, 0.001);
+
+// 黑名单（本地测试用，上线可从数据库读取）
+const bannedIPs = [
+    '192.168.1.100',
+    '10.0.0.5',
+    '127.0.0.2',
+    '::1',
+    '::ffff:127.0.0.1'
+];
+bannedIPs.forEach(ip => ipBlacklistFilter.insert(ip));
+// ==================== 王晓恩添加位置 (结束) ====================
 const app = express();
 
 // ========== 新增：安全配置 ==========（xin）
@@ -9,7 +68,20 @@ require('dotenv').config();
 const crypto = require('crypto');
 
 const port = 3000;
-
+// ==================== 王晓恩添加位置 (开始) ====================
+// IP 黑名单拦截中间件（全局生效，生产可用）
+app.use((req, res, next) => {
+    const clientIp = req.ip || req.connection.remoteAddress;
+    if (ipBlacklistFilter.has(clientIp)) {
+        console.warn(`🚫 已拦截黑名单IP：${clientIp}`);
+        return res.status(403).json({
+            success: false,
+            error: 'Access denied: Your IP is blocked'
+        });
+    }
+    next();
+});
+// ==================== 王晓恩添加位置 (结束) ====================
 app.use(cors());
 app.use(express.json());
 app.use(express.static('/home/ubuntu/public'));
@@ -753,7 +825,7 @@ app.get('/api/admin/dashboard', async (req, res) => {
             GROUP BY command_text ORDER BY cnt DESC LIMIT 1
         `);
         const [unhandled] = await pool.query(`SELECT COUNT(*) as count FROM alerts WHERE status = 'unhandled'`);
-        
+
         res.json({
             success: true,
             data: {
@@ -895,4 +967,4 @@ app.listen(port, () => {
         .then(conn => { console.log('✅ Database connected'); conn.release(); })
         .catch(err => console.error('❌ Database connection failed:', err.message));
 });
-   
+

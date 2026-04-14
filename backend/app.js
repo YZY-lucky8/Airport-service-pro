@@ -16,7 +16,25 @@ bannedIPs.forEach(ip => {
 // ==================== 王晓恩添加位置 (结束) ====================
 const app = express();
 const port = 3000;
+// ==================== 王晓恩添加位置 (开始) ====================
+// 新增：布隆过滤器中间件，用于拦截黑名单IP
+app.use((req, res, next) => {
+    const clientIp = req.ip || req.connection.remoteAddress;
+    // 2. 👇 在这里打印 IP，用于验证是否获取成功
+    console.log(`👀 捕获到请求 IP: ${clientIp}`);
+    // 检查IP是否在布隆过滤器中
+    if (ipBlacklistFilter.has(clientIp)) {
+        console.warn(`🚫 拦截请求：IP ${clientIp} 在黑名单中`);
+        return res.status(403).json({
+            success: false,
+            error: 'Forbidden: Your IP is blocked.'
+        });
+    }
 
+    // 如果不在黑名单，继续处理请求
+    next();
+});
+// ==================== 王晓恩添加位置 (结束) ====================
 app.use(cors());
 app.use(express.json());
 app.use(express.static('/home/ubuntu/public'));
@@ -268,22 +286,3 @@ app.listen(port, () => {
         .catch(err => console.error('❌ Database connection failed:', err.message));
 });
 
-// ==================== 王晓恩添加位置 (开始) ====================
-// 新增：布隆过滤器中间件，用于拦截黑名单IP
-app.use((req, res, next) => {
-    const clientIp = req.ip || req.connection.remoteAddress;
-    // 2. 👇 在这里打印 IP，用于验证是否获取成功
-    console.log(`👀 捕获到请求 IP: ${clientIp}`);
-    // 检查IP是否在布隆过滤器中
-    if (ipBlacklistFilter.has(clientIp)) {
-        console.warn(`🚫 拦截请求：IP ${clientIp} 在黑名单中`);
-        return res.status(403).json({
-            success: false,
-            error: 'Forbidden: Your IP is blocked.'
-        });
-    }
-
-    // 如果不在黑名单，继续处理请求
-    next();
-});
-// ==================== 王晓恩添加位置 (结束) ====================

@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');// 引入 path 模块，解决路径问题
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 // ==================== 王晓恩添加位置 (开始) ====================
@@ -142,7 +143,7 @@ app.use((req, res, next) => {
 
 // ========== 滑动窗口频率检测中间件结束 ==========
 
-app.use(express.static('/home/ubuntu/public'));
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 
 

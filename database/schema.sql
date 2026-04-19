@@ -254,7 +254,7 @@ CREATE TABLE `system_logs`  (
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 在MySQL中执行（只需执行一次）(xin)
+-- 在 airport_db 数据库中执行（xin）
 CREATE TABLE IF NOT EXISTS `token_usage` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `token` VARCHAR(255) NOT NULL UNIQUE,
@@ -265,6 +265,18 @@ CREATE TABLE IF NOT EXISTS `token_usage` (
   INDEX `idx_used_at` (`used_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 1. 创建令牌使用记录表
+CREATE TABLE IF NOT EXISTS `token_usage` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `token` VARCHAR(255) NOT NULL UNIQUE,
+  `user_id` VARCHAR(100) DEFAULT 'guest',
+  `used_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_token` (`token`),
+  INDEX `idx_used_at` (`used_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 2. 创建审计日志表
 CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `action` VARCHAR(100) NOT NULL,

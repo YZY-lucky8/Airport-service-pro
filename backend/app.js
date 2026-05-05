@@ -63,6 +63,8 @@ const bannedIPs = [
 bannedIPs.forEach(ip => ipBlacklistFilter.insert(ip));
 // ==================== 王晓恩添加位置 (结束) ====================
 const app = express();
+app.use(express.static('frontend'));   // 让浏览器能访问 frontend 文件夹里的网页
+
 
 // 设置信任代理，以正确获取客户端 IP（解决 req.ip 未定义问题）
 app.set('trust proxy', true);
@@ -144,7 +146,9 @@ app.use((req, res, next) => {
 // ========== 滑动窗口频率检测中间件结束 ==========
 
 app.use(express.static(path.join(__dirname, '../frontend')));
-
+// ✅ 添加安全路由 - 
+const securityRouter = require('./routes/security');
+app.use('/api/security', securityRouter);
 
 
 // ========== 新增：安全模块 ==========(xin)

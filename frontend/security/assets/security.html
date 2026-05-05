@@ -1,0 +1,2628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机场安全运营中心</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1890FF;
+            --primary-hover: #40A9FF;
+            --primary-active: #096DD9;
+            --success: #52C41A;
+            --warning: #FA8C16;
+            --danger: #F5222D;
+            --page-bg: #F0F2F5;
+            --card-bg: #FFFFFF;
+            --text-primary: #262626;
+            --text-secondary: #595959;
+            --text-assist: #8C8C8C;
+            --border: #D9D9D9;
+            --divider: #E8E8E8;
+            --header-bg: #001529;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--page-bg);
+            min-height: 100vh;
+        }
+
+        /* ========== 登录页面样式 ========== */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .login-bg-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            border-radius: 0;
+        }
+
+        .login-bg-slide.active {
+            opacity: 1;
+        }
+
+        .login-bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(24, 144, 255, 0.2) 0%, rgba(0, 21, 41, 0.4) 100%);
+            z-index: 1;
+        }
+
+        .login-box {
+            position: relative;
+            z-index: 10;
+            width: 440px;
+            padding: 56px 48px;
+            background: rgba(255, 255, 255, 0.32);
+            backdrop-filter: blur(35px) saturate(180%);
+            -webkit-backdrop-filter: blur(35px) saturate(180%);
+            border-radius: 16px;
+            box-shadow: 
+                0 8px 32px rgba(0, 21, 41, 0.18),
+                0 2px 8px rgba(255, 255, 255, 0.3) inset,
+                0 -2px 6px rgba(0, 0, 0, 0.05) inset;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            transform: perspective(1000px) rotateX(0deg) rotateY(0deg);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .login-box:hover {
+            transform: perspective(1000px) rotateX(-1.5deg) rotateY(1deg) translateY(-4px);
+            box-shadow: 
+                0 16px 48px rgba(0, 21, 41, 0.25),
+                0 4px 12px rgba(255, 255, 255, 0.4) inset,
+                0 -2px 8px rgba(0, 0, 0, 0.08) inset;
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-title h1 {
+            font-size: 28px;
+            color: #001529;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .login-title p {
+            color: #595959;
+            font-size: 14px;
+        }
+
+        .login-form .form-item {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .login-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: #262626;
+            font-weight: 500;
+        }
+
+        .login-form input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            padding-right: 44px;
+            border: 1px solid rgba(217, 217, 217, 0.5);
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.55);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.04),
+                0 1px 3px rgba(255, 255, 255, 0.5) inset;
+        }
+
+        .login-form input:hover {
+            background: rgba(255, 255, 255, 0.65);
+            border-color: rgba(24, 144, 255, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.08),
+                0 1px 3px rgba(255, 255, 255, 0.6) inset;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: #1890FF;
+            background: rgba(255, 255, 255, 0.85);
+            transform: translateY(-1px);
+            box-shadow: 
+                0 0 0 3px rgba(24, 144, 255, 0.15),
+                0 4px 12px rgba(24, 144, 255, 0.1),
+                0 1px 3px rgba(255, 255, 255, 0.7) inset;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            cursor: pointer;
+            color: #8C8C8C;
+            font-size: 18px;
+            user-select: none;
+            transition: color 0.3s;
+        }
+
+        .password-toggle:hover {
+            color: #1890FF;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(135deg, #1890FF 0%, #096DD9 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 8px;
+            box-shadow: 
+                0 4px 15px rgba(24, 144, 255, 0.3),
+                0 1px 3px rgba(255, 255, 255, 0.2) inset;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .login-btn:hover::before {
+            left: 100%;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #40A9FF 0%, #1890FF 100%);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 8px 25px rgba(24, 144, 255, 0.4),
+                0 2px 5px rgba(255, 255, 255, 0.3) inset;
+        }
+
+        .login-btn:active {
+            transform: translateY(-1px);
+            box-shadow: 
+                0 4px 12px rgba(24, 144, 255, 0.35),
+                0 1px 3px rgba(0, 0, 0, 0.1) inset;
+        }
+
+        .login-tip {
+            margin-top: 16px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .login-error {
+            display: none;
+            background: rgba(255, 242, 240, 0.8);
+            border: 1px solid rgba(255, 204, 199, 0.6);
+            color: #F5222D;
+            padding: 10px 12px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        /* ========== 主系统样式 ========== */
+        .main-app {
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        .main-app.show {
+            display: flex;
+        }
+
+        /* 顶部导航栏 */
+        .header {
+            height: 64px;
+            background: var(--header-bg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-title {
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            color: white;
+        }
+
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            cursor: pointer;
+            padding: 6px 16px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        /* 主体容器 */
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧菜单 - 固定定位 */
+        .sidebar {
+            width: 240px;
+            background: white;
+            border-right: 1px solid var(--divider);
+            padding: 16px 0;
+            overflow-y: auto;
+            position: fixed;
+            left: 0;
+            top: 64px;
+            bottom: 0;
+            z-index: 10;
+        }
+        
+        /* 右侧内容区域，给左侧菜单留出空间 */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            margin-left: 240px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .menu-item:hover {
+            background: #E6F7FF;
+            color: var(--primary);
+        }
+
+        .menu-item.active {
+            background: #E6F7FF;
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .menu-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        /* ========== 页面切换核心样式 ========== */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: block !important;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========== 状态徽章样式 ========== */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.success {
+            background: #F6FFED;
+            color: #52C41A;
+            border: 1px solid #B7EB8F;
+        }
+
+        .status-badge.warning {
+            background: #FFFBE6;
+            color: #FA8C16;
+            border: 1px solid #FFE58F;
+        }
+
+        .status-badge.danger {
+            background: #FFF1F0;
+            color: #F5222D;
+            border: 1px solid #FFCCC7;
+        }
+
+        .status-badge.primary {
+            background: #E6F7FF;
+            color: #1890FF;
+            border: 1px solid #91D5FF;
+        }
+
+        .status-badge.info {
+            background: #E6FBFF;
+            color: #13C2C2;
+            border: 1px solid #87E8DE;
+        }
+
+        /* ========== 状态点指示器 ========== */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-dot.success {
+            background: #52C41A;
+            box-shadow: 0 0 0 3px rgba(82, 196, 26, 0.2);
+        }
+
+        .status-dot.warning {
+            background: #FA8C16;
+            box-shadow: 0 0 0 3px rgba(250, 140, 22, 0.2);
+        }
+
+        .status-dot.danger {
+            background: #F5222D;
+            box-shadow: 0 0 0 3px rgba(245, 34, 45, 0.2);
+        }
+
+        .status-dot.primary {
+            background: #1890FF;
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2);
+        }
+
+        /* ========== 统计卡片 ========== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .stat-value.danger {
+            color: var(--danger);
+        }
+
+        .stat-value.success {
+            color: var(--success);
+        }
+
+        .stat-value.primary {
+            color: var(--primary);
+        }
+
+        .stat-value.warning {
+            color: var(--warning);
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: var(--text-assist);
+        }
+
+        /* ========== 图表区域 ========== */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .charts-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .chart {
+            width: 100%;
+            height: 300px;
+        }
+
+        .chart.small {
+            height: 250px;
+        }
+
+        /* ========== 表格样式 ========== */
+        .table-container {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--divider);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #FAFAFA;
+        }
+
+        th {
+            padding: 14px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--divider);
+            font-size: 14px;
+        }
+
+        td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--divider);
+            color: var(--text-secondary);
+        }
+
+        tbody tr:hover {
+            background: #FAFAFA;
+        }
+
+        /* ========== 按钮样式 ========== */
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-default {
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-default:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #FF4D4F;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        /* ========== 防御技术卡片 ========== */
+        .defense-tech-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .defense-tech-card {
+            background: white;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid var(--primary);
+        }
+
+        .defense-tech-card.success {
+            border-left-color: var(--success);
+        }
+
+        .defense-tech-card.warning {
+            border-left-color: var(--warning);
+        }
+
+        .defense-tech-card.danger {
+            border-left-color: var(--danger);
+        }
+
+        .defense-tech-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .defense-tech-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .defense-tech-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .defense-tech-status {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* ========== Bloom过滤器状态 ========== */
+        .bloom-status {
+            background: #F6FFED;
+            border: 1px solid #B7EB8F;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .bloom-status-title {
+            font-weight: 600;
+            color: #52C41A;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .bloom-status-info {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            font-size: 13px;
+        }
+
+        .bloom-status-item {
+            text-align: center;
+        }
+
+        .bloom-status-item .value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #52C41A;
+            margin-bottom: 4px;
+        }
+
+        .bloom-status-item .label {
+            color: var(--text-secondary);
+        }
+
+        /* ========== HMAC令牌状态 ========== */
+        .token-status {
+            background: #E6F7FF;
+            border: 1px solid #91D5FF;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .token-status-title {
+            font-weight: 600;
+            color: #1890FF;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .token-status-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            font-size: 13px;
+        }
+
+        /* ========== 滑动窗口监控 ========== */
+        .window-monitor {
+            background: #FFFBE6;
+            border: 1px solid #FFE58F;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .window-monitor-title {
+            font-weight: 600;
+            color: #FA8C16;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ========== 搜索查询栏 ========== */
+        .query-bar {
+            background: white;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .query-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .query-item label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .query-item input,
+        .query-item select {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13px;
+            min-width: 160px;
+        }
+
+        .query-item input:focus,
+        .query-item select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* ========== 普通卡片样式 ========== */
+        .card {
+            background: white;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-item {
+            margin-bottom: 16px;
+        }
+
+        .form-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .form-item input,
+        .form-item select,
+        .form-item textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-item input:focus,
+        .form-item select:focus,
+        .form-item textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-item textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* ========== 分页样式 ========== */
+        .pagination {
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ========== 操作链接 ========== */
+        .action-link {
+            color: var(--primary);
+            cursor: pointer;
+            margin-right: 12px;
+            text-decoration: underline;
+        }
+
+        .action-link.danger {
+            color: var(--danger);
+        }
+
+        /* ========== 白名单标签 ========== */
+        .whitelist-badge {
+            background: #F6FFED;
+            color: #52C41A;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        /* ========== 关键服务标记 ========== */
+        .critical-service {
+            display: inline-block;
+            background: #FFF1F0;
+            color: #F5222D;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* ========== 响应式 ========== */
+        @media (max-width: 1400px) {
+            .defense-tech-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+            .bloom-status-info,
+            .token-status-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-bg">
+            <div class="login-bg-slide active" style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1920&q=80')"></div>
+            <div class="login-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1556388158-158ea5ccacbd?w=1920&q=80')"></div>
+            <div class="login-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1464037866556-6812c9d1c72e?w=1920&q=80')"></div>
+            <div class="login-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1437846515165-fa03b0a803d5?w=1920&q=80')"></div>
+            <div class="login-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1559268950-12ff5c4e053c?w=1920&q=80')"></div>
+            <div class="login-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1548180422-8ce5288a91ca?w=1920&q=80')"></div>
+            <div class="login-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=80')"></div>
+            <div class="login-bg-slide" style="background-image: url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1920&q=80')"></div>
+        </div>
+        <div class="login-bg-overlay"></div>
+        
+        <div class="login-box">
+            <div class="login-title">
+                <h1>机场安全运营中心</h1>
+                <p>DDoS Hybrid Defense System v2.0</p>
+            </div>
+            
+            <div class="login-error" id="loginError">
+                用户名或密码错误，请重试
+            </div>
+            
+            <form class="login-form" id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-item">
+                    <label>用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名" value="admin">
+                </div>
+                <div class="form-item">
+                    <label>密码</label>
+                    <input type="password" id="password" placeholder="请输入密码" value="admin">
+                    <span class="password-toggle" id="passwordToggle" onclick="togglePassword()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
+                    </span>
+                </div>
+                <button type="submit" class="login-btn">安全登录</button>
+            </form>
+            
+            <div class="login-tip">
+                默认账号密码：admin / admin | 所有操作均记录安全审计日志
+            </div>
+        </div>
+    </div>
+
+    <!-- 主系统 -->
+    <div class="main-app" id="mainApp">
+        <!-- 顶部导航栏 -->
+        <div class="header">
+            <div class="header-left">
+                <div class="header-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L3 6V12C3 16.42 5.83 20.74 12 22C18.17 20.74 21 16.42 21 12V6L12 2Z" fill="#1890FF"/>
+                        <path d="M12 6L7 8.5V12C7 15.31 9.11 18.41 12 19.5C14.89 18.41 17 15.31 17 12V8.5L12 6Z" fill="white" opacity="0.8"/>
+                    </svg>
+                </div>
+                <div class="header-title">机场安全运营中心</div>
+            </div>
+            <div class="header-right">
+                <div class="header-user">
+                    <div class="user-avatar">A</div>
+                    <span>admin</span>
+                </div>
+                <span class="logout-btn" onclick="logout()">退出</span>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- 左侧菜单 -->
+            <div class="sidebar">
+                <div class="menu-item active" onclick="switchPage('overview', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 13H7V21H3V13ZM9 5H13V21H9V5ZM15 9H19V21H15V9Z"/>
+                        </svg>
+                    </span>
+                    <span>安全态势总览</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('ratelimit', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12S7.59 4 12 4s8 3.59 8 8-3.59 8-8 8ZM12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67V7Z"/>
+                        </svg>
+                    </span>
+                    <span>滑动窗口限流</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('bloom', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/>
+                        </svg>
+                    </span>
+                    <span>Bloom过滤器</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('hmac', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2ZM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6Zm9 14H6V10h12v10Zm-6-1c0 .55-.45 1-1 1s-1-.45-1-1v-3c0-.55.45-1 1-1s1 .45 1 1v3Z"/>
+                        </svg>
+                    </span>
+                    <span>HMAC令牌管理</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('whitelist', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                    </span>
+                    <span>IP白名单管理</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('services', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L1 21h22L12 2zm0 3.83L19.13 19H4.87L12 5.83zM11 16h2v2h-2v-2zm0-6h2v4h-2v-4z"/>
+                        </svg>
+                    </span>
+                    <span>关键服务保护</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('logs', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                        </svg>
+                    </span>
+                    <span>防御日志分析</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('audit', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z"/>
+                        </svg>
+                    </span>
+                    <span>安全审计溯源</span>
+                </div>
+            </div>
+
+            <!-- 主内容区 -->
+            <div class="main-content">
+                <!-- 页面1：安全态势总览 -->
+                <div class="page active" id="page-overview">
+                    <h2 class="page-title">安全态势总览</h2>
+                    
+                    <!-- 六大核心防御技术展示 -->
+                    <div class="defense-tech-grid">
+                        <div class="defense-tech-card success">
+                            <div class="defense-tech-icon">
+                                <span class="status-dot success"></span>
+                            </div>
+                            <div class="defense-tech-title">滑动窗口频率检测</div>
+                            <div class="defense-tech-desc">IP请求限流，超限自动写入安全日志，有效防止HTTP Flood攻击</div>
+                            <div class="defense-tech-status">
+                                <span class="status-badge success">运行中</span>
+                                <span style="font-size: 12px; color: var(--text-secondary);">今日拦截：1,285次</span>
+                            </div>
+                        </div>
+                        <div class="defense-tech-card success">
+                            <div class="defense-tech-icon">
+                                <span class="status-dot success"></span>
+                            </div>
+                            <div class="defense-tech-title">Bloom Filter近似跟踪</div>
+                            <div class="defense-tech-desc">布隆过滤器快速验证可信IP，减少数据库查询压力，误判率0.1%</div>
+                            <div class="defense-tech-status">
+                                <span class="status-badge success">运行中</span>
+                                <span style="font-size: 12px; color: var(--text-secondary);">已跟踪IP：8,456个</span>
+                            </div>
+                        </div>
+                        <div class="defense-tech-card success">
+                            <div class="defense-tech-icon">
+                                <span class="status-dot success"></span>
+                            </div>
+                            <div class="defense-tech-title">HMAC一次性令牌</div>
+                            <div class="defense-tech-desc">防重放攻击，值机接口调用保护，采用SHA-256签名算法，300秒过期</div>
+                            <div class="defense-tech-status">
+                                <span class="status-badge success">运行中</span>
+                                <span style="font-size: 12px; color: var(--text-secondary);">今日签发：2,341个</span>
+                            </div>
+                        </div>
+                        <div class="defense-tech-card warning">
+                            <div class="defense-tech-icon">
+                                <span class="status-dot warning"></span>
+                            </div>
+                            <div class="defense-tech-title">攻击反馈隐藏</div>
+                            <div class="defense-tech-desc">统一返回403状态码，隐藏真实错误原因，防止攻击者探测系统漏洞</div>
+                            <div class="defense-tech-status">
+                                <span class="status-badge success">已启用</span>
+                                <span style="font-size: 12px; color: var(--text-secondary);">隐蔽模式：开启</span>
+                            </div>
+                        </div>
+                        <div class="defense-tech-card success">
+                            <div class="defense-tech-icon">
+                                <span class="status-dot success"></span>
+                            </div>
+                            <div class="defense-tech-title">混合防御+白名单</div>
+                            <div class="defense-tech-desc">内网IP自动绕过限流，可信源直接放行，多层防护策略组合</div>
+                            <div class="defense-tech-status">
+                                <span class="status-badge success">已启用</span>
+                                <span style="font-size: 12px; color: var(--text-secondary);">白名单IP：156个</span>
+                            </div>
+                        </div>
+                        <div class="defense-tech-card danger">
+                            <div class="defense-tech-icon">
+                                <span class="status-dot danger"></span>
+                            </div>
+                            <div class="defense-tech-title">关键服务免扰</div>
+                            <div class="defense-tech-desc">"紧急帮助"服务永不限流，确保旅客紧急求助通道畅通</div>
+                            <div class="defense-tech-status">
+                                <span class="status-badge danger">最高优先级</span>
+                                <span style="font-size: 12px; color: var(--text-secondary);">保护服务：3项</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-label">今日限流拦截</div>
+                            <div class="stat-value danger">1,285</div>
+                            <div class="stat-desc">较昨日 +12.5%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Bloom过滤器命中</div>
+                            <div class="stat-value success">89.6%</div>
+                            <div class="stat-desc">快速放行可信IP</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">HMAC令牌验证</div>
+                            <div class="stat-value primary">2,341</div>
+                            <div class="stat-desc">成功率 99.8%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">白名单放行</div>
+                            <div class="stat-value success">45,672</div>
+                            <div class="stat-desc">内网IP免限流</div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-container">
+                            <div class="chart-title">24小时拦截趋势</div>
+                            <div class="chart" id="interceptChart"></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">防御类型分布</div>
+                            <div class="chart small" id="defenseTypeChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">最新拦截记录</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-default">刷新</button>
+                            <button class="btn btn-primary">导出报告</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>来源IP</th>
+                                    <th>防御类型</th>
+                                    <th>请求目标</th>
+                                    <th>处理结果</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2024-05-05 11:25:32</td>
+                                    <td>192.168.1.100</td>
+                                    <td><span class="status-badge warning">滑动窗口限流</span></td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge danger">拦截 - 403</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:24:18</td>
+                                    <td>10.0.0.55</td>
+                                    <td><span class="status-badge info">Bloom过滤</span></td>
+                                    <td>/api/flight</td>
+                                    <td><span class="status-badge success">快速放行</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:23:45</td>
+                                    <td>172.16.0.88</td>
+                                    <td><span class="status-badge primary">HMAC验证</span></td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge success">验证通过</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:22:10</td>
+                                    <td>192.168.2.200</td>
+                                    <td><span class="status-badge success">白名单</span></td>
+                                    <td>/api/emergency</td>
+                                    <td><span class="status-badge success">内网放行</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:20:55</td>
+                                    <td>203.0.113.45</td>
+                                    <td><span class="status-badge danger">攻击反馈隐藏</span></td>
+                                    <td>/api/admin</td>
+                                    <td><span class="status-badge danger">拦截 - 403</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 页面2：滑动窗口限流 -->
+                <div class="page" id="page-ratelimit">
+                    <h2 class="page-title">滑动窗口频率检测</h2>
+                    
+                    <div class="window-monitor">
+                        <div class="window-monitor-title"><span class="status-dot warning" style="margin-right: 8px;"></span>实时监控状态</div>
+                        <div class="bloom-status-info">
+                            <div class="bloom-status-item">
+                                <div class="value">1s</div>
+                                <div class="label">窗口大小</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">5次</div>
+                                <div class="label">最大请求数</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">1,245</div>
+                                <div class="label">当前监控IP</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">89</div>
+                                <div class="label">待拦截IP</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row full">
+                        <div class="chart-container">
+                            <div class="chart-title">实时请求量监控（最近60秒）</div>
+                            <div class="chart" id="realtimeRequestChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="query-bar">
+                        <div class="query-item">
+                            <label>IP地址：</label>
+                            <input type="text" placeholder="输入IP搜索...">
+                        </div>
+                        <div class="query-item">
+                            <label>时间范围：</label>
+                            <input type="date">
+                            <span>~</span>
+                            <input type="date">
+                        </div>
+                        <button class="btn btn-primary">查询</button>
+                        <button class="btn btn-default">重置</button>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">限流拦截日志</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-primary">加入黑名单</button>
+                            <button class="btn btn-default">加入白名单</button>
+                            <button class="btn btn-default">导出</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox"></th>
+                                    <th>触发时间</th>
+                                    <th>来源IP</th>
+                                    <th>1秒内请求数</th>
+                                    <th>请求接口</th>
+                                    <th>处理方式</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>2024-05-05 11:25:32</td>
+                                    <td>192.168.1.100</td>
+                                    <td><span style="color: var(--danger); font-weight: 600;">12次</span></td>
+                                    <td>/api/check-in</td>
+                                    <td>拦截并记录</td>
+                                    <td><span class="status-badge danger">已拦截</span></td>
+                                    <td>
+                                        <span class="action-link">详情</span>
+                                        <span class="action-link danger">拉黑</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>2024-05-05 11:24:18</td>
+                                    <td>10.0.0.55</td>
+                                    <td><span style="color: var(--danger); font-weight: 600;">8次</span></td>
+                                    <td>/api/flight/search</td>
+                                    <td>拦截并记录</td>
+                                    <td><span class="status-badge danger">已拦截</span></td>
+                                    <td>
+                                        <span class="action-link">详情</span>
+                                        <span class="action-link danger">拉黑</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>2024-05-05 11:23:45</td>
+                                    <td>172.16.0.88</td>
+                                    <td><span style="color: var(--warning); font-weight: 600;">6次</span></td>
+                                    <td>/api/user/profile</td>
+                                    <td>警告并记录</td>
+                                    <td><span class="status-badge warning">已警告</span></td>
+                                    <td>
+                                        <span class="action-link">详情</span>
+                                        <span class="action-link danger">拉黑</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="page-btn">首页</button>
+                            <button class="page-btn">上一页</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">下一页</button>
+                            <button class="page-btn">末页</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 页面3：Bloom过滤器 -->
+                <div class="page" id="page-bloom">
+                    <h2 class="page-title">Bloom Filter近似跟踪</h2>
+                    
+                    <div class="bloom-status">
+                        <div class="bloom-status-title"><span class="status-dot success" style="margin-right: 8px;"></span>Bloom过滤器实时状态</div>
+                        <div class="bloom-status-info">
+                            <div class="bloom-status-item">
+                                <div class="value">10,000</div>
+                                <div class="label">位集合大小</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">0.1%</div>
+                                <div class="label">误判率</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">8,456</div>
+                                <div class="label">已跟踪IP数</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">92.3%</div>
+                                <div class="label">命中率</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-container">
+                            <div class="chart-title">Bloom过滤器性能指标</div>
+                            <div class="chart" id="bloomChart"></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">IP来源分布</div>
+                            <div class="chart small" id="ipSourceChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">过滤器配置</div>
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label>位集合大小</label>
+                                <input type="number" value="10000">
+                            </div>
+                            <div class="form-item">
+                                <label>目标误判率</label>
+                                <input type="number" value="0.1" step="0.01"> %
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label>哈希函数数量</label>
+                                <input type="number" value="3">
+                            </div>
+                            <div class="form-item">
+                                <label>IP过期时间</label>
+                                <input type="number" value="24"> 小时
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary">保存配置</button>
+                            <button class="btn btn-danger" style="margin-left: 12px;">重置过滤器</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">最近添加的可信IP</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-primary">手动添加IP</button>
+                            <button class="btn btn-default">导出列表</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>IP地址</th>
+                                    <th>添加时间</th>
+                                    <th>来源</th>
+                                    <th>验证次数</th>
+                                    <th>可信度</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>192.168.1.50</td>
+                                    <td>2024-05-05 10:30:00</td>
+                                    <td>自动学习</td>
+                                    <td>1,234次</td>
+                                    <td><span class="status-badge success">98%</span></td>
+                                    <td>
+                                        <span class="action-link">详情</span>
+                                        <span class="action-link danger">移除</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>10.0.0.100</td>
+                                    <td>2024-05-05 09:15:00</td>
+                                    <td>手动添加</td>
+                                    <td>856次</td>
+                                    <td><span class="status-badge success">100%</span></td>
+                                    <td>
+                                        <span class="action-link">详情</span>
+                                        <span class="action-link danger">移除</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>172.16.0.200</td>
+                                    <td>2024-05-05 08:00:00</td>
+                                    <td>自动学习</td>
+                                    <td>567次</td>
+                                    <td><span class="status-badge success">95%</span></td>
+                                    <td>
+                                        <span class="action-link">详情</span>
+                                        <span class="action-link danger">移除</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 页面4：HMAC令牌管理 -->
+                <div class="page" id="page-hmac">
+                    <h2 class="page-title">HMAC 一次性令牌管理</h2>
+                    
+                    <div class="token-status">
+                        <div class="token-status-title"><span class="status-dot primary" style="margin-right: 8px;"></span>HMAC令牌系统状态</div>
+                        <div class="token-status-info">
+                            <div class="bloom-status-item">
+                                <div class="value">SHA-256</div>
+                                <div class="label">签名算法</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">300s</div>
+                                <div class="label">过期时间</div>
+                            </div>
+                            <div class="bloom-status-item">
+                                <div class="value">99.8%</div>
+                                <div class="label">验证成功率</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row full">
+                        <div class="chart-container">
+                            <div class="chart-title">令牌签发与使用统计（24小时）</div>
+                            <div class="chart" id="tokenChart"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">令牌配置</div>
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label>签名算法</label>
+                                <select>
+                                    <option>SHA-256</option>
+                                    <option>SHA-512</option>
+                                    <option>SHA3-256</option>
+                                </select>
+                            </div>
+                            <div class="form-item">
+                                <label>令牌有效期</label>
+                                <input type="number" value="300"> 秒
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label>防重放检查</label>
+                                <label class="switch" style="display: inline-flex; align-items: center; gap: 8px;">
+                                    <input type="checkbox" checked style="width: 16px; height: 16px;">
+                                    <span>已启用</span>
+                                </label>
+                            </div>
+                            <div class="form-item">
+                                <label>时间戳容差</label>
+                                <input type="number" value="5"> 秒
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary">保存配置</button>
+                            <button class="btn btn-warning" style="margin-left: 12px;">轮换密钥</button>
+                        </div>
+                    </div>
+
+                    <div class="query-bar">
+                        <div class="query-item">
+                            <label>用户ID：</label>
+                            <input type="text" placeholder="输入用户ID...">
+                        </div>
+                        <div class="query-item">
+                            <label>验证结果：</label>
+                            <select>
+                                <option>全部</option>
+                                <option>成功</option>
+                                <option>失败-过期</option>
+                                <option>失败-重放</option>
+                                <option>失败-签名错误</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">查询</button>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">令牌使用日志</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-default">导出</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>用户ID</th>
+                                    <th>调用接口</th>
+                                    <th>验证结果</th>
+                                    <th>失败原因</th>
+                                    <th>来源IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2024-05-05 11:25:32</td>
+                                    <td>USER_001</td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge success">成功</span></td>
+                                    <td>-</td>
+                                    <td>192.168.1.100</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:24:18</td>
+                                    <td>USER_002</td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge danger">失败</span></td>
+                                    <td>令牌已过期</td>
+                                    <td>10.0.0.55</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:23:45</td>
+                                    <td>USER_003</td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge danger">失败</span></td>
+                                    <td>重放攻击检测</td>
+                                    <td>172.16.0.88</td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:22:10</td>
+                                    <td>USER_004</td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge danger">失败</span></td>
+                                    <td>签名验证失败</td>
+                                    <td>203.0.113.45</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="page-btn">首页</button>
+                            <button class="page-btn">上一页</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">下一页</button>
+                            <button class="page-btn">末页</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 页面5：IP白名单管理 -->
+                <div class="page" id="page-whitelist">
+                    <h2 class="page-title">IP白名单管理</h2>
+                    
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-label">白名单IP总数</div>
+                            <div class="stat-value success">156</div>
+                            <div class="stat-desc">今日新增：5个</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">内网IP段</div>
+                            <div class="stat-value primary">12</div>
+                            <div class="stat-desc">自动绕过限流</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">今日放行次数</div>
+                            <div class="stat-value">45,672</div>
+                            <div class="stat-desc">较昨日 +8.3%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">白名单命中率</div>
+                            <div class="stat-value warning">78.5%</div>
+                            <div class="stat-desc">建议优化</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">添加白名单</div>
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label>IP地址/IP段</label>
+                                <input type="text" placeholder="例如：192.168.1.0/24 或 10.0.0.1">
+                            </div>
+                            <div class="form-item">
+                                <label>备注说明</label>
+                                <input type="text" placeholder="例如：内网办公网段">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label>白名单类型</label>
+                                <select>
+                                    <option>永久有效</option>
+                                    <option>临时（24小时）</option>
+                                    <option>临时（7天）</option>
+                                    <option>临时（30天）</option>
+                                </select>
+                            </div>
+                            <div class="form-item">
+                                <label>应用范围</label>
+                                <select>
+                                    <option>所有防御（限流+Bloom+HMAC）</option>
+                                    <option>仅绕过限流检查</option>
+                                    <option>仅绕过Bloom检查</option>
+                                    <option>仅绕过HMAC检查</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary">添加白名单</button>
+                            <button class="btn btn-default" style="margin-left: 12px;">批量导入</button>
+                        </div>
+                    </div>
+
+                    <div class="query-bar">
+                        <div class="query-item">
+                            <label>IP搜索：</label>
+                            <input type="text" placeholder="输入IP地址...">
+                        </div>
+                        <div class="query-item">
+                            <label>类型：</label>
+                            <select>
+                                <option>全部</option>
+                                <option>单个IP</option>
+                                <option>IP段</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">查询</button>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">白名单列表</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-danger">批量移除</button>
+                            <button class="btn btn-default">导出</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox"></th>
+                                    <th>IP地址/网段</th>
+                                    <th>类型</th>
+                                    <th>备注</th>
+                                    <th>添加时间</th>
+                                    <th>过期时间</th>
+                                    <th>今日放行</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>192.168.0.0/16 <span class="whitelist-badge">内网</span></td>
+                                    <td>IP段</td>
+                                    <td>内网办公网段</td>
+                                    <td>2024-01-01 00:00:00</td>
+                                    <td>永久有效</td>
+                                    <td>12,456次</td>
+                                    <td>
+                                        <span class="action-link">编辑</span>
+                                        <span class="action-link danger">移除</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>10.0.0.0/8 <span class="whitelist-badge">内网</span></td>
+                                    <td>IP段</td>
+                                    <td>服务器网段</td>
+                                    <td>2024-01-01 00:00:00</td>
+                                    <td>永久有效</td>
+                                    <td>8,934次</td>
+                                    <td>
+                                        <span class="action-link">编辑</span>
+                                        <span class="action-link danger">移除</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>172.16.0.0/12 <span class="whitelist-badge">内网</span></td>
+                                    <td>IP段</td>
+                                    <td>终端设备网段</td>
+                                    <td>2024-01-01 00:00:00</td>
+                                    <td>永久有效</td>
+                                    <td>23,876次</td>
+                                    <td>
+                                        <span class="action-link">编辑</span>
+                                        <span class="action-link danger">移除</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><input type="checkbox"></td>
+                                    <td>203.0.113.10</td>
+                                    <td>单个IP</td>
+                                    <td>第三方API调用</td>
+                                    <td>2024-05-01 10:00:00</td>
+                                    <td>2024-06-01 10:00:00</td>
+                                    <td>406次</td>
+                                    <td>
+                                        <span class="action-link">编辑</span>
+                                        <span class="action-link danger">移除</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="page-btn">首页</button>
+                            <button class="page-btn">上一页</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">下一页</button>
+                            <button class="page-btn">末页</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 页面6：关键服务保护 -->
+                <div class="page" id="page-services">
+                    <h2 class="page-title">关键服务免扰保护</h2>
+                    
+                    <div class="card" style="border-left: 4px solid var(--danger);">
+                        <div class="card-title"><span class="status-dot danger" style="margin-right: 8px;"></span>保护说明</div>
+                        <p style="color: var(--text-secondary); line-height: 1.8; margin-bottom: 0;">
+                            以下服务为机场关键核心服务，<strong style="color: var(--danger);">永远不受限流策略影响</strong>，
+                            确保在任何情况下（包括DDoS攻击期间），旅客和工作人员都能正常使用这些关键功能。
+                            这些服务的请求会跳过滑动窗口限流、Bloom过滤器检查，直接由后端处理。
+                        </p>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-label">受保护服务数</div>
+                            <div class="stat-value danger">3</div>
+                            <div class="stat-desc">最高优先级</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">今日请求量</div>
+                            <div class="stat-value primary">1,234</div>
+                            <div class="stat-desc">全部正常放行</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">紧急帮助呼叫</div>
+                            <div class="stat-value warning">23</div>
+                            <div class="stat-desc">已全部响应</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">服务可用率</div>
+                            <div class="stat-value success">100%</div>
+                            <div class="stat-desc">连续运行156天</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">添加保护服务</div>
+                        <div class="form-row">
+                            <div class="form-item">
+                                <label>服务路径</label>
+                                <input type="text" placeholder="例如：/api/emergency">
+                            </div>
+                            <div class="form-item">
+                                <label>服务名称</label>
+                                <input type="text" placeholder="例如：紧急帮助">
+                            </div>
+                        </div>
+                        <div class="form-item">
+                            <label>服务描述</label>
+                            <textarea rows="3" placeholder="描述该服务的重要性和使用场景..."></textarea>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary">添加保护服务</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">受保护服务列表</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-default">导出配置</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>服务标识</th>
+                                    <th>服务路径</th>
+                                    <th>服务描述</th>
+                                    <th>今日请求</th>
+                                    <th>添加时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="critical-service">紧急帮助</span></td>
+                                    <td>/api/emergency/help</td>
+                                    <td>旅客紧急求助按钮，直接连接机场安保中心</td>
+                                    <td>23次</td>
+                                    <td>2024-01-01</td>
+                                    <td><span class="status-badge success">保护中</span></td>
+                                    <td>
+                                        <span class="action-link">编辑</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="critical-service">值机服务</span></td>
+                                    <td>/api/check-in/critical</td>
+                                    <td>航班起飞前30分钟的紧急值机通道</td>
+                                    <td>456次</td>
+                                    <td>2024-01-01</td>
+                                    <td><span class="status-badge success">保护中</span></td>
+                                    <td>
+                                        <span class="action-link">编辑</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="critical-service">医疗急救</span></td>
+                                    <td>/api/medical/emergency</td>
+                                    <td>医疗急救呼叫服务</td>
+                                    <td>12次</td>
+                                    <td>2024-01-01</td>
+                                    <td><span class="status-badge success">保护中</span></td>
+                                    <td>
+                                        <span class="action-link">编辑</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 页面7：防御日志分析 -->
+                <div class="page" id="page-logs">
+                    <h2 class="page-title">防御日志分析</h2>
+                    
+                    <div class="query-bar">
+                        <div class="query-item">
+                            <label>时间范围：</label>
+                            <input type="date">
+                            <span>~</span>
+                            <input type="date">
+                        </div>
+                        <div class="query-item">
+                            <label>防御类型：</label>
+                            <select>
+                                <option>全部</option>
+                                <option>滑动窗口限流</option>
+                                <option>Bloom过滤</option>
+                                <option>HMAC验证</option>
+                                <option>攻击反馈隐藏</option>
+                            </select>
+                        </div>
+                        <div class="query-item">
+                            <label>处理结果：</label>
+                            <select>
+                                <option>全部</option>
+                                <option>拦截</option>
+                                <option>放行</option>
+                                <option>警告</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">查询</button>
+                        <button class="btn btn-default">重置</button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-label">总请求数</div>
+                            <div class="stat-value primary">52,847</div>
+                            <div class="stat-desc">今日累计</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">拦截总数</div>
+                            <div class="stat-value danger">1,285</div>
+                            <div class="stat-desc">拦截率 2.4%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">放行总数</div>
+                            <div class="stat-value success">51,562</div>
+                            <div class="stat-desc">放行率 97.6%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">平均响应时间</div>
+                            <div class="stat-value warning">23ms</div>
+                            <div class="stat-desc">性能优秀</div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">防御日志列表</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-primary">导出全部</button>
+                            <button class="btn btn-default">刷新</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>来源IP</th>
+                                    <th>防御类型</th>
+                                    <th>请求路径</th>
+                                    <th>处理结果</th>
+                                    <th>HTTP状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2024-05-05 11:25:32</td>
+                                    <td>192.168.1.100</td>
+                                    <td><span class="status-badge warning">滑动窗口限流</span></td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge danger">拦截</span></td>
+                                    <td>403 Forbidden</td>
+                                    <td><span class="action-link">查看</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:24:18</td>
+                                    <td>10.0.0.55</td>
+                                    <td><span class="status-badge info">Bloom过滤</span></td>
+                                    <td>/api/flight</td>
+                                    <td><span class="status-badge success">放行</span></td>
+                                    <td>200 OK</td>
+                                    <td><span class="action-link">查看</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:23:45</td>
+                                    <td>172.16.0.88</td>
+                                    <td><span class="status-badge primary">HMAC验证</span></td>
+                                    <td>/api/check-in</td>
+                                    <td><span class="status-badge success">通过</span></td>
+                                    <td>200 OK</td>
+                                    <td><span class="action-link">查看</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:22:10</td>
+                                    <td>192.168.2.200</td>
+                                    <td><span class="status-badge success">白名单</span></td>
+                                    <td>/api/emergency</td>
+                                    <td><span class="status-badge success">放行</span></td>
+                                    <td>200 OK</td>
+                                    <td><span class="action-link">查看</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:20:55</td>
+                                    <td>203.0.113.45</td>
+                                    <td><span class="status-badge danger">攻击隐藏</span></td>
+                                    <td>/api/admin</td>
+                                    <td><span class="status-badge danger">拦截</span></td>
+                                    <td>403 Forbidden</td>
+                                    <td><span class="action-link">查看</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="page-btn">首页</button>
+                            <button class="page-btn">上一页</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">下一页</button>
+                            <button class="page-btn">末页</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 页面8：安全审计溯源 -->
+                <div class="page" id="page-audit">
+                    <h2 class="page-title">安全审计溯源</h2>
+                    
+                    <div class="query-bar">
+                        <div class="query-item">
+                            <label>时间范围：</label>
+                            <input type="date">
+                            <span>~</span>
+                            <input type="date">
+                        </div>
+                        <div class="query-item">
+                            <label>操作类型：</label>
+                            <select>
+                                <option>全部</option>
+                                <option>登录</option>
+                                <option>修改配置</option>
+                                <option>添加白名单</option>
+                                <option>导出日志</option>
+                            </select>
+                        </div>
+                        <div class="query-item">
+                            <label>操作用户：</label>
+                            <input type="text" placeholder="输入用户名...">
+                        </div>
+                        <button class="btn btn-primary">查询</button>
+                        <button class="btn btn-default">重置</button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-label">今日操作总数</div>
+                            <div class="stat-value primary">234</div>
+                            <div class="stat-desc">较昨日 +5.2%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">配置修改</div>
+                            <div class="stat-value warning">18</div>
+                            <div class="stat-desc">需重点关注</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">登录成功</div>
+                            <div class="stat-value success">156</div>
+                            <div class="stat-desc">登录成功率</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">异常操作</div>
+                            <div class="stat-value danger">0</div>
+                            <div class="stat-desc">无风险行为</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">审计操作</div>
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-primary">生成审计报告</button>
+                            <button class="btn btn-default">导出审计日志</button>
+                            <button class="btn btn-warning">风险扫描</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <div class="table-toolbar">
+                            <span style="font-weight: 600;">操作审计日志</span>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-default">导出全部</button>
+                        </div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>用户</th>
+                                    <th>操作类型</th>
+                                    <th>操作详情</th>
+                                    <th>来源IP</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2024-05-05 11:25:32</td>
+                                    <td>admin</td>
+                                    <td>登录</td>
+                                    <td>用户登录系统</td>
+                                    <td>192.168.1.1</td>
+                                    <td><span class="status-badge success">成功</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 11:20:15</td>
+                                    <td>admin</td>
+                                    <td>修改配置</td>
+                                    <td>修改滑动窗口限流阈值：5次/秒 → 10次/秒</td>
+                                    <td>192.168.1.1</td>
+                                    <td><span class="status-badge success">成功</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 10:45:30</td>
+                                    <td>admin</td>
+                                    <td>添加白名单</td>
+                                    <td>添加IP段：203.0.113.0/24，备注：第三方API</td>
+                                    <td>192.168.1.1</td>
+                                    <td><span class="status-badge success">成功</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 10:30:00</td>
+                                    <td>admin</td>
+                                    <td>导出日志</td>
+                                    <td>导出2024-05-04防御日志分析报告</td>
+                                    <td>192.168.1.1</td>
+                                    <td><span class="status-badge success">成功</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2024-05-05 09:15:22</td>
+                                    <td>admin</td>
+                                    <td>登录</td>
+                                    <td>用户登录系统</td>
+                                    <td>10.0.0.50</td>
+                                    <td><span class="status-badge success">成功</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button class="page-btn">首页</button>
+                            <button class="page-btn">上一页</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <button class="page-btn">下一页</button>
+                            <button class="page-btn">末页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 登录背景轮播
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.login-bg-slide');
+        
+        setInterval(() => {
+            slides[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+            slides[currentSlide].classList.add('active');
+        }, 5000);
+
+        // 密码显示切换
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const type = passwordInput.type === 'password' ? 'text' : 'password';
+            passwordInput.type = type;
+        }
+
+        // 登录处理
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'admin') {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('mainApp').classList.add('show');
+                initCharts();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            document.getElementById('mainApp').classList.remove('show');
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('password').value = 'admin';
+        }
+
+        // 页面切换
+        function switchPage(pageId, element) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+                page.style.display = 'none';
+            });
+            
+            // 显示目标页面
+            const targetPage = document.getElementById('page-' + pageId);
+            if (targetPage) {
+                targetPage.style.display = 'block';
+                setTimeout(() => {
+                    targetPage.classList.add('active');
+                }, 10);
+            }
+            
+            // 更新菜单状态
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            // 重新初始化图表
+            setTimeout(initCharts, 100);
+        }
+
+        // 图表初始化
+        function initCharts() {
+            // 24小时拦截趋势图
+            const interceptChartDom = document.getElementById('interceptChart');
+            if (interceptChartDom && echarts) {
+                const interceptChart = echarts.init(interceptChartDom);
+                const interceptOption = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['滑动窗口拦截', 'HMAC拦截', 'Bloom过滤', '白名单放行']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        boundaryGap: false,
+                        data: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: '滑动窗口拦截',
+                            type: 'line',
+                            smooth: true,
+                            data: [45, 32, 28, 45, 89, 156, 134, 167, 189, 145, 98, 56],
+                            color: '#FA8C16',
+                            areaStyle: {
+                                opacity: 0.1
+                            }
+                        },
+                        {
+                            name: 'HMAC拦截',
+                            type: 'line',
+                            smooth: true,
+                            data: [12, 8, 5, 15, 23, 45, 38, 52, 58, 42, 28, 18],
+                            color: '#1890FF',
+                            areaStyle: {
+                                opacity: 0.1
+                            }
+                        },
+                        {
+                            name: 'Bloom过滤',
+                            type: 'line',
+                            smooth: true,
+                            data: [234, 189, 156, 267, 456, 789, 654, 823, 912, 756, 543, 321],
+                            color: '#52C41A'
+                        },
+                        {
+                            name: '白名单放行',
+                            type: 'line',
+                            smooth: true,
+                            data: [1234, 987, 876, 1456, 2345, 3456, 3210, 3890, 4123, 3654, 2789, 1876],
+                            color: '#722ED1'
+                        }
+                    ]
+                };
+                interceptChart.setOption(interceptOption);
+                
+                window.addEventListener('resize', () => {
+                    interceptChart.resize();
+                });
+            }
+
+            // 防御类型分布图
+            const defenseTypeChartDom = document.getElementById('defenseTypeChart');
+            if (defenseTypeChartDom && echarts) {
+                const defenseTypeChart = echarts.init(defenseTypeChartDom);
+                const defenseTypeOption = {
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{b}: {c} ({d}%)'
+                    },
+                    series: [
+                        {
+                            name: '防御类型',
+                            type: 'pie',
+                            radius: ['40%', '70%'],
+                            data: [
+                                { value: 45, name: '滑动窗口限流', itemStyle: { color: '#FA8C16' } },
+                                { value: 25, name: 'HMAC令牌验证', itemStyle: { color: '#1890FF' } },
+                                { value: 15, name: 'Bloom过滤器', itemStyle: { color: '#52C41A' } },
+                                { value: 10, name: '攻击反馈隐藏', itemStyle: { color: '#F5222D' } },
+                                { value: 5, name: '其他防御', itemStyle: { color: '#722ED1' } }
+                            ],
+                            label: {
+                                formatter: '{b}\n{d}%'
+                            }
+                        }
+                    ]
+                };
+                defenseTypeChart.setOption(defenseTypeOption);
+                
+                window.addEventListener('resize', () => {
+                    defenseTypeChart.resize();
+                });
+            }
+
+            // 实时请求量监控图
+            const realtimeRequestChartDom = document.getElementById('realtimeRequestChart');
+            if (realtimeRequestChartDom && echarts) {
+                const realtimeRequestChart = echarts.init(realtimeRequestChartDom);
+                
+                const seconds = Array.from({length: 60}, (_, i) => {
+                    const d = new Date();
+                    d.setSeconds(d.getSeconds() - (59 - i));
+                    return d.getSeconds() + 's';
+                });
+                
+                const normalData = Array.from({length: 60}, () => Math.floor(Math.random() * 3) + 1);
+                const thresholdLine = Array(60).fill(5);
+                
+                const realtimeOption = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['实际请求数', '限流阈值']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: seconds
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '请求数/秒'
+                    },
+                    series: [
+                        {
+                            name: '实际请求数',
+                            type: 'line',
+                            smooth: true,
+                            data: normalData,
+                            color: '#1890FF',
+                            areaStyle: {
+                                opacity: 0.1
+                            }
+                        },
+                        {
+                            name: '限流阈值',
+                            type: 'line',
+                            lineStyle: {
+                                type: 'dashed',
+                                color: '#F5222D'
+                            },
+                            data: thresholdLine,
+                            symbol: 'none'
+                        }
+                    ]
+                };
+                realtimeRequestChart.setOption(realtimeOption);
+                
+                window.addEventListener('resize', () => {
+                    realtimeRequestChart.resize();
+                });
+            }
+
+            // Bloom过滤器性能指标
+            const bloomChartDom = document.getElementById('bloomChart');
+            if (bloomChartDom && echarts) {
+                const bloomChart = echarts.init(bloomChartDom);
+                const bloomOption = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['查询次数', '命中次数', '新增IP数']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: '查询次数',
+                            type: 'bar',
+                            data: [1234, 2345, 4567, 5678, 6789, 3456],
+                            color: '#1890FF'
+                        },
+                        {
+                            name: '命中次数',
+                            type: 'bar',
+                            data: [1100, 2100, 4100, 5100, 6100, 3100],
+                            color: '#52C41A'
+                        },
+                        {
+                            name: '新增IP数',
+                            type: 'line',
+                            smooth: true,
+                            data: [45, 67, 89, 123, 156, 98],
+                            color: '#FA8C16'
+                        }
+                    ]
+                };
+                bloomChart.setOption(bloomOption);
+                
+                window.addEventListener('resize', () => {
+                    bloomChart.resize();
+                });
+            }
+
+            // IP来源分布图
+            const ipSourceChartDom = document.getElementById('ipSourceChart');
+            if (ipSourceChartDom && echarts) {
+                const ipSourceChart = echarts.init(ipSourceChartDom);
+                const ipSourceOption = {
+                    tooltip: {
+                        trigger: 'item'
+                    },
+                    series: [
+                        {
+                            name: 'IP来源',
+                            type: 'pie',
+                            radius: ['40%', '70%'],
+                            data: [
+                                { value: 45, name: '内网 192.168.x.x', itemStyle: { color: '#52C41A' } },
+                                { value: 25, name: '内网 10.x.x.x', itemStyle: { color: '#1890FF' } },
+                                { value: 15, name: '内网 172.16.x.x', itemStyle: { color: '#13C2C2' } },
+                                { value: 15, name: '外网可信IP', itemStyle: { color: '#722ED1' } }
+                            ]
+                        }
+                    ]
+                };
+                ipSourceChart.setOption(ipSourceOption);
+                
+                window.addEventListener('resize', () => {
+                    ipSourceChart.resize();
+                });
+            }
+
+            // 令牌签发与使用统计
+            const tokenChartDom = document.getElementById('tokenChart');
+            if (tokenChartDom && echarts) {
+                const tokenChart = echarts.init(tokenChartDom);
+                const tokenOption = {
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['签发令牌数', '验证成功数', '验证失败数']
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
+                    },
+                    yAxis: {
+                        type: 'value'
+                    },
+                    series: [
+                        {
+                            name: '签发令牌数',
+                            type: 'bar',
+                            data: [45, 32, 28, 56, 123, 234, 210, 256, 278, 245, 156, 78],
+                            color: '#1890FF'
+                        },
+                        {
+                            name: '验证成功数',
+                            type: 'bar',
+                            data: [44, 31, 27, 55, 122, 233, 209, 255, 277, 244, 155, 77],
+                            color: '#52C41A'
+                        },
+                        {
+                            name: '验证失败数',
+                            type: 'line',
+                            smooth: true,
+                            data: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            color: '#F5222D'
+                        }
+                    ]
+                };
+                tokenChart.setOption(tokenOption);
+                
+                window.addEventListener('resize', () => {
+                    tokenChart.resize();
+                });
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 确保第一个页面显示
+            const firstPage = document.querySelector('.page.active');
+            if (firstPage) {
+                firstPage.style.display = 'block';
+            }
+            
+            // 检查是否已登录
+            const mainApp = document.getElementById('mainApp');
+            if (mainApp.classList.contains('show')) {
+                initCharts();
+            }
+        });
+    </script>
+</body>
+</html>

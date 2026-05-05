@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "bloom-filter": "^0.2.0"
+    "bloom-filter": "^0.2.0",
+    "mysql2": "^3.22.3"
   }
 }

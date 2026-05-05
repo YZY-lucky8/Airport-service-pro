@@ -265,17 +265,6 @@ CREATE TABLE IF NOT EXISTS `token_usage` (
   INDEX `idx_used_at` (`used_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 1. 创建令牌使用记录表
-CREATE TABLE IF NOT EXISTS `token_usage` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `token` VARCHAR(255) NOT NULL UNIQUE,
-  `user_id` VARCHAR(100) DEFAULT 'guest',
-  `used_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX `idx_token` (`token`),
-  INDEX `idx_used_at` (`used_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- 2. 创建审计日志表
 CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -289,3 +278,186 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
   INDEX `idx_user_id` (`user_id`),
   INDEX `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================
+-- 机场DDoS防御系统 - 一键建表SQL脚本
+-- 执行日期：2024-05-05
+-- ============================================
+
+-- 1. 滑动窗口限流记录表
+CREATE TABLE IF NOT EXISTS `rate_limit_logs` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `ip_address` VARCHAR(50) NOT NULL COMMENT '来源IP',
+  `request_count` INT(11) NOT NULL COMMENT '1秒内请求数',
+  `target_url` VARCHAR(255) DEFAULT NULL COMMENT '请求目标',
+  `action` VARCHAR(50) DEFAULT NULL COMMENT '处理方式：拦截/警告',
+  `status` VARCHAR(20) DEFAULT 'blocked' COMMENT '状态',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ip` (`ip_address`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='滑动窗口限流拦截日志';
+
+-- 2. Bloom过滤器IP跟踪表
+CREATE TABLE IF NOT EXISTS `bloom_filter_ips` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `ip_address` VARCHAR(50) NOT NULL COMMENT 'IP地址',
+  `source` VARCHAR(50) DEFAULT 'auto' COMMENT '来源：auto/manual',
+  `verify_count` INT(11) DEFAULT 0 COMMENT '验证次数',
+  `trust_level` DECIMAL(5,2) DEFAULT 95.00 COMMENT '可信度%',
+  `added_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `expire_at` DATETIME DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ip` (`ip_address`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Bloom过滤器可信IP跟踪表';
+
+-- 3. Bloom过滤器状态记录表
+CREATE TABLE IF NOT EXISTS `bloom_filter_status` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `bit_set_size` INT(11) DEFAULT 10000 COMMENT '位集合大小',
+  `error_rate` DECIMAL(8,6) DEFAULT 0.001 COMMENT '误判率',
+  `hash_count` INT(11) DEFAULT 3 COMMENT '哈希函数数量',
+  `tracked_ips` INT(11) DEFAULT 0 COMMENT '已跟踪IP数',
+  `hit_count` BIGINT(20) DEFAULT 0 COMMENT '命中次数',
+  `total_count` BIGINT(20) DEFAULT 0 COMMENT '总查询次数',
+  `expire_hours` INT(11) DEFAULT 24 COMMENT 'IP过期时间（小时）',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Bloom过滤器状态表';
+
+-- 初始化Bloom过滤器配置
+INSERT IGNORE INTO `bloom_filter_status` (`id`, `bit_set_size`, `error_rate`, `hash_count`) VALUES (1, 10000, 0.001, 3);
+
+-- 4. HMAC令牌使用日志表
+CREATE TABLE IF NOT EXISTS `hmac_token_logs` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `user_id` VARCHAR(100) DEFAULT NULL COMMENT '用户ID',
+  `token` VARCHAR(512) NOT NULL COMMENT '令牌',
+  `api_url` VARCHAR(255) DEFAULT NULL COMMENT '调用接口',
+  `verify_result` VARCHAR(20) NOT NULL COMMENT '验证结果：success/failed',
+  `fail_reason` VARCHAR(100) DEFAULT NULL COMMENT '失败原因',
+  `ip_address` VARCHAR(50) DEFAULT NULL COMMENT '来源IP',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_result` (`verify_result`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='HMAC令牌使用日志表';
+
+-- 5. HMAC系统配置表
+CREATE TABLE IF NOT EXISTS `hmac_config` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `algorithm` VARCHAR(50) DEFAULT 'SHA-256' COMMENT '签名算法',
+  `expire_seconds` INT(11) DEFAULT 300 COMMENT '过期时间(秒)',
+  `anti_replay` TINYINT(1) DEFAULT 1 COMMENT '防重放检查',
+  `time_tolerance` INT(11) DEFAULT 5 COMMENT '时间戳容差(秒)',
+  `secret_key` VARCHAR(255) NOT NULL COMMENT '签名密钥',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='HMAC系统配置表';
+
+-- 初始化HMAC配置
+INSERT IGNORE INTO `hmac_config` (`id`, `algorithm`, `expire_seconds`, `anti_replay`, `time_tolerance`, `secret_key`) 
+VALUES (1, 'SHA-256', 300, 1, 5, 'airport-ddos-secret-key-2024-change-me');
+
+-- 6. IP白名单表
+CREATE TABLE IF NOT EXISTS `ip_whitelist` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `ip_address` VARCHAR(100) NOT NULL COMMENT 'IP地址或网段',
+  `ip_type` VARCHAR(20) DEFAULT 'single' COMMENT '类型：single/range',
+  `remark` VARCHAR(255) DEFAULT NULL COMMENT '备注',
+  `bypass_scope` VARCHAR(50) DEFAULT 'all' COMMENT '绕过范围：all/rate_limit/bloom/hmac',
+  `is_internal` TINYINT(1) DEFAULT 0 COMMENT '是否内网IP',
+  `expire_type` VARCHAR(20) DEFAULT 'permanent' COMMENT '过期类型：permanent/temp_24h/temp_7d/temp_30d',
+  `expire_at` DATETIME DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `today_pass_count` INT(11) DEFAULT 0 COMMENT '今日放行次数',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_ip` (`ip_address`),
+  KEY `idx_internal` (`is_internal`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='IP白名单表';
+
+-- 初始化默认内网白名单
+INSERT IGNORE INTO `ip_whitelist` (`ip_address`, `ip_type`, `remark`, `bypass_scope`, `is_internal`, `expire_type`) VALUES 
+('192.168.0.0/16', 'range', '内网办公网段', 'all', 1, 'permanent'),
+('10.0.0.0/8', 'range', '服务器网段', 'all', 1, 'permanent'),
+('172.16.0.0/12', 'range', '终端设备网段', 'all', 1, 'permanent');
+
+-- 7. 关键服务保护表
+CREATE TABLE IF NOT EXISTS `critical_services` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `service_name` VARCHAR(100) NOT NULL COMMENT '服务名称',
+  `service_path` VARCHAR(255) NOT NULL COMMENT '服务路径',
+  `description` TEXT COMMENT '服务描述',
+  `today_request_count` INT(11) DEFAULT 0 COMMENT '今日请求数',
+  `status` VARCHAR(20) DEFAULT 'active' COMMENT '状态：active/inactive',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_path` (`service_path`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='关键服务保护表';
+
+-- 初始化关键服务
+INSERT IGNORE INTO `critical_services` (`id`, `service_name`, `service_path`, `description`) VALUES
+(1, '紧急帮助', '/api/emergency/help', '旅客紧急求助按钮，直接连接机场安保中心'),
+(2, '紧急值机', '/api/check-in/critical', '航班起飞前30分钟的紧急值机通道'),
+(3, '医疗急救', '/api/medical/emergency', '医疗急救呼叫服务');
+
+-- 8. 防御日志总表
+CREATE TABLE IF NOT EXISTS `defense_logs` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `ip_address` VARCHAR(50) NOT NULL COMMENT '来源IP',
+  `defense_type` VARCHAR(50) NOT NULL COMMENT '防御类型：rate_limit/bloom/hmac/whitelist/attack_hide',
+  `target_url` VARCHAR(255) DEFAULT NULL COMMENT '请求目标',
+  `action_result` VARCHAR(20) NOT NULL COMMENT '处理结果：block/pass/warn',
+  `http_status` INT(11) DEFAULT 403 COMMENT 'HTTP状态码',
+  `details` TEXT COMMENT '详情',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_type` (`defense_type`),
+  KEY `idx_result` (`action_result`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='防御日志总表';
+
+-- 9. 安全审计日志表
+CREATE TABLE IF NOT EXISTS `security_audit_logs` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(100) NOT NULL COMMENT '操作用户',
+  `action_type` VARCHAR(50) NOT NULL COMMENT '操作类型',
+  `action_content` TEXT COMMENT '操作内容',
+  `ip_address` VARCHAR(50) DEFAULT NULL COMMENT '操作IP',
+  `result` VARCHAR(20) DEFAULT 'success' COMMENT '操作结果',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`username`),
+  KEY `idx_type` (`action_type`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='安全审计日志表';
+
+-- 10. 系统配置表
+CREATE TABLE IF NOT EXISTS `security_system_config` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `config_key` VARCHAR(100) NOT NULL COMMENT '配置键',
+  `config_value` TEXT COMMENT '配置值',
+  `description` VARCHAR(255) DEFAULT NULL COMMENT '描述',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_key` (`config_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='安全系统配置表';
+
+-- 初始化系统配置
+INSERT IGNORE INTO `security_system_config` (`config_key`, `config_value`, `description`) VALUES
+('rate_limit_enabled', '1', '限流功能开关'),
+('rate_limit_max_requests', '5', '每秒最大请求数'),
+('bloom_filter_enabled', '1', 'Bloom过滤器开关'),
+('hmac_enabled', '1', 'HMAC令牌验证开关'),
+('attack_hide_enabled', '1', '攻击反馈隐藏开关'),
+('auto_refresh_seconds', '30', '数据自动刷新间隔');
+
+-- ============================================
+-- 建表完成！
+-- ============================================
+-- 使用说明：
+-- 1. 执行此SQL文件创建所有10张表
+-- 2. 自动插入初始配置数据
+-- 3. 然后就可以使用完整的API了
+-- ============================================

@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');// 引入 path 模块，解决路径问题
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 // ==================== 王晓恩添加位置 (开始) ====================
 // 🎯 生产级原生布隆过滤器（零依赖，机场正式环境推荐）
 class BloomFilter {
@@ -56,9 +57,8 @@ const ipBlacklistFilter = new BloomFilter(10000, 0.001);
 const bannedIPs = [
     '192.168.1.100',
     '10.0.0.5',
-    '127.0.0.2',
-    '::1',
-    '::ffff:127.0.0.1'
+    '127.0.0.2'
+    // 移除本地IP: '::1', '::ffff:127.0.0.1'
 ];
 bannedIPs.forEach(ip => ipBlacklistFilter.insert(ip));
 // ==================== 王晓恩添加位置 (结束) ====================
@@ -87,6 +87,7 @@ app.use((req, res, next) => {
 });
 // ==================== 王晓恩添加位置 (结束) ====================
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 
 const pool = mysql.createPool({
@@ -144,7 +145,7 @@ app.use((req, res, next) => {
 // ========== 滑动窗口频率检测中间件结束 ==========
 
 app.use(express.static(path.join(__dirname, '../frontend')));
-
+ 
 
 
 // ========== 新增：安全模块 ==========(xin)
@@ -258,9 +259,6 @@ app.use((req, res, next) => {
   next();
 });
 // 令牌使用记录函数
-// ========== 在 app.js 顶部添加 ==========
-require('dotenv').config();
-
 // ========== HMAC 令牌生成和验证 ==========
 const generateToken = (userId = 'guest') => {
   const timestamp = Math.floor(Date.now() / 1000);
@@ -437,7 +435,19 @@ app.get('/api/token/generate', async (req, res) => {
 });
 
 // ========== 新增：值机接口（受令牌保护） ==========
-app.post('/api/check-in', async (req, res) => {
+app.post('/api/check-in', validateInput({
+  flightNumber: {
+    required: true,
+    type: 'string',
+    pattern: /^[A-Z0-9]{4,10}$/
+  },
+  passengerName: {
+    required: true,
+    type: 'string',
+    maxLength: 100,
+    minLength: 2
+  }
+}), async (req, res) => {
   try {
     // 1. 获取令牌（从URL参数或header）
     const token = req.query.token || req.headers['x-token'];
@@ -517,7 +527,7 @@ app.post('/api/check-in', async (req, res) => {
 });
 // HMAC 令牌系统
 // ========== 新增：审计日志记录 ==========
-const auditLog = async (action, userId = 'guest', details = {}) => {
+const auditLog = async (req, action, userId = 'guest', details = {}) => {
   try {
     const sql = `
       INSERT INTO audit_logs (action, user_id, details, ip_address, user_agent)
@@ -645,7 +655,7 @@ app.get('/api/audit/report', async (req, res) => {
 });
 // 输入验证中间件
 // ========== 新增：输入验证中间件 ==========
-const validateInput = (schema) => {
+function validateInput(schema) {
   return (req, res, next) => {
     const errors = [];
     const data = req.body;
@@ -697,25 +707,6 @@ const validateInput = (schema) => {
   };
 };
 
-// 使用示例（在值机接口中）
-app.post('/api/check-in', 
-  validateInput({
-    flightNumber: { 
-      required: true, 
-      type: 'string',
-      pattern: /^[A-Z0-9]{4,10}$/ 
-    },
-    passengerName: { 
-      required: true, 
-      type: 'string', 
-      maxLength: 100,
-      minLength: 2
-    }
-  }),
-  async (req, res) => {
-    // ... 原有逻辑 ...
-  }
-);
 // ========== 新增：CSRF令牌管理 ==========
 const csrfTokens = new Map();
 
@@ -1011,11 +1002,285 @@ app.get('/api/attack-status', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`✅ API server running at http://localhost:${port}`);
-    pool.getConnection()
-        .then(conn => { console.log('✅ Database connected'); conn.release(); })
-        .catch(err => console.error('❌ Database connection failed:', err.message));
+
+// ========== 新增：IP白名单管理接口 ==========
+app.get('/api/whitelist', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT id, ip_address, description, created_at FROM ip_whitelist ORDER BY created_at DESC');
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error('获取白名单失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+app.post('/api/whitelist', async (req, res) => {
+    const { ip_address, description } = req.body;
+    if (!ip_address) {
+        return res.status(400).json({ error: 'IP地址不能为空' });
+    }
+    try {
+        const sql = 'INSERT INTO ip_whitelist (ip_address, description) VALUES (?, ?)';
+        const [result] = await pool.execute(sql, [ip_address, description || '']);
+        res.json({ success: true, id: result.insertId });
+    } catch (error) {
+        console.error('添加白名单失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+app.delete('/api/whitelist/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const sql = 'DELETE FROM ip_whitelist WHERE id = ?';
+        await pool.execute(sql, [id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('删除白名单失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+// ========== 新增：黑名单管理接口 ==========
+app.get('/api/blacklist', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT id, ip_address, reason, created_at FROM ip_blacklist ORDER BY created_at DESC');
+        res.json({ success: true, data: rows });
+    } catch (error) {
+        console.error('获取黑名单失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+app.post('/api/blacklist', async (req, res) => {
+    const { ip_address, reason } = req.body;
+    if (!ip_address) {
+        return res.status(400).json({ error: 'IP地址不能为空' });
+    }
+    try {
+        const sql = 'INSERT INTO ip_blacklist (ip_address, reason) VALUES (?, ?)';
+        const [result] = await pool.execute(sql, [ip_address, reason || '']);
+        res.json({ success: true, id: result.insertId });
+    } catch (error) {
+        console.error('添加黑名单失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+app.delete('/api/blacklist/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const sql = 'DELETE FROM ip_blacklist WHERE id = ?';
+        await pool.execute(sql, [id]);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('删除黑名单失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+// ========== 新增：防御日志分页查询接口 ==========
+app.get('/api/defense-logs', async (req, res) => {
+    try {
+        const { page = 1, limit = 10, type, startDate, endDate } = req.query;
+        const offset = (page - 1) * limit;
+        
+        let sql = 'SELECT id, attack_type, src_ip, dst_ip, create_time FROM attack_log WHERE 1=1';
+        const params = [];
+        
+        if (type) {
+            sql += ' AND attack_type = ?';
+            params.push(type);
+        }
+        
+        if (startDate && endDate) {
+            sql += ' AND create_time BETWEEN ? AND ?';
+            params.push(startDate, endDate);
+        }
+        
+        sql += ' ORDER BY create_time DESC LIMIT ? OFFSET ?';
+        params.push(parseInt(limit), offset);
+        
+        const [rows] = await pool.execute(sql, params);
+        
+        // 获取总数
+        let countSql = 'SELECT COUNT(*) as total FROM attack_log WHERE 1=1';
+        const countParams = [];
+        if (type) {
+            countSql += ' AND attack_type = ?';
+            countParams.push(type);
+        }
+        if (startDate && endDate) {
+            countSql += ' AND create_time BETWEEN ? AND ?';
+            countParams.push(startDate, endDate);
+        }
+        const [countResult] = await pool.execute(countSql, countParams);
+        
+        res.json({
+            success: true,
+            data: rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: countResult[0].total,
+                totalPages: Math.ceil(countResult[0].total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('获取防御日志失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+// ========== 新增：导出防御日志接口 ==========
+app.get('/api/defense-logs/export', async (req, res) => {
+    try {
+        const { type, startDate, endDate, format = 'csv' } = req.query;
+        
+        let sql = 'SELECT id, attack_type, src_ip, dst_ip, create_time FROM attack_log WHERE 1=1';
+        const params = [];
+        
+        if (type) {
+            sql += ' AND attack_type = ?';
+            params.push(type);
+        }
+        
+        if (startDate && endDate) {
+            sql += ' AND create_time BETWEEN ? AND ?';
+            params.push(startDate, endDate);
+        }
+        
+        sql += ' ORDER BY create_time DESC';
+        
+        const [rows] = await pool.execute(sql, params);
+        
+        if (format === 'csv') {
+            const csv = [
+                'ID,攻击类型,来源IP,目标IP,时间',
+                ...rows.map(row => 
+                    `${row.id},${row.attack_type},${row.src_ip},${row.dst_ip},${row.create_time}`
+                )
+            ].join('\n');
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename=defense-logs.csv');
+            res.send(csv);
+        } else {
+            res.json({ success: true, data: rows });
+        }
+    } catch (error) {
+        console.error('导出防御日志失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+// ========== 新增：审计日志分页查询接口 ==========
+app.get('/api/audit-logs', async (req, res) => {
+    try {
+        const { page = 1, limit = 10, action, startDate, endDate, userId } = req.query;
+        const offset = (page - 1) * limit;
+        
+        let sql = 'SELECT id, action, user_id, details, ip_address, created_at FROM audit_logs WHERE 1=1';
+        const params = [];
+        
+        if (action) {
+            sql += ' AND action = ?';
+            params.push(action);
+        }
+        
+        if (userId) {
+            sql += ' AND user_id = ?';
+            params.push(userId);
+        }
+        
+        if (startDate && endDate) {
+            sql += ' AND created_at BETWEEN ? AND ?';
+            params.push(startDate, endDate);
+        }
+        
+        sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+        params.push(parseInt(limit), offset);
+        
+        const [rows] = await pool.execute(sql, params);
+        
+        // 获取总数
+        let countSql = 'SELECT COUNT(*) as total FROM audit_logs WHERE 1=1';
+        const countParams = [];
+        if (action) {
+            countSql += ' AND action = ?';
+            countParams.push(action);
+        }
+        if (userId) {
+            countSql += ' AND user_id = ?';
+            countParams.push(userId);
+        }
+        if (startDate && endDate) {
+            countSql += ' AND created_at BETWEEN ? AND ?';
+            countParams.push(startDate, endDate);
+        }
+        const [countResult] = await pool.execute(countSql, countParams);
+        
+        res.json({
+            success: true,
+            data: rows,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total: countResult[0].total,
+                totalPages: Math.ceil(countResult[0].total / limit)
+            }
+        });
+    } catch (error) {
+        console.error('获取审计日志失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
+});
+
+// ========== 新增：导出审计日志接口 ==========
+app.get('/api/audit-logs/export', async (req, res) => {
+    try {
+        const { action, startDate, endDate, userId, format = 'csv' } = req.query;
+        
+        let sql = 'SELECT id, action, user_id, details, ip_address, created_at FROM audit_logs WHERE 1=1';
+        const params = [];
+        
+        if (action) {
+            sql += ' AND action = ?';
+            params.push(action);
+        }
+        
+        if (userId) {
+            sql += ' AND user_id = ?';
+            params.push(userId);
+        }
+        
+        if (startDate && endDate) {
+            sql += ' AND created_at BETWEEN ? AND ?';
+            params.push(startDate, endDate);
+        }
+        
+        sql += ' ORDER BY created_at DESC';
+        
+        const [rows] = await pool.execute(sql, params);
+        
+        if (format === 'csv') {
+            const csv = [
+                'ID,操作类型,用户ID,详情,IP地址,时间',
+                ...rows.map(row => 
+                    `${row.id},${row.action},${row.user_id},${JSON.stringify(row.details)},${row.ip_address},${row.created_at}`
+                )
+            ].join('\n');
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename=audit-logs.csv');
+            res.send(csv);
+        } else {
+            res.json({ success: true, data: rows });
+        }
+    } catch (error) {
+        console.error('导出审计日志失败:', error);
+        res.status(500).json({ error: '服务器内部错误' });
+    }
 });
 
 // ========== 新增：数据库连接健康检查端点 ==========
@@ -1027,5 +1292,12 @@ app.get('/api/health/db', async (req, res) => {
         console.error('Database health check failed:', error);
         res.status(500).json({ success: false, message: 'Database connection failed', error: error.message });
     }
+});
+
+app.listen(port, () => {
+    console.log(`✅ API server running at http://localhost:${port}`);
+    pool.getConnection()
+        .then(conn => { console.log('✅ Database connected'); conn.release(); })
+        .catch(err => console.error('❌ Database connection failed:', err.message));
 });
 

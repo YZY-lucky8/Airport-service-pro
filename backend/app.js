@@ -1,7 +1,13 @@
+// ========== 基础依赖和配置 ==========
+require('dotenv').config(); // 必须在最开始加载环境变量
 const express = require('express');
 const path = require('path');// 引入 path 模块，解决路径问题
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+<<<<<<< HEAD
+const crypto = require('crypto');
+const path = require('path'); // 用于路径处理
+=======
 // ==================== 王晓恩添加位置 (开始) ====================
 // 🎯 生产级原生布隆过滤器（零依赖，机场正式环境推荐）
 class BloomFilter {
@@ -48,6 +54,7 @@ class BloomFilter {
         return Math.abs(hash);
     }
 }
+>>>>>>> 940c284f0a59355bb5d28d1d89786cecf8b5a41e
 
 // 初始化（生产环境可支持 10000 个黑名单 IP）
 const ipBlacklistFilter = new BloomFilter(10000, 0.001);
@@ -63,8 +70,14 @@ const bannedIPs = [
 bannedIPs.forEach(ip => ipBlacklistFilter.insert(ip));
 // ==================== 王晓恩添加位置 (结束) ====================
 const app = express();
-app.use(express.static('frontend'));   // 让浏览器能访问 frontend 文件夹里的网页
+<<<<<<< HEAD
+const port = process.env.PORT || 3000;
 
+// ========== 中间件配置 ==========
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+=======
 
 // 设置信任代理，以正确获取客户端 IP（解决 req.ip 未定义问题）
 app.set('trust proxy', true);
@@ -90,17 +103,26 @@ app.use((req, res, next) => {
 // ==================== 王晓恩添加位置 (结束) ====================
 app.use(cors());
 app.use(express.json());
+>>>>>>> 940c284f0a59355bb5d28d1d89786cecf8b5a41e
 
+// 修复静态文件路径 - 使用相对路径，兼容 Windows 和 Linux
+const publicDir = path.join(__dirname, '..', 'frontend', 'public');
+app.use(express.static(publicDir));
+
+// ========== 数据库连接池 ==========
 const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'project_user',
-    password: 'Airport123!',   // 请改为你的真实密码
-    database: 'airport_db',
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'project_user',
+    password: process.env.DB_PASSWORD || 'Airport123!',
+    database: process.env.DB_NAME || 'airport_terminal',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
+<<<<<<< HEAD
+// ========== 安全工具函数 ==========
+=======
 
 // ========== 滑动窗口频率检测中间件  杨梓瑜添加位置（开始）==========
 // ========== 滑动窗口频率检测中间件 ==========
@@ -374,6 +396,7 @@ const verifyToken = async (token, userId = 'guest') => {
 };
 // 安全日志记录函数
 // ========== 新增：令牌使用记录功能 ==========
+>>>>>>> 940c284f0a59355bb5d28d1d89786cecf8b5a41e
 const recordTokenUsage = async (token, userId = 'guest') => {
   try {
     const sql = 'INSERT INTO token_usage (token, user_id) VALUES (?, ?)';
@@ -384,6 +407,8 @@ const recordTokenUsage = async (token, userId = 'guest') => {
     return false;
   }
 };
+<<<<<<< HEAD
+=======
 
 const isTokenUsed = async (token) => {
   try {
@@ -785,10 +810,169 @@ app.use((req, res, next) => {
 });
 
 // ==================== 原有接口 ====================
+>>>>>>> 940c284f0a59355bb5d28d1d89786cecf8b5a41e
 
-// POST /api/log
+const isTokenUsed = async (token) => {
+  try {
+    const sql = 'SELECT id FROM token_usage WHERE token = ? LIMIT 1';
+    const [rows] = await pool.execute(sql, [token]);
+    return rows.length > 0;
+  } catch (error) {
+    console.error('检查令牌使用状态失败:', error);
+    return false;
+  }
+};
+
+const logSecurityEvent = async (eventType, details = {}) => {
+  try {
+    // 确保 details 是对象
+    const safeDetails = typeof details === 'object' && details !== null ? details : {};
+    const message = JSON.stringify({
+      ...safeDetails,
+      timestamp: new Date().toISOString()
+    });
+    const sql = 'INSERT INTO system_logs (module, level, message) VALUES (?, ?, ?)';
+    await pool.execute(sql, ['security', eventType.includes('failed') ? 'error' : 'info', message]);
+    return true;
+  } catch (error) {
+    console.error('安全日志记录失败:', error);
+    return false;
+  }
+};
+
+// ========== HMAC 令牌系统 ==========
+const generateToken = (userId = 'guest') => {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const nonce = crypto.randomBytes(16).toString('hex');
+  const message = `${timestamp}:${nonce}:${userId}`;
+  
+  // 验证 HMAC_SECRET 是否存在
+  if (!process.env.HMAC_SECRET) {
+    throw new Error('HMAC_SECRET environment variable is not set');
+  }
+  
+  const signature = crypto
+    .createHmac('sha256', process.env.HMAC_SECRET)
+    .update(message)
+    .digest('hex');
+  
+  return {
+    token: `${signature}:${timestamp}:${nonce}`,
+    timestamp,
+    nonce,
+    expires_in: parseInt(process.env.TOKEN_TTL) || 300
+  };
+};
+
+const verifyToken = async (token, userId = 'guest') => {
+  try {
+    // 安全的空值检查
+    if (!token || typeof token !== 'string') {
+      await logSecurityEvent('token_verification_failed', { reason: 'missing_or_invalid_token', userId });
+      return { valid: false, reason: 'invalid_format' };
+    }
+    
+    const parts = token.split(':');
+    if (parts.length !== 3) {
+      await logSecurityEvent('token_verification_failed', { reason: 'invalid_format', token, userId });
+      return { valid: false, reason: 'invalid_format' };
+    }
+    
+    const [signature, timestampStr, nonce] = parts;
+    
+    // 验证时间戳
+    const timestamp = parseInt(timestampStr, 10);
+    if (isNaN(timestamp)) {
+      await logSecurityEvent('token_verification_failed', { reason: 'invalid_timestamp', token, userId });
+      return { valid: false, reason: 'invalid_format' };
+    }
+    
+    const now = Math.floor(Date.now() / 1000);
+    const ttl = parseInt(process.env.TOKEN_TTL) || 300;
+    
+    if (now - timestamp > ttl) {
+      await logSecurityEvent('token_verification_failed', { reason: 'expired', token, userId });
+      return { valid: false, reason: 'expired' };
+    }
+    
+    if (timestamp > now + 300) { // 允许5分钟的时钟偏移
+      await logSecurityEvent('token_verification_failed', { reason: 'future_timestamp', token, userId });
+      return { valid: false, reason: 'future_timestamp' };
+    }
+    
+    const message = `${timestamp}:${nonce}:${userId}`;
+    const expectedSig = crypto
+      .createHmac('sha256', process.env.HMAC_SECRET)
+      .update(message)
+      .digest('hex');
+    
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(signature), 
+      Buffer.from(expectedSig)
+    );
+    
+    if (!isValid) {
+      await logSecurityEvent('token_verification_failed', { reason: 'invalid_signature', token, userId });
+      return { valid: false, reason: 'invalid_signature' };
+    }
+    
+    const isUsed = await isTokenUsed(token);
+    if (isUsed) {
+      await logSecurityEvent('token_verification_failed', { reason: 'replayed', token, userId });
+      return { valid: false, reason: 'replayed' };
+    }
+    
+    await recordTokenUsage(token, userId);
+    
+    return { valid: true, timestamp, nonce };
+  } catch (e) {
+    console.error('Token verification error:', e);
+    await logSecurityEvent('token_verification_error', { error: e.message, token, userId });
+    return { valid: false, reason: 'verification_error' };
+  }
+};
+
+// ========== 输入验证中间件 ==========
+const validateInput = (schema) => {
+  return (req, res, next) => {
+    const errors = [];
+    const data = req.body || {}; // 确保 data 不是 undefined
+    
+    for (const field in schema) {
+      const rules = schema[field];
+      const value = data[field];
+      
+      if (rules.required && (value === undefined || value === null || value === '')) {
+        errors.push(`${field} is required`);
+        continue;
+      }
+      
+      if (value !== undefined && value !== null) {
+        if (rules.type === 'string' && typeof value !== 'string') {
+          errors.push(`${field} must be a string`);
+        }
+        
+        if (rules.maxLength && typeof value === 'string' && value.length > rules.maxLength) {
+          errors.push(`${field} exceeds maximum length of ${rules.maxLength}`);
+        }
+        
+        if (rules.pattern && typeof value === 'string' && !rules.pattern.test(value)) {
+          errors.push(`${field} format is invalid`);
+        }
+      }
+    }
+    
+    if (errors.length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
+    
+    next();
+  };
+};
+
+// ==================== 原有接口 ====================
 app.post('/api/log', async (req, res) => {
-    const { module, level, message } = req.body;
+    const { module, level, message } = req.body || {};
     if (!module || !message) {
         return res.status(400).json({ error: '缺少必要字段' });
     }
@@ -802,7 +986,6 @@ app.post('/api/log', async (req, res) => {
     }
 });
 
-// GET /api/stats
 app.get('/api/stats', async (req, res) => {
     try {
         const [rows] = await pool.query(`
@@ -812,16 +995,15 @@ app.get('/api/stats', async (req, res) => {
                 AVG(avg_dwell_time) as avg_dwell_time_seconds
             FROM passenger_flow
         `);
-        res.json({ success: true, data: rows[0] });
+        res.json({ success: true, data: rows[0] || {} });
     } catch (error) {
         console.error('获取统计失败:', error);
         res.status(500).json({ error: '服务器内部错误' });
     }
 });
 
-// GET /api/logs?type=attack
 app.get('/api/logs', async (req, res) => {
-    const logType = req.query.type;
+    const logType = req.query?.type;
     if (logType !== 'attack') {
         return res.status(400).json({ error: '目前仅支持 type=attack 的查询' });
     }
@@ -835,7 +1017,6 @@ app.get('/api/logs', async (req, res) => {
     }
 });
 
-// GET /api/hourly-stats
 app.get('/api/hourly-stats', async (req, res) => {
     try {
         const sql = `
@@ -857,8 +1038,6 @@ app.get('/api/hourly-stats', async (req, res) => {
 });
 
 // ==================== 新增后台管理接口 ====================
-
-// 1. 数据监控摘要
 app.get('/api/admin/dashboard', async (req, res) => {
     try {
         const [terminals] = await pool.query(`
@@ -883,14 +1062,14 @@ app.get('/api/admin/dashboard', async (req, res) => {
         res.json({
             success: true,
             data: {
-                online_terminals: terminals[0].online,
-                total_terminals: terminals[0].total,
-                offline_terminals: terminals[0].offline,
-                fault_terminals: terminals[0].fault,
-                today_usage: todayUsage[0].total || 0,
+                online_terminals: terminals[0]?.online || 0,
+                total_terminals: terminals[0]?.total || 0,
+                offline_terminals: terminals[0]?.offline || 0,
+                fault_terminals: terminals[0]?.fault || 0,
+                today_usage: todayUsage[0]?.total || 0,
                 top_question: topQuestion[0]?.command_text || '暂无',
                 top_question_count: topQuestion[0]?.cnt || 0,
-                unhandled_alerts: unhandled[0].count,
+                unhandled_alerts: unhandled[0]?.count || 0,
                 inbound_traffic: '150Mbps',
                 outbound_traffic: '80Mbps',
                 cpu_usage: 45,
@@ -903,7 +1082,6 @@ app.get('/api/admin/dashboard', async (req, res) => {
     }
 });
 
-// 2. 终端状态列表
 app.get('/api/terminals', async (req, res) => {
     try {
         const [rows] = await pool.query(`
@@ -917,7 +1095,6 @@ app.get('/api/terminals', async (req, res) => {
     }
 });
 
-// 3. 告警列表
 app.get('/api/alerts', async (req, res) => {
     try {
         const [rows] = await pool.query(`
@@ -930,7 +1107,6 @@ app.get('/api/alerts', async (req, res) => {
     }
 });
 
-// 4. 使用统计（今日、本周、本月）
 app.get('/api/usage-stats', async (req, res) => {
     try {
         const [today] = await pool.query(`
@@ -948,9 +1124,9 @@ app.get('/api/usage-stats', async (req, res) => {
         res.json({
             success: true,
             data: {
-                today: today[0].total || 0,
-                week: week[0].total || 0,
-                month: month[0].total || 0
+                today: today[0]?.total || 0,
+                week: week[0]?.total || 0,
+                month: month[0]?.total || 0
             }
         });
     } catch (error) {
@@ -959,7 +1135,6 @@ app.get('/api/usage-stats', async (req, res) => {
     }
 });
 
-// 5. 高频问题统计
 app.get('/api/faq-stats', async (req, res) => {
     try {
         const [rows] = await pool.query(`
@@ -977,7 +1152,6 @@ app.get('/api/faq-stats', async (req, res) => {
     }
 });
 
-// 6. 呼叫记录
 app.get('/api/call-records', async (req, res) => {
     try {
         const [rows] = await pool.query(`
@@ -991,14 +1165,13 @@ app.get('/api/call-records', async (req, res) => {
     }
 });
 
-// 7. 攻击防护状态
 app.get('/api/attack-status', async (req, res) => {
     try {
         const [attackRecent] = await pool.query(`
             SELECT COUNT(*) as count FROM attack_log 
             WHERE create_time >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
         `);
-        const status = attackRecent[0].count > 0 ? '检测到攻击' : '正常';
+        const status = attackRecent[0]?.count > 0 ? '检测到攻击' : '正常';
         res.json({
             success: true,
             data: {
@@ -1015,9 +1188,125 @@ app.get('/api/attack-status', async (req, res) => {
     }
 });
 
+// ========== 新增：生成令牌接口 ==========
+app.get('/api/token/generate', async (req, res) => {
+  try {
+    // 安全地获取 userId
+    const userId = (req.query?.userId && typeof req.query.userId === 'string') ? req.query.userId : 'guest';
+    const tokenData = generateToken(userId);
+    
+    await logSecurityEvent('token_generated', {
+      userId,
+      timestamp: tokenData.timestamp,
+      nonce: tokenData.nonce
+    });
+    
+    res.json({
+      success: true,
+      token: tokenData.token,
+      expires_in: tokenData.expires_in,
+      timestamp: tokenData.timestamp
+    });
+  } catch (error) {
+    console.error('Token generation error:', error);
+    await logSecurityEvent('token_generation_failed', { error: error.message });
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
+
+// ========== 新增：值机接口（受令牌保护） ==========
+app.post('/api/check-in', 
+  validateInput({
+    flightNumber: { required: true, type: 'string', pattern: /^[A-Z0-9]{4,10}$/ },
+    passengerName: { required: true, type: 'string', maxLength: 100 }
+  }),
+  async (req, res) => {
+    try {
+      // 安全地获取 token
+      let token = null;
+      if (req.query?.token && typeof req.query.token === 'string') {
+        token = req.query.token;
+      } else if (req.headers?.['x-token'] && typeof req.headers['x-token'] === 'string') {
+        token = req.headers['x-token'];
+      }
+      
+      if (!token) {
+        await logSecurityEvent('missing_token', { ip: req.ip, path: req.path });
+        return res.status(401).json({ success: false, error: 'Missing token' });
+      }
+      
+      // 安全地获取 userId
+      const userId = (req.cookies?.userId && typeof req.cookies.userId === 'string') ? req.cookies.userId : 'guest';
+      const verificationResult = await verifyToken(token, userId);
+      
+      if (!verificationResult.valid) {
+        const reasonMap = {
+          'expired': 'Token expired',
+          'invalid_signature': 'Invalid signature',
+          'replayed': 'Token has been used',
+          'invalid_format': 'Invalid token format',
+          'future_timestamp': 'Invalid timestamp',
+          'verification_error': 'Verification error'
+        };
+        
+        return res.status(401).json({
+          success: false,
+          error: reasonMap[verificationResult.reason] || 'Invalid token'
+        });
+      }
+      
+      const { flightNumber, passengerName } = req.body;
+      
+      await logSecurityEvent('check_in', {
+        userId,
+        flightNumber,
+        passengerName,
+        timestamp: new Date().toISOString()
+      });
+      
+      res.json({
+        success: true,
+        message: 'Check-in completed successfully',
+        data: {
+          flightNumber,
+          passengerName,
+          timestamp: new Date().toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Check-in error:', error);
+      await logSecurityEvent('check_in_failed', { error: error.message });
+      res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+  }
+);
+
+// ========== 健康检查和启动 ==========
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        service: 'Airport Terminal API'
+    });
+});
+
 app.listen(port, () => {
     console.log(`✅ API server running at http://localhost:${port}`);
+    console.log(`📋 Health check: http://localhost:${port}/health`);
+    
+    // 测试数据库连接
     pool.getConnection()
+<<<<<<< HEAD
+        .then(conn => { 
+            console.log('✅ Database connected'); 
+            conn.release(); 
+        })
+        .catch(err => {
+            console.error('❌ Database connection failed:', err.message);
+            console.error('💡 Please check your database configuration and .env file');
+        });
+});
+=======
         .then(conn => { console.log('✅ Database connected'); conn.release(); })
         .catch(err => console.error('❌ Database connection failed:', err.message));
 });
@@ -1033,3 +1322,4 @@ app.get('/api/health/db', async (req, res) => {
     }
 });
 
+>>>>>>> 940c284f0a59355bb5d28d1d89786cecf8b5a41e

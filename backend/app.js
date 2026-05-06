@@ -23,6 +23,7 @@ class BloomFilter {
         }
     }
     has(item) {
+        if (!item) return false;
         let h1 = this._hash1(item);
         let h2 = this._hash2(item);
         for (let i = 0; i < this.hashCount; i++) {
@@ -34,6 +35,7 @@ class BloomFilter {
         return true;
     }
     _hash1(str) {
+        if (!str) str = '';
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;

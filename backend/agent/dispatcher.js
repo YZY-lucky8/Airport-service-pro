@@ -43,6 +43,7 @@ const KnowledgeRetriever = require('./knowledge-retriever');
 const ItineraryAdvisor = require('./itinerary-advisor');
 const EmotionModule = require('./emotion-module');
 const SecurityManagementAgent = require('./security-management');
+const { LLMManager } = require('./llm-adapter');
 
 // 允许的动作白名单（最小权限原则）
 const ALLOWED_ACTIONS = new Set([
@@ -59,7 +60,7 @@ const ALLOWED_ACTIONS = new Set([
 ]);
 
 class AgentDispatcher {
-  constructor(pool) {
+  constructor(pool, llmConfig = {}) {
     this.pool = pool;
 
     // 初始化各模块
@@ -69,9 +70,34 @@ class AgentDispatcher {
     this.itinerary = new ItineraryAdvisor(pool);
     this.emotion = new EmotionModule();
     this.securityAgent = new SecurityManagementAgent(pool);
+    this.llm = new LLMManager();
+    if (llmConfig.provider) {
+      this.llm.register(llmConfig.provider, llmConfig);
+      this.llm.switchProvider(llmConfig.provider);
+    }
 
     // 审计日志
     this.auditLog = [];
+  }
+
+  /**
+   * 运行时切换 LLM 配置
+   * @param {Object} config - { provider, model, apiKey, baseUrl, temperature, fallbackChain }
+   */
+  switchLLM(config) {
+    const { provider, ...rest } = config;
+    if (rest.apiKey || rest.baseUrl) {
+      this.llm.register(provider, rest);
+    }
+    const result = this.llm.switchProvider(provider);
+    return { success: result.success, provider: result.provider || provider, status: result.status || 'unknown' };
+  }
+
+  /**
+   * 获取 LLM 使用统计
+   */
+  getLLMStats() {
+    return this.llm.getAllStats();
   }
 
   /**

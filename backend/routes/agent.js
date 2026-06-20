@@ -342,6 +342,62 @@ router.get('/knowledge/stats', async (req, res) => {
 });
 
 /**
+ * POST /api/agent/llm/switch
+ * 运行时切换 LLM 大脑
+ */
+router.post('/llm/switch', async (req, res) => {
+  if (!agent) {
+    return res.status(503).json({ success: false, error: 'Agent 未初始化' });
+  }
+
+  try {
+    const { provider, model, apiKey, baseUrl, temperature, fallbackChain, systemPrompt } = req.body;
+
+    if (!provider) {
+      return res.status(400).json({ success: false, error: '请指定 provider（rule_engine | openai | vllm | claude | dashscope）' });
+    }
+
+    const result = agent.switchLLM({
+      provider,
+      model: model || 'none',
+      apiKey: apiKey || '',
+      baseUrl: baseUrl || '',
+      temperature: temperature ?? 0.3,
+      fallbackChain: fallbackChain || [],
+      systemPrompt: systemPrompt || '',
+    });
+
+    try {
+      await agent.pool.execute(`
+        INSERT INTO security_audit_logs (username, action_type, action_content, ip_address, result)
+        VALUES (?, ?, ?, ?, ?)
+      `, [
+        req.body.approved_by || 'admin',
+        'llm_switch',
+        `LLM 切换: ${provider} / ${model || 'none'}`,
+        req.ip || 'unknown',
+        'success',
+      ]);
+    } catch (e) {}
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * GET /api/agent/llm/stats
+ * LLM 使用统计
+ */
+router.get('/llm/stats', async (req, res) => {
+  if (!agent) {
+    return res.status(503).json({ success: false, error: 'Agent 未初始化' });
+  }
+  res.json({ success: true, data: agent.getLLMStats() });
+});
+
+/**
  * GET /api/agent/knowledge/list
  * 知识库列表
  */

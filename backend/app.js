@@ -1294,10 +1294,32 @@ app.get('/api/health/db', async (req, res) => {
     }
 });
 
+// ============================================================
+// 🔒 智能体系统路由注册 (Agent System)
+// 基于 LangGraph 有向图状态机 + VeriGuard 形式化验证
+// 参考：Multi-Agent Defense Pipeline (IEEE 2025)
+// ============================================================
+try {
+    const { router: agentRouter, initAgent } = require('./routes/agent');
+    app.use('/api/agent', agentRouter);
+} catch (e) {
+    console.log('⚠️  智能体路由加载失败（模块未找到）:', e.message);
+}
+
 app.listen(port, () => {
     console.log(`✅ API server running at http://localhost:${port}`);
     pool.getConnection()
-        .then(conn => { console.log('✅ Database connected'); conn.release(); })
+        .then(async conn => {
+            console.log('✅ Database connected');
+            conn.release();
+            // 初始化智能体系统
+            try {
+                const { initAgent } = require('./routes/agent');
+                initAgent(pool);
+            } catch (e) {
+                console.log('⚠️  智能体初始化失败:', e.message);
+            }
+        })
         .catch(err => console.error('❌ Database connection failed:', err.message));
 });
 

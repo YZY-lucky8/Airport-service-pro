@@ -228,8 +228,8 @@ class IntentClassifier {
     const flightMatch = text.match(/([A-Za-z]{2}\d{3,4})/);
     if (flightMatch) entities.flight_no = flightMatch[1];
 
-    // 登机口（A/B/C+数字）
-    const gateMatch = text.match(/[A-Ca-c]\d{1,3}/);
+    // 登机口（D/E+数字，机场常见）
+    const gateMatch = text.match(/[DE]\d{1,3}/);
     if (gateMatch) entities.gate = gateMatch[0].toUpperCase();
 
     // 地点偏好

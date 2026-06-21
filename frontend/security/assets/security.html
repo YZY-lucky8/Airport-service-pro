@@ -1295,6 +1295,41 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- ===== Agent 监控面板 ===== -->
+                    <div class="stats-row" style="margin-top:24px;">
+                        <div class="stat-card">
+                            <div class="stat-label">Agent 总交互数</div>
+                            <div class="stat-value primary" id="agentTotalInteractions">--</div>
+                            <div class="stat-desc">累计对话轮次</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">今日交互数</div>
+                            <div class="stat-value success" id="agentTodayInteractions">--</div>
+                            <div class="stat-desc">今日新增</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Guardrail 拦截</div>
+                            <div class="stat-value danger" id="agentGuardrailBlocks">--</div>
+                            <div class="stat-desc">触发安全拦截</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">平均延迟</div>
+                            <div class="stat-value warning" id="agentAvgLatency">--</div>
+                            <div class="stat-desc">单位：毫秒</div>
+                        </div>
+                    </div>
+
+                    <div class="charts-row">
+                        <div class="chart-container">
+                            <div class="chart-title">意图分布</div>
+                            <div class="chart small" id="agentIntentChart"></div>
+                        </div>
+                        <div class="chart-container">
+                            <div class="chart-title">情感分布</div>
+                            <div class="chart small" id="agentEmotionChart"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 页面2：滑动窗口限流 -->
@@ -2260,35 +2295,59 @@
             passwordInput.type = type;
         }
 
+        // 认证相关工具函数
+        function getAuthToken() {
+            return localStorage.getItem('admin_token') || '';
+        }
+
+        function authHeaders() {
+            const h = { 'Content-Type': 'application/json' };
+            const token = getAuthToken();
+            if (token) {
+                h['Authorization'] = `Bearer ${token}`;
+            }
+            return h;
+        }
+
         const API_BASE_URL = 'http://127.0.0.1:3000';
 
-        // 通用API调用函数
+        // 通用API调用函数（自动附加 auth header，401 时重定向登录）
         async function apiCall(endpoint, options = {}) {
             const defaultOptions = {
                 method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: authHeaders(),
             };
-            
+
             const config = { ...defaultOptions, ...options };
+            // 如果 options.headers 被传入了，合并 auth headers
+            if (options.headers) {
+                config.headers = { ...authHeaders(), ...options.headers };
+            }
             const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
-            
+
             try {
                 const response = await fetch(url, config);
                 const contentType = response.headers.get('content-type') || '';
                 const isJson = contentType.includes('application/json');
                 const data = isJson ? await response.json() : await response.text();
-                
+
+                // 401 未授权 → 清除 token 并重定向到登录页
+                if (response.status === 401) {
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_username');
+                    window.location.reload();
+                    throw new Error('登录已过期，请重新登录');
+                }
+
                 if (!response.ok) {
                     const message = isJson ? (data.error || `HTTP ${response.status}`) : data;
                     throw new Error(message);
                 }
-                
+
                 if (!isJson) {
                     throw new Error(`服务器返回非JSON内容: ${data}`);
                 }
-                
+
                 return data;
             } catch (error) {
                 console.error('API call failed:', error);
@@ -2577,24 +2636,42 @@
             }
         }
 
-        // 登录处理
-        function handleLogin(event) {
+        // 登录处理（对接后端 /api/auth/login）
+        async function handleLogin(event) {
             event.preventDefault();
             const username = document.getElementById('username')?.value.trim();
             const password = document.getElementById('password')?.value;
             const errorEl = document.getElementById('loginError');
 
-            if (username === 'admin' && password === 'admin') {
-                errorEl.style.display = 'none';
-                document.getElementById('loginContainer').style.display = 'none';
-                document.getElementById('mainApp').classList.add('show');
-                initCharts();
-                loadPageData('logs');
-                loadPageData('audit');
-                return;
-            }
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
 
-            errorEl.style.display = 'block';
+                if (data.success) {
+                    errorEl.style.display = 'none';
+                    localStorage.setItem('admin_token', data.token);
+                    localStorage.setItem('admin_username', data.username);
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('mainApp').classList.add('show');
+                    // 更新用户名显示
+                    const userSpan = document.querySelector('.header-user span');
+                    if (userSpan) userSpan.textContent = data.username;
+                    initCharts();
+                    loadPageData('logs');
+                    loadPageData('audit');
+                } else {
+                    errorEl.textContent = data.error || '用户名或密码错误，请重试';
+                    errorEl.style.display = 'block';
+                }
+            } catch (e) {
+                console.error('登录失败:', e);
+                errorEl.textContent = '网络错误，请检查后端服务';
+                errorEl.style.display = 'block';
+            }
         }
 
         // 图表初始化
@@ -2951,9 +3028,11 @@
 
         // 退出登录
         function logout() {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_username');
             document.getElementById('mainApp').classList.remove('show');
             document.getElementById('loginContainer').style.display = 'flex';
-            document.getElementById('password').value = 'admin';
+            document.getElementById('password').value = '';
         }
 
         // 页面加载完成后初始化

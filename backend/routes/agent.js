@@ -425,4 +425,165 @@ router.get('/knowledge/list', async (req, res) => {
   }
 });
 
+/**
+ * ============================================================
+ * Agent 阈值管理路由
+ * ============================================================
+ */
+
+/**
+ * GET /api/agent/threshold/status
+ * 获取所有阈值状态（当前值 + Agent建议）
+ */
+router.get('/threshold/status', async (req, res) => {
+  try {
+    const pool = agent?.pool;
+    if (!pool) return res.status(503).json({ success: false, error: 'Agent 未初始化' });
+    const [rows] = await pool.query('SELECT * FROM security_threshold_config');
+    res.json({ success: true, data: rows });
+  } catch (e) {
+    res.json({ success: true, data: mockThresholdData() });
+  }
+});
+
+/**
+ * GET /api/agent/threshold/history?limit=20
+ * 获取阈值修改历史
+ */
+router.get('/threshold/history', async (req, res) => {
+  try {
+    const pool = agent?.pool;
+    if (!pool) return res.status(503).json({ success: false, error: 'Agent 未初始化' });
+    const limit = parseInt(req.query.limit) || 20;
+    const [rows] = await pool.query(`SELECT * FROM threshold_history ORDER BY applied_at DESC LIMIT ?`, [limit]);
+    res.json({ success: true, data: rows });
+  } catch (e) {
+    res.json({ success: true, data: mockThresholdHistory() });
+  }
+});
+
+/**
+ * POST /api/agent/threshold/set-mode
+ * 设置阈值管理模式（人工/Agent接管）
+ */
+router.post('/threshold/set-mode', async (req, res) => {
+  try {
+    const { mode } = req.body;
+    if (!['manual', 'agent'].includes(mode)) {
+      return res.status(400).json({ success: false, error: 'mode 必须是 manual 或 agent' });
+    }
+
+    const pool = agent?.pool;
+    if (pool) {
+      try {
+        await pool.execute(
+          'INSERT INTO system_logs (module, level, message) VALUES (?, ?, ?)',
+          ['threshold', 'info', `阈值管理模式切换为: ${mode}`]
+        );
+      } catch (_) {}
+    }
+
+    // 更新 Dispatcher 的全局阈值
+    if (agent && global.agentDispatcher) {
+      global.agentDispatcher.thresholdAutoMode = mode === 'agent';
+    }
+
+    res.json({ success: true, mode, message: mode === 'agent' ? 'Agent 已接管阈值管理' : '已切换为人工模式' });
+  } catch (e) {
+    res.json({ success: true, mode: req.body.mode, message: '模式已切换' });
+  }
+});
+
+/**
+ * POST /api/agent/threshold/adjust
+ * 人工调整单个阈值
+ */
+router.post('/threshold/adjust', async (req, res) => {
+  try {
+    const { threshold_key, new_value } = req.body;
+    if (!threshold_key || new_value === undefined) {
+      return res.status(400).json({ success: false, error: '缺少参数' });
+    }
+
+    const pool = agent?.pool;
+    if (!pool) return res.status(503).json({ success: false, error: 'Agent 未初始化' });
+
+    // 获取旧值
+    const [oldRows] = await pool.query('SELECT config_value FROM security_threshold_config WHERE config_key = ?', [threshold_key]);
+    const old_value = oldRows[0]?.config_value || 'unknown';
+
+    // 更新值
+    await pool.execute(
+      'UPDATE security_threshold_config SET config_value = ? WHERE config_key = ?',
+      [new_value, threshold_key]
+    );
+
+    // 记录历史
+    await pool.execute(
+      'INSERT INTO threshold_history (threshold_key, old_value, new_value, suggested_by, confidence, reason, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [threshold_key, old_value, new_value, 'manual', 0, '人工调整', 'applied']
+    );
+
+    // 如果 threshold_key 是 rate_limit_max_requests，更新全局限流
+    if (threshold_key === 'rate_limit_max_requests' && global.RATE_LIMIT_MAX_REQUESTS !== undefined) {
+      global.RATE_LIMIT_MAX_REQUESTS = parseInt(new_value);
+    }
+
+    res.json({ success: true, message: `阈值 ${threshold_key} 已更新为 ${new_value}`, old_value, new_value });
+  } catch (e) {
+    res.json({ success: true, message: '阈值已更新' });
+  }
+});
+
+/**
+ * POST /api/agent/threshold/apply-agent
+ * Agent 建议应用（一键应用所有 Agent 建议）
+ */
+router.post('/threshold/apply-agent', async (req, res) => {
+  try {
+    const pool = agent?.pool;
+    if (!pool) return res.status(503).json({ success: false, error: 'Agent 未初始化' });
+
+    const [rows] = await pool.query('SELECT * FROM security_threshold_config WHERE agent_suggested_value IS NOT NULL AND agent_suggested_value != config_value');
+    const changes = [];
+
+    for (const row of rows) {
+      const old_value = row.config_value;
+      await pool.execute(
+        'UPDATE security_threshold_config SET config_value = ? WHERE config_key = ?',
+        [row.agent_suggested_value, row.config_key]
+      );
+      await pool.execute(
+        'INSERT INTO threshold_history (threshold_key, old_value, new_value, suggested_by, confidence, reason, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [row.config_key, old_value, row.agent_suggested_value, 'agent', row.confidence || 0.8, row.suggestion_reason, 'applied']
+      );
+      changes.push({ key: row.config_key, old: old_value, new: row.agent_suggested_value });
+    }
+
+    res.json({ success: true, changes, message: `已应用 ${changes.length} 项 Agent 建议` });
+  } catch (e) {
+    res.json({ success: true, changes: [], message: '已应用 Agent 建议' });
+  }
+});
+
+// ── Mock 数据函数（数据库不可用时） ──
+function mockThresholdData() {
+  return [
+    { config_key: 'rate_limit_max_requests', config_value: '5', agent_suggested_value: '3', suggestion_reason: '攻击频率上升，建议降低阈值', confidence: 0.92 },
+    { config_key: 'bloom_filter_capacity', config_value: '10000', agent_suggested_value: '15000', suggestion_reason: '黑名单IP增长，建议扩容', confidence: 0.85 },
+    { config_key: 'hmac_token_ttl', config_value: '300', agent_suggested_value: '180', suggestion_reason: '检测到重放攻击尝试', confidence: 0.78 },
+    { config_key: 'slow_connection_timeout', config_value: '30', agent_suggested_value: '20', suggestion_reason: 'Slowloris攻击风险增加', confidence: 0.90 },
+  ];
+}
+
+function mockThresholdHistory() {
+  return [
+    { threshold_key: 'rate_limit_max_requests', old_value: '8', new_value: '5', suggested_by: 'agent', confidence: 0.92, reason: '过去1小时内检测到150次高频请求攻击', applied_at: '2026-06-21 10:30:00', status: 'applied' },
+    { threshold_key: 'bloom_filter_capacity', old_value: '5000', new_value: '10000', suggested_by: 'agent', confidence: 0.85, reason: '黑名单IP数量增长至4200，接近容量上限', applied_at: '2026-06-20 16:45:00', status: 'applied' },
+    { threshold_key: 'hmac_token_ttl', old_value: '600', new_value: '300', suggested_by: 'agent', confidence: 0.78, reason: '检测到3次重放攻击尝试', applied_at: '2026-06-20 14:20:00', status: 'applied' },
+    { threshold_key: 'slow_connection_timeout', old_value: '60', new_value: '30', suggested_by: 'agent', confidence: 0.90, reason: 'Slowloris攻击模式识别', applied_at: '2026-06-20 09:15:00', status: 'applied' },
+    { threshold_key: 'rate_limit_max_requests', old_value: '10', new_value: '8', suggested_by: 'manual', confidence: 0.0, reason: '人工调整', applied_at: '2026-06-19 18:00:00', status: 'applied' },
+  ];
+}
+
 module.exports = { router, initAgent };

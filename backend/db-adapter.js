@@ -319,6 +319,18 @@ function initSQLiteSchema(sqlite) {
       check_in_status TEXT DEFAULT '未值机',
       seat_number TEXT, baggage_count INTEGER DEFAULT 0
     );
+
+    CREATE TABLE IF NOT EXISTS threshold_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      threshold_key TEXT NOT NULL,
+      old_value TEXT,
+      new_value TEXT,
+      suggested_by TEXT DEFAULT 'agent',
+      confidence REAL,
+      reason TEXT,
+      applied_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      status TEXT DEFAULT 'applied'
+    );
   `);
 
   // 插入初始数据
@@ -397,8 +409,20 @@ function initSQLiteData(sqlite) {
   const insCritical = sqlite.prepare('INSERT OR IGNORE INTO critical_services (path, description, enabled) VALUES (?, ?, ?)');
   critical.forEach(c => insCritical.run(...c));
 
-  // 阈值配置
-  sqlite.prepare("INSERT OR IGNORE INTO security_threshold_config (config_key, config_value) VALUES ('rate_limit_max_requests', '5')").run();
+  // 阈值配置初始值
+  const thresholdInit = sqlite.prepare('INSERT OR IGNORE INTO security_threshold_config (config_key, config_value, agent_suggested_value, suggestion_reason) VALUES (?, ?, ?, ?)');
+  thresholdInit.run('rate_limit_max_requests', '5', '3', '攻击频率上升，建议降低阈值');
+  thresholdInit.run('bloom_filter_capacity', '10000', '15000', '黑名单IP增长，建议扩容');
+  thresholdInit.run('hmac_token_ttl', '300', '180', '检测到重放攻击尝试');
+  thresholdInit.run('slow_connection_timeout', '30', '20', 'Slowloris攻击风险增加');
+
+  // 阈值修改历史
+  const historyInit = sqlite.prepare('INSERT OR IGNORE INTO threshold_history (threshold_key, old_value, new_value, suggested_by, confidence, reason, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  historyInit.run('rate_limit_max_requests', '8', '5', 'agent', 0.92, '过去1小时内检测到150次高频请求攻击', 'applied');
+  historyInit.run('bloom_filter_capacity', '5000', '10000', 'agent', 0.85, '黑名单IP数量增长至4200，接近容量上限', 'applied');
+  historyInit.run('hmac_token_ttl', '600', '300', 'agent', 0.78, '检测到3次重放攻击尝试', 'applied');
+  historyInit.run('slow_connection_timeout', '60', '30', 'agent', 0.90, 'Slowloris攻击模式识别', 'applied');
+  historyInit.run('rate_limit_max_requests', '10', '8', 'manual', 0.0, '人工调整', 'applied');
 
   // HMAC 配置
   sqlite.prepare("INSERT OR IGNORE INTO hmac_config (algorithm, token_ttl) VALUES ('sha256', 300)").run();

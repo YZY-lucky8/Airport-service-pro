@@ -107,8 +107,8 @@ app.use((req, res, next) => {
 
 // ── 滑动窗口频率检测 ──
 const requestCounts = new Map();
-const RATE_LIMIT_WINDOW_MS = 1000;
-const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 2000;
+const RATE_LIMIT_MAX_REQUESTS = 15;
 
 app.use((req, res, next) => {
     const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;

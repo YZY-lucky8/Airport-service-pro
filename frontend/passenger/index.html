@@ -261,42 +261,122 @@
       left: 0;
     }
 
+    /* ── 文本输入 + 语音控制条 ── */
     .ctrl-bar {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(18px);
-      border-radius: 80px;
-      padding: 12px 20px;
+      border-radius: 60px;
+      padding: 10px 16px;
       display: flex;
-      gap: 20px;
+      gap: 10px;
+      align-items: center;
+      border: 1.5px solid rgba(100, 160, 220, 0.6);
+      box-shadow: 0 2px 12px rgba(13, 71, 161, 0.08);
+    }
+
+    .text-input-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .text-input-wrap input {
+      width: 100%;
+      padding: 12px 52px 12px 20px;
+      border: 1.5px solid #c8e1f5;
+      border-radius: 48px;
+      font-size: 16px;
+      outline: none;
+      transition: 0.2s;
+      background: #f8fbff;
+      color: #1e293b;
+    }
+
+    .text-input-wrap input:focus {
+      border-color: #1565C0;
+      box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+      background: #fff;
+    }
+
+    .text-input-wrap input::placeholder {
+      color: #94a3b8;
+    }
+
+    .send-btn {
+      position: absolute;
+      right: 6px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1565C0, #0d47a1);
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
       justify-content: center;
-      border: 1px solid rgba(100, 160, 220, 0.5);
+      transition: 0.15s;
+    }
+
+    .send-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.4);
+    }
+
+    .send-btn:active {
+      transform: scale(0.95);
     }
 
     .mic-btn {
-      width: 68px;
-      height: 68px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
       background: linear-gradient(135deg, #1565C0, #0a2f5a);
       border: none;
-      font-size: 32px;
+      font-size: 26px;
       color: white;
       cursor: pointer;
-      transition: 0.1s;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+    }
+
+    .mic-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 20px rgba(21, 101, 192, 0.4);
     }
 
     .mic-btn:active {
-      transform: scale(0.96);
+      transform: scale(0.94);
+    }
+
+    .mic-btn.listening {
+      background: linear-gradient(135deg, #e53935, #c62828);
+      animation: micPulse 1s infinite;
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5); }
+      50% { box-shadow: 0 0 0 12px rgba(229, 57, 53, 0); }
     }
 
     .stop-btn {
       background: #f0f7ff;
-      border: 1px solid #90CAF9;
-      padding: 12px 32px;
+      border: 1.5px solid #90CAF9;
+      padding: 10px 22px;
       border-radius: 48px;
       font-weight: 600;
+      font-size: 14px;
       cursor: pointer;
       color: #0a2f5a;
+      flex-shrink: 0;
+      transition: 0.15s;
+    }
+
+    .stop-btn:hover {
+      background: #e3f2fd;
     }
 
     /* 右侧对话 */
@@ -377,6 +457,60 @@
     .elder-mode .func-btn {
       font-size: 20px !important;
       padding: 16px !important;
+    }
+
+    /* ── 打字中动画 ── */
+    .typing-indicator {
+      display: flex;
+      gap: 5px;
+      padding: 14px 20px;
+      align-self: flex-start;
+      background: #f0f7ff;
+      border: 1px solid #b9d9ff;
+      border-radius: 28px;
+      border-bottom-left-radius: 8px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #1565C0;
+      border-radius: 50%;
+      animation: typingBounce 1.2s infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-8px); opacity: 1; }
+    }
+
+    /* ── Agent 状态标签 ── */
+    .agent-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: #e8f5e9;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #2e7d32;
+      font-weight: 500;
+    }
+
+    .agent-status-dot {
+      width: 6px;
+      height: 6px;
+      background: #4caf50;
+      border-radius: 50%;
+      animation: statusPulse 2s infinite;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
     }
 
     /* 地图标记 */
@@ -525,7 +659,7 @@
       color: white;
     }
 
-    /* ========== 选座模块（布局修正版） ========== */
+    /* ========== 选座模块(布局修正版) ========== */
     .seat-modal-content {
       display: flex;
       flex-direction: column;
@@ -658,7 +792,7 @@
       color: #1565C0;
     }
 
-    /* 右侧飞机俯视图（修正对齐） */
+    /* 右侧飞机俯视图(修正对齐) */
     .plane-view-area {
       flex: 1;
       background: #eef4fc;
@@ -729,7 +863,7 @@
       z-index: 2;
     }
 
-    /* 舱位标签（不遮挡座位，不偏移） */
+    /* 舱位标签(不遮挡座位,不偏移) */
     .cabin-section {
       position: absolute;
       left: 50%;
@@ -921,7 +1055,7 @@
       <div class="id-tip">请将身份证放置感应区</div>
     </div>
     <div class="id-success-box" id="idSuccessBox">
-      <div class="id-success-text">身份识别成功，请确认身份进入</div>
+      <div class="id-success-text">身份识别成功,请确认身份进入</div>
       <button class="id-confirm-btn" id="idConfirmBtn">确认进入系统</button>
     </div>
   </div>
@@ -952,8 +1086,12 @@
           </div>
         </div>
         <div class="ctrl-bar">
-          <button class="mic-btn" id="micBtn">🎤</button>
-          <button class="stop-btn" id="stopBtn">⏹️ 停止播报</button>
+          <button class="mic-btn" id="micBtn" title="语音输入">🎤</button>
+          <div class="text-input-wrap">
+            <input type="text" id="textInput" placeholder="输入问题,如:帮我查CA1234航班、导航到安检..." autocomplete="off">
+            <button class="send-btn" id="sendBtn" title="发送">➤</button>
+          </div>
+          <button class="stop-btn" id="stopBtn">⏹️ 停止</button>
         </div>
       </div>
 
@@ -974,8 +1112,8 @@
         </div>
         <div class="chat-box" id="chatBox">
           <div class="chat-bubble system-bubble">✈️ 欢迎使用首都机场T3智慧服务</div>
-          <div class="chat-bubble system-bubble">🎤 点击麦克风说话，或点击下方按钮导航</div>
-          <div class="chat-bubble system-bubble">👴 语音指令：老人机模式 → 字体放大</div>
+          <div class="chat-bubble system-bubble">🎤 点击麦克风说话,或点击下方按钮导航</div>
+          <div class="chat-bubble system-bubble">👴 语音指令:老人机模式 → 字体放大</div>
         </div>
       </div>
     </div>
@@ -989,10 +1127,10 @@
       <div class="safety-header"><span style="font-size:32px;">✈️</span>
         <h2>航班安全须知</h2>
       </div>
-      <div class="safety-tip">请仔细阅读，<span id="countdown">5</span>秒后可进入选座</div>
+      <div class="safety-tip">请仔细阅读,<span id="countdown">5</span>秒后可进入选座</div>
       <div class="safety-content">
         <h3>⚠️ 1. 紧急出口位置</h3>
-        <p>位于12-13排，请勿堆放行李。</p>
+        <p>位于12-13排,请勿堆放行李。</p>
         <h3>🫁 2. 氧气面罩</h3>
         <p>先戴好自己的面罩再帮助他人。</p>
         <h3>🔒 3. 全程系好安全带</h3>
@@ -1003,11 +1141,11 @@
         <p>机舱全段禁烟。</p>
       </div>
       <div class="safety-btn-group"><button class="safety-btn safety-btn-back" id="safetyBack">返回主页</button><button
-          class="safety-btn safety-btn-next" id="safetyNext" disabled>已阅读，选座</button></div>
+          class="safety-btn safety-btn-next" id="safetyNext" disabled>已阅读,选座</button></div>
     </div>
   </div>
 
-  <!-- 选座弹窗（布局已修正） -->
+  <!-- 选座弹窗(布局已修正) -->
   <div class="modal" id="seatModal">
     <div class="modal-content">
       <div class="seat-modal-content">
@@ -1062,9 +1200,9 @@
         </div>
         <div class="seat-bottom-bar">
           <div class="selected-summary">
-            <div class="summary-item">已选座位：<span class="value" id="summarySeat">--</span></div>
-            <div class="summary-item">位置：<span class="value" id="summaryPos">--</span></div>
-            <div class="summary-item">加价：<span class="value" id="summaryPrice">--</span></div>
+            <div class="summary-item">已选座位:<span class="value" id="summarySeat">--</span></div>
+            <div class="summary-item">位置:<span class="value" id="summaryPos">--</span></div>
+            <div class="summary-item">加价:<span class="value" id="summaryPrice">--</span></div>
           </div>
           <div class="seat-btn-group"><button class="seat-btn-back" id="seatBack">返回</button><button
               class="seat-btn-confirm" id="seatConfirm" disabled>确认选座</button></div>
@@ -1075,6 +1213,12 @@
   <div class="selected-seat-toast" id="seatToast"><span>✓</span><span id="toastText"></span></div>
 
   <script>
+    // ============================================================
+    // 全局状态
+    // ============================================================
+    let agentSessionToken = null; // Agent session token
+    let isAgentReplying = false;  // 防止重复发送
+
     // -------------------- 身份证页面 --------------------
     function initIdCard() {
       const idPage = document.getElementById('idCardPage');
@@ -1082,22 +1226,166 @@
       const idSuccess = document.getElementById('idSuccessBox');
       const idBtn = document.getElementById('idConfirmBtn');
       const mainApp = document.getElementById('mainApp');
-      idArea.onclick = () => { idArea.style.display = 'none'; idSuccess.style.display = 'block'; speakText('身份识别成功，请确认身份进入'); };
-      idBtn.onclick = async () => { idPage.style.display = 'none'; mainApp.style.display = 'flex'; speakText('欢迎使用首都机场T3智慧服务系统'); await preRequestMic(); };
+      idArea.onclick = () => { idArea.style.display = 'none'; idSuccess.style.display = 'block'; speakText('身份识别成功,请确认身份进入'); };
+      idBtn.onclick = async () => { idPage.style.display = 'none'; mainApp.style.display = 'flex'; speakText('欢迎使用首都机场T3智慧服务系统'); await preRequestMic(); await createAgentSession(); };
+    }
+
+    // ============================================================
+    // Agent 会话管理
+    // ============================================================
+    async function createAgentSession() {
+      try {
+        const resp = await fetch('/api/agent/session/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const data = await resp.json();
+        if (data.success && data.session_token) {
+          agentSessionToken = data.session_token;
+          addChatMessage('🤖 Agent 助手已就绪,可以语音或打字交互', 'system');
+        }
+      } catch (e) {
+        console.warn('Agent session 创建失败,使用匿名模式');
+        agentSessionToken = 'anonymous_' + Date.now();
+      }
+    }
+
+    // ============================================================
+    // 发送消息到 Agent
+    // ============================================================
+    async function sendToAgent(text) {
+      if (!text.trim() || isAgentReplying) return;
+      isAgentReplying = true;
+
+      // 显示用户消息
+      addChatMessage(text, 'user');
+
+      // 显示打字中
+      const typingEl = showTyping();
+
+      try {
+        const resp = await fetch('/api/agent/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            session_token: agentSessionToken,
+            flight_no: 'CA1234' // 可从选择中提取
+          })
+        });
+        const data = await resp.json();
+        hideTyping(typingEl);
+
+        if (data.success) {
+          addChatMessage(data.response, 'system');
+          speakText(data.response);
+
+          // ── 根据 intent 触发 UI 动作 ──
+          const intent = data.intent;
+          if (intent === 'checkin') {
+            addChatMessage('🛄 正在打开值机选座页面...', 'system');
+            speakText('正在打开值机选座页面');
+            setTimeout(openSafetyModal, 800);
+          } else if (intent === 'poi_query' || intent === 'navigation') {
+            const poi = data.entities?.poi || data.entities?.gate;
+            if (poi) {
+              addChatMessage(`🗺️ 正在为您导航到 ${poi}`, 'system');
+              speakText(`正在导航到${poi}`);
+              drawRouteTo(poi);
+            }
+          }
+        } else {
+          addChatMessage(data.response || '抱歉,暂时无法回答', 'system');
+        }
+      } catch (e) {
+        hideTyping(typingEl);
+        console.error('Agent 调用失败:', e);
+        // 降级:本地关键词匹配
+        handleLocalFallback(text);
+      }
+
+      isAgentReplying = false;
+    }
+
+    // ── 本地降级(Agent 不可用时) ──
+    function handleLocalFallback(text) {
+      for (let cmd in KEYWORDS) {
+        if (KEYWORDS[cmd].some(k => text.includes(k))) {
+          if (cmd === 'checkin') {
+            addChatMessage('🛄 打开安全须知');
+            speakText('打开安全须知');
+            setTimeout(openSafetyModal, 600);
+            return;
+          } else if (CMD_MAP[cmd]) {
+            let name = CMD_MAP[cmd];
+            let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+            addChatMessage(desc);
+            speakText(desc);
+            drawRouteTo(name);
+            return;
+          }
+        }
+      }
+      addChatMessage('🤔 没听清,试试说"值机"、"安检"、"登机口"');
+      speakText('请再说一次');
+    }
+
+    // ── 打字中指示器 ──
+    function showTyping() {
+      const box = document.getElementById('chatBox');
+      const div = document.createElement('div');
+      div.className = 'typing-indicator';
+      div.id = 'typingIndicator';
+      div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    function hideTyping(el) {
+      if (el && el.parentNode) el.remove();
+      const existing = document.getElementById('typingIndicator');
+      if (existing) existing.remove();
+    }
+
+    // ============================================================
+    // 文本输入处理
+    // ============================================================
+    function initTextInput() {
+      const input = document.getElementById('textInput');
+      const sendBtn = document.getElementById('sendBtn');
+
+      if (!input || !sendBtn) return;
+
+      function doSend() {
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        sendToAgent(text);
+      }
+
+      sendBtn.onclick = doSend;
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          doSend();
+        }
+      };
     }
 
     // -------------------- 机场数据 --------------------
     const AIRPORT_LOCATIONS = {
-      '值机柜台': { lng: 116.610512, lat: 40.080123, type: 'checkin', icon: '🛄', desc: '国内值机区C岛，可办理登机牌与行李托运' },
-      '安检区': { lng: 116.612534, lat: 40.079812, type: 'security', icon: '🔍', desc: '国内安检通道1-5，请提前取出电脑' },
-      '登机口A12': { lng: 116.613011, lat: 40.080408, type: 'gate', icon: '🚪', desc: 'A12登机口，步行约3分钟' },
-      '餐厅': { lng: 116.608876, lat: 40.081043, type: 'restaurant', icon: '🍽️', desc: '2层中西餐厅，营业时间6:00-22:00' },
-      '卫生间': { lng: 116.608943, lat: 40.078643, type: 'toilet', icon: '🚻', desc: '安检后2层卫生间，含母婴室' },
+      '值机柜台': { lng: 116.610512, lat: 40.080123, type: 'checkin', icon: '🛄', desc: '国内值机区C岛,可办理登机牌与行李托运' },
+      '安检区': { lng: 116.612534, lat: 40.079812, type: 'security', icon: '🔍', desc: '国内安检通道1-5,请提前取出电脑' },
+      '登机口A12': { lng: 116.613011, lat: 40.080408, type: 'gate', icon: '🚪', desc: 'A12登机口,步行约3分钟' },
+      '餐厅': { lng: 116.608876, lat: 40.081043, type: 'restaurant', icon: '🍽️', desc: '2层中西餐厅,营业时间6:00-22:00' },
+      '卫生间': { lng: 116.608943, lat: 40.078643, type: 'toilet', icon: '🚻', desc: '安检后2层卫生间,含母婴室' },
       '免税店': { lng: 116.613234, lat: 40.079734, type: 'shop', icon: '🛍️', desc: '2层免税店美妆烟酒专区' },
       '行李提取': { lng: 116.612567, lat: 40.077867, type: 'baggage', icon: '🧳', desc: '1层行李提取转盘10-15' },
-      '失物招领': { lng: 116.608543, lat: 40.078876, type: 'lost', icon: '🔎', desc: '1层服务台旁，电话010-64599567' },
-      '特殊旅客': { lng: 116.608289, lat: 40.079845, type: 'special', icon: '👴', desc: '值机区特殊旅客服务台，轮椅服务' },
-      '交通中心': { lng: 116.611734, lat: 40.077954, type: 'transport', icon: '🚌', desc: 'T3交通中心，机场快轨/大巴/出租' }
+      '失物招领': { lng: 116.608543, lat: 40.078876, type: 'lost', icon: '🔎', desc: '1层服务台旁,电话010-64599567' },
+      '特殊旅客': { lng: 116.608289, lat: 40.079845, type: 'special', icon: '👴', desc: '值机区特殊旅客服务台,轮椅服务' },
+      '交通中心': { lng: 116.611734, lat: 40.077954, type: 'transport', icon: '🚌', desc: 'T3交通中心,机场快轨/大巴/出租' }
     };
     const CMD_MAP = { checkin: '值机柜台', security: '安检区', gate: '登机口A12', restaurant: '餐厅', toilet: '卫生间', shop: '免税店', baggage: '行李提取', lost: '失物招领', special: '特殊旅客', transport: '交通中心' };
     const KEYWORDS = { checkin: ['值机', '登机牌', '选座'], security: ['安检'], gate: ['登机口', 'A12'], restaurant: ['餐厅', '吃饭'], toilet: ['卫生间', '厕所'], shop: ['免税店'], baggage: ['行李'], lost: ['失物'], special: ['轮椅', '老人服务'], transport: ['交通', '大巴'], elder: ['老人机', '放大字体', '大字'], normal: ['正常模式'] };
@@ -1142,13 +1430,13 @@
           let p = AIRPORT_LOCATIONS[name];
           let div = document.createElement('div'); div.className = `custom-marker marker-${p.type}`; div.innerText = p.icon;
           let marker = new AMap.Marker({ position: [p.lng, p.lat], content: div, offset: new AMap.Pixel(-24, -24) });
-          marker.on('click', () => { addChatMessage(`📍 ${name}：${p.desc}`); speakText(p.desc); drawRouteTo(name); });
+          marker.on('click', () => { addChatMessage(`📍 ${name}:${p.desc}`); speakText(p.desc); drawRouteTo(name); });
           marker.setMap(map);
         }
       });
     }
 
-    // -------------------- 语音识别集成（稳定版）--------------------
+    // -------------------- 语音识别集成(稳定版)--------------------
     let recognition = null;
     let micReady = false;
 
@@ -1157,10 +1445,10 @@
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(t => t.stop());
         micReady = true;
-        addChatMessage('✅ 麦克风已就绪，点击🎤即可语音');
+        addChatMessage('✅ 麦克风已就绪,点击🎤即可语音');
       } catch (e) {
         console.error('权限请求失败', e);
-        addChatMessage('⚠️ 无法获取麦克风权限，请点击地址栏锁图标→麦克风→允许');
+        addChatMessage('⚠️ 无法获取麦克风权限,请点击地址栏锁图标→麦克风→允许');
       }
     }
 
@@ -1170,35 +1458,35 @@
       recognition = new SpeechRecog();
       recognition.lang = 'zh-CN'; recognition.continuous = false; recognition.interimResults = false;
 
-      recognition.onstart = () => addChatMessage('🎤 聆听中，请说话...');
+      recognition.onstart = () => addChatMessage('🎤 聆听中,请说话...');
       recognition.onresult = (e) => {
         let text = e.results[0][0].transcript.trim();
         addChatMessage(`🗣️ ${text}`, 'user');
-        if (KEYWORDS.elder.some(k => text.includes(k))) { document.body.classList.add('elder-mode'); addChatMessage('✅ 老人机模式已开启'); speakText('老人模式已开启'); return; }
-        if (KEYWORDS.normal.some(k => text.includes(k))) { document.body.classList.remove('elder-mode'); addChatMessage('✅ 恢复正常模式'); speakText('已恢复正常'); return; }
-        for (let cmd in KEYWORDS) {
-          if (KEYWORDS[cmd].some(k => text.includes(k))) {
-            if (cmd === 'checkin') { addChatMessage('🛄 打开安全须知'); speakText('打开安全须知'); setTimeout(openSafetyModal, 600); return; }
-            else if (CMD_MAP[cmd]) { let name = CMD_MAP[cmd]; let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`; addChatMessage(desc); speakText(desc); drawRouteTo(name); return; }
-          }
-        }
-        addChatMessage('🤔 没听清，试试说“值机”、“安检”、“登机口”');
-        speakText('请再说一次');
+        // 直接发送到 Agent
+        sendToAgent(text);
       };
       recognition.onerror = (err) => {
         console.error('语音识别错误:', err);
-        if (err.error === 'not-allowed') addChatMessage('⚠️ 麦克风被禁用，请检查权限');
-        else if (err.error === 'no-speech') addChatMessage('⚠️ 没有听到声音，请靠近麦克风');
-        else if (err.error === 'network') addChatMessage('⚠️ 网络错误，无法连接语音服务');
+        if (err.error === 'not-allowed') addChatMessage('⚠️ 麦克风被禁用,请检查权限');
+        else if (err.error === 'no-speech') addChatMessage('⚠️ 没有听到声音,请靠近麦克风');
+        else if (err.error === 'network') addChatMessage('⚠️ 网络错误,无法连接语音服务');
         else addChatMessage(`⚠️ 识别失败: ${err.error}`);
       };
-      recognition.onend = () => { };
+      recognition.onend = () => {
+        micBtn.classList.remove('listening');
+      };
 
       const micBtn = document.getElementById('micBtn');
       micBtn.onclick = async () => {
         if (!micReady) { await preRequestMic(); if (!micReady) return; }
         try { recognition.abort(); } catch (e) { }
-        try { recognition.start(); } catch (e) { addChatMessage('启动失败，请刷新页面重试'); }
+        micBtn.classList.add('listening');
+        try {
+          recognition.start();
+        } catch (e) {
+          micBtn.classList.remove('listening');
+          addChatMessage('启动失败，请刷新页面重试');
+        }
       };
     }
 
@@ -1212,7 +1500,7 @@
     function getFilteredSeats() { if (currentFilter === 'all') return seatData.filter(s => s.type !== 'occupied'); return seatData.filter(s => { if (s.type === 'occupied') return false; if (currentFilter === 'window') return s.isWindow; if (currentFilter === 'aisle') return s.isAisle; if (currentFilter === 'exit') return s.type === 'exit'; if (currentFilter === 'cheap') return s.type === 'cheap'; return true; }); }
     function renderSeatCards() { let list = getFilteredSeats(); let container = document.getElementById('seatCardsContainer'); container.innerHTML = list.map(s => { let sel = selectedSeat?.seatNo === s.seatNo; let label = '可选', cls = 'seat-type-available'; if (s.type === 'popular') { label = '热门'; cls = 'seat-type-popular'; } else if (s.type === 'cheap') { label = '特惠'; cls = 'seat-type-cheap'; } else if (s.type === 'exit') { label = '出口'; cls = 'seat-type-exit'; } else if (s.type === 'occupied') { label = '已占'; cls = 'seat-type-occupied'; } let priceTxt = s.type === 'occupied' ? '已售' : (s.price > 0 ? `+¥${s.price}` : (s.price < 0 ? `-¥${-s.price}` : '免费')); return `<div class="seat-card ${sel ? 'selected' : ''}" onclick="selectSeat('${s.seatNo}')"><div class="seat-card-header"><span class="seat-number">${s.seatNo}</span><span class="seat-type-badge ${cls}">${label}</span></div><div class="seat-price">${priceTxt}</div></div>`; }).join(''); }
 
-    // 修正后的 renderPlaneView：座位对齐更精准
+    // 修正后的 renderPlaneView:座位对齐更精准
     function renderPlaneView() {
       let container = document.getElementById('planeSeatsContainer');
       container.innerHTML = '';
@@ -1240,7 +1528,7 @@
     }
 
     window.selectSeat = function (no) { let s = seatData.find(x => x.seatNo === no); if (!s || s.type === 'occupied') return; selectedSeat = s; let toast = document.getElementById('seatToast'); document.getElementById('toastText').innerText = `✓ 已选座位 ${no}`; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); speakText(`已选择座位${s.seatNo}`); renderSeatCards(); renderPlaneView(); updateSummary(); };
-    function confirmSeat() { if (!selectedSeat) { alert('请先选择座位'); return; } alert(`✅ 值机成功！\n座位：${selectedSeat.seatNo}\n祝您旅途愉快！`); closeSeatModal(); }
+    function confirmSeat() { if (!selectedSeat) { alert('请先选择座位'); return; } alert(`✅ 值机成功!\n座位:${selectedSeat.seatNo}\n祝您旅途愉快!`); closeSeatModal(); }
 
     // -------------------- 事件绑定 --------------------
     document.getElementById('stopBtn').onclick = stopAllVoice;
@@ -1257,6 +1545,7 @@
       script.onload = initMap;
       document.head.appendChild(script);
       initVoice();
+      initTextInput();
     };
   </script>
 </body>

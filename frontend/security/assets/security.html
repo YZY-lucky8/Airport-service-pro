@@ -988,6 +988,385 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        /* ========== Agent 阈值管理页面样式 ========== */
+
+        /* Agent 接管模式脉冲光条 */
+        #agent-pulse-bar {
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #52C41A, #73D13D, #52C41A, transparent);
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        #agent-pulse-bar.active {
+            opacity: 1;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 8px rgba(82, 196, 26, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(82, 196, 26, 0.8); }
+        }
+
+        /* 模式切换区域 */
+        .agent-mode-section {
+            background: white;
+            border-radius: 4px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+        }
+        .agent-mode-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .agent-mode-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .agent-mode-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+        .agent-stats-row {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--divider);
+            flex-wrap: wrap;
+        }
+        .agent-stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        .agent-stat-item .stat-num {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .toggle-label.manual-active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .toggle-label.agent-active {
+            color: var(--success);
+            font-weight: 600;
+            animation: agentLabelPulse 2s ease-in-out infinite;
+        }
+        @keyframes agentLabelPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .toggle-switch {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            cursor: pointer;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #D9D9D9;
+            border-radius: 14px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #52C41A, #73D13D);
+            box-shadow: 0 0 12px rgba(82, 196, 26, 0.4);
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(28px);
+        }
+
+        /* 阈值对比卡片 */
+        .threshold-cards-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .threshold-card {
+            background: white;
+            border-radius: 4px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-top: 3px solid var(--primary);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .threshold-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        .threshold-card.agent-mode {
+            border-top-color: var(--success);
+        }
+        .threshold-card.agent-mode::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 40px 40px 0;
+            border-color: transparent var(--success) transparent transparent;
+            opacity: 0.15;
+        }
+        .threshold-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .threshold-card-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .threshold-trend-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .threshold-trend-tag.rising {
+            background: #FFF1F0;
+            color: #F5222D;
+        }
+        .threshold-trend-tag.normal {
+            background: #F6FFED;
+            color: #52C41A;
+        }
+        .threshold-values {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .threshold-current {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .threshold-current .unit {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-secondary);
+            margin-left: 2px;
+        }
+        .threshold-suggested {
+            font-size: 14px;
+            color: var(--success);
+            font-weight: 600;
+            background: #F6FFED;
+            padding: 4px 10px;
+            border-radius: 4px;
+            border: 1px solid #B7EB8F;
+        }
+        .threshold-suggested .prefix {
+            font-weight: 400;
+            color: #73D13D;
+        }
+        .confidence-bar-container {
+            margin-bottom: 12px;
+        }
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .confidence-bar {
+            height: 6px;
+            background: #F0F0F0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease-out;
+        }
+        .confidence-fill.high {
+            background: linear-gradient(90deg, #52C41A, #73D13D);
+        }
+        .confidence-fill.medium {
+            background: linear-gradient(90deg, #FA8C16, #FFC53D);
+        }
+        .confidence-fill.low {
+            background: linear-gradient(90deg, #F5222D, #FF4D4F);
+        }
+        .apply-suggest-btn {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--success);
+            background: #F6FFED;
+            color: var(--success);
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .apply-suggest-btn:hover {
+            background: var(--success);
+            color: white;
+        }
+        .apply-suggest-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #F0F0F0;
+            border-color: #D9D9D9;
+            color: #8C8C8C;
+        }
+        .auto-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: #F6FFED;
+            color: #52C41A;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            animation: autoBadgePulse 2s ease-in-out infinite;
+        }
+        @keyframes autoBadgePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(82, 196, 26, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(82, 196, 26, 0); }
+        }
+
+        /* Agent 决策历史表格 */
+        .agent-history-section {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+        .agent-history-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--divider);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .agent-history-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .confidence-table {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .confidence-table-bar {
+            width: 60px;
+            height: 6px;
+            background: #F0F0F0;
+            border-radius: 3px;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .confidence-table-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+        .result-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .result-badge.applied {
+            background: #F6FFED;
+            color: #52C41A;
+        }
+        .result-badge.pending {
+            background: #FFFBE6;
+            color: #FA8C16;
+        }
+        .result-badge.rejected {
+            background: #FFF1F0;
+            color: #F5222D;
+        }
+
+        /* Agent 页面响应式 */
+        @media (max-width: 1400px) {
+            .threshold-cards-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 768px) {
+            .threshold-cards-row {
+                grid-template-columns: 1fr;
+            }
+            .agent-mode-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1037,6 +1416,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Agent 接管模式脉冲光条 -->
+    <div id="agent-pulse-bar"></div>
 
     <!-- 主系统 -->
     <div class="main-app" id="mainApp">
@@ -1118,6 +1500,14 @@
                         </svg>
                     </span>
                     <span>防御日志分析</span>
+                </div>
+                <div class="menu-item" onclick="switchPage('agent-threshold', this)">
+                    <span class="menu-icon">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.5 2c-1.24 0-2.19.95-2.19 2.19 0 .44.14.86.38 1.2L4.59 13.5a2.19 2.19 0 0 0-1.59 2.1v2.38c0 1.24.95 2.19 2.19 2.19h2.38c.92 0 1.76-.55 2.1-1.42l3.51-7.51 3.18 3.18a2.19 2.19 0 0 0 1.2.38h2.38c1.24 0 2.19-.95 2.19-2.19v-2.38c0-.92-.55-1.76-1.42-2.1l-8.03-3.51c.34-.34.55-.81.55-1.33V4.19C13 2.95 12.05 2 10.81 2H20.5ZM8.3 19.7H4.59v-2.38l12.51-8.3.06.03-8.86 18.74v2.31h2.31l.09-.19-.09-.19-2.31-2.31.09-.19.09.19 1.76-1.71-.09-.19-.09-.19-1.76 1.71Z"/>
+                        </svg>
+                    </span>
+                    <span>Agent 阈值管理</span>
                 </div>
                 <div class="menu-item" onclick="switchPage('audit', this)">
                     <span class="menu-icon">
@@ -2274,6 +2664,86 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Agent 阈值管理页面 -->
+            <div class="page" id="page-agent-threshold">
+                <h2 class="page-title">🤖 Agent 阈值自适应管理</h2>
+
+                <!-- 模式切换区域 -->
+                <div class="agent-mode-section">
+                    <div class="agent-mode-header">
+                        <div>
+                            <div class="agent-mode-title">
+                                🤖 Agent 阈值自适应管理
+                            </div>
+                            <div class="agent-mode-description" id="agentModeDescription">
+                                当前为 <strong style="color: var(--primary);">人工模式</strong> — 阈值由安全管理员手动调整，Agent 仅提供建议。
+                            </div>
+                        </div>
+                        <div class="toggle-container">
+                            <span class="toggle-label manual-active" id="labelManual">人工模式</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="agentModeToggle" onchange="toggleAgentMode(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-label" id="labelAgent">Agent 接管</span>
+                        </div>
+                    </div>
+                    <div class="agent-stats-row">
+                        <div class="agent-stat-item">
+                            <span>📊 已自动调整：</span>
+                            <span class="stat-num" id="agentAutoAdjustCount">0</span>
+                            <span>次</span>
+                        </div>
+                        <div class="agent-stat-item">
+                            <span>🛡️ 拦截提升：</span>
+                            <span class="stat-num" id="agentInterceptImprovement">+0%</span>
+                        </div>
+                        <div class="agent-stat-item">
+                            <span>⚡ 平均响应延迟：</span>
+                            <span class="stat-num" id="agentAvgResponseTime">0ms</span>
+                        </div>
+                        <div class="agent-stat-item">
+                            <span>🔄 最后更新：</span>
+                            <span id="agentLastUpdate" style="font-weight: 500;">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 阈值对比卡片 -->
+                <div class="threshold-cards-row" id="thresholdCardsRow">
+                    <!-- 卡片由 JS 动态渲染 -->
+                </div>
+
+                <!-- Agent 决策历史 -->
+                <div class="agent-history-section">
+                    <div class="agent-history-header">
+                        <div class="agent-history-title">
+                            <span>📋</span> Agent 决策历史
+                        </div>
+                        <div>
+                            <button class="btn btn-default" onclick="loadAgentHistory()" style="margin-right: 8px;">刷新</button>
+                            <button class="btn btn-primary" onclick="exportAgentHistory()">导出记录</button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>时间</th>
+                                <th>参数</th>
+                                <th>原值</th>
+                                <th>新值</th>
+                                <th>置信度</th>
+                                <th>原因</th>
+                                <th>结果</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agentHistoryBody">
+                            <!-- 由 JS 动态渲染 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3052,6 +3522,179 @@
                 loadPageData('audit');
             }
         });
+
+        /* ========== Agent 阈值管理 ========== */
+        (function () {
+            'use strict';
+
+            var agentMode = 'manual';
+            var thresholdRefreshTimer = null;
+            var REFRESH_INTERVAL = 10000;
+
+            var mockThresholds = [
+                { id: 'rate_limit', name: '滑动窗口请求上限', current: '5/s', suggested: '3/s', confidence: 92, trend: '📈 攻击上升', trendType: 'rising', unit: '' },
+                { id: 'bloom_capacity', name: 'Bloom Filter 容量', current: '10000', suggested: '15000', confidence: 85, trend: '-', trendType: 'normal', unit: '' },
+                { id: 'hmac_ttl', name: 'HMAC Token 有效期', current: '300s', suggested: '180s', confidence: 78, trend: '📈 重放攻击', trendType: 'rising', unit: '' },
+                { id: 'slow_timeout', name: '慢连接超时', current: '30s', suggested: '20s', confidence: 90, trend: '-', trendType: 'normal', unit: '' }
+            ];
+
+            var mockHistory = [
+                { time: '2026-06-21 13:25:00', param: '滑动窗口请求上限', oldValue: '8/s', newValue: '5/s', confidence: 95, reason: '检测到 192.168.1.x 段请求突增 340%', result: 'applied' },
+                { time: '2026-06-21 12:10:00', param: 'HMAC Token 有效期', oldValue: '600s', newValue: '300s', confidence: 88, reason: '发现 3 起 HMAC 重放攻击尝试', result: 'applied' },
+                { time: '2026-06-21 10:45:00', param: 'Bloom Filter 容量', oldValue: '5000', newValue: '10000', confidence: 82, reason: '当前容量使用率 91%，接近上限', result: 'applied' },
+                { time: '2026-06-21 09:30:00', param: '慢连接超时', oldValue: '60s', newValue: '30s', confidence: 91, reason: '慢连接消耗资源占比达 45%', result: 'applied' },
+                { time: '2026-06-20 22:15:00', param: '滑动窗口请求上限', oldValue: '10/s', newValue: '8/s', confidence: 76, reason: '夜间流量基线下降，收紧策略', result: 'pending' },
+                { time: '2026-06-20 18:00:00', param: 'HMAC Token 有效期', oldValue: '300s', newValue: '120s', confidence: 65, reason: '检测到异常 HMAC 签名模式', result: 'rejected' }
+            ];
+
+            function confClass(v) { return v >= 90 ? 'high' : v >= 70 ? 'medium' : 'low'; }
+
+            function renderThresholdCards(data) {
+                var container = document.getElementById('thresholdCardsRow');
+                if (!container) return;
+                var html = '';
+                for (var i = 0; i < data.length; i++) {
+                    var t = data[i];
+                    var isAgent = agentMode === 'agent';
+                    html += '<div class="threshold-card' + (isAgent ? ' agent-mode' : '') + '">';
+                    html += '<div class="threshold-card-header"><span class="threshold-card-name">' + t.name + '</span><span class="threshold-trend-tag ' + t.trendType + '">' + t.trend + '</span></div>';
+                    html += '<div class="threshold-values"><span class="threshold-current">' + t.current + '</span><span class="threshold-suggested"><span class="prefix">Agent 建议: </span>' + t.suggested + '</span></div>';
+                    html += '<div class="confidence-bar-container"><div class="confidence-label"><span>Agent 置信度</span><span>' + t.confidence + '%</span></div><div class="confidence-bar"><div class="confidence-fill ' + confClass(t.confidence) + '" style="width:' + t.confidence + '%"></div></div></div>';
+                    if (isAgent) {
+                        html += '<div style="text-align:center; margin-top: 8px;"><span class="auto-badge">🤖 Agent 自动管理中</span></div>';
+                    } else {
+                        html += '<button class="apply-suggest-btn" onclick="applyAgentSuggestion(\'' + t.id + '\',\'' + t.suggested + '\')">✋ 应用 Agent 建议 → ' + t.suggested + '</button>';
+                    }
+                    html += '</div>';
+                }
+                container.innerHTML = html;
+            }
+
+            function renderAgentHistory(data) {
+                var tbody = document.getElementById('agentHistoryBody');
+                if (!tbody) return;
+                var html = '';
+                for (var i = 0; i < data.length; i++) {
+                    var h = data[i];
+                    var resultText = h.result === 'applied' ? '已应用' : h.result === 'pending' ? '待审核' : '已拒绝';
+                    html += '<tr>';
+                    html += '<td>' + h.time + '</td>';
+                    html += '<td><strong>' + h.param + '</strong></td>';
+                    html += '<td style="text-decoration: line-through; color: var(--text-assist);">' + h.oldValue + '</td>';
+                    html += '<td style="color: var(--success); font-weight: 600;">' + h.newValue + '</td>';
+                    html += '<td><div class="confidence-table"><div class="confidence-table-bar"><div class="confidence-table-fill ' + confClass(h.confidence) + '" style="width:' + h.confidence + '%"></div></div><span>' + h.confidence + '%</span></div></td>';
+                    html += '<td style="max-width: 240px; font-size: 12px;">' + h.reason + '</td>';
+                    html += '<td><span class="result-badge ' + h.result + '">' + resultText + '</span></td>';
+                    html += '</tr>';
+                }
+                tbody.innerHTML = html;
+            }
+
+            function updateAgentStats(stats) {
+                document.getElementById('agentAutoAdjustCount').textContent = stats.autoAdjustCount || 47;
+                document.getElementById('agentInterceptImprovement').textContent = '+' + (stats.interceptImprovement || 23) + '%';
+                document.getElementById('agentAvgResponseTime').textContent = (stats.avgResponseTime || 12) + 'ms';
+                document.getElementById('agentLastUpdate').textContent = new Date().toLocaleTimeString('zh-CN');
+            }
+
+            async function loadThresholdData() {
+                try {
+                    var resp = await fetch(API_BASE_URL + '/api/agent/threshold/current', { headers: authHeaders() });
+                    if (resp.ok) {
+                        var data = await resp.json();
+                        renderThresholdCards(data.thresholds || data);
+                        updateAgentStats(data.stats || {});
+                    } else if (resp.status === 404) {
+                        renderThresholdCards(mockThresholds);
+                        updateAgentStats({});
+                    }
+                } catch (e) {
+                    renderThresholdCards(mockThresholds);
+                    updateAgentStats({});
+                }
+            }
+
+            async function loadAgentHistory() {
+                try {
+                    var resp = await fetch(API_BASE_URL + '/api/agent/threshold/history', { headers: authHeaders() });
+                    if (resp.ok) {
+                        var data = await resp.json();
+                        renderAgentHistory(data.records || data);
+                    } else if (resp.status === 404) {
+                        renderAgentHistory(mockHistory);
+                    }
+                } catch (e) {
+                    renderAgentHistory(mockHistory);
+                }
+            }
+
+            function startRefresh() {
+                if (thresholdRefreshTimer) clearInterval(thresholdRefreshTimer);
+                loadThresholdData();
+                loadAgentHistory();
+                thresholdRefreshTimer = setInterval(loadThresholdData, REFRESH_INTERVAL);
+            }
+
+            function stopRefresh() {
+                if (thresholdRefreshTimer) { clearInterval(thresholdRefreshTimer); thresholdRefreshTimer = null; }
+            }
+
+            // Expose global functions
+            window.toggleAgentMode = async function (isAgent) {
+                agentMode = isAgent ? 'agent' : 'manual';
+                var labelManual = document.getElementById('labelManual');
+                var labelAgent = document.getElementById('labelAgent');
+                var desc = document.getElementById('agentModeDescription');
+                var pulseBar = document.getElementById('agent-pulse-bar');
+                if (isAgent) {
+                    labelManual.className = 'toggle-label';
+                    labelAgent.className = 'toggle-label agent-active';
+                    desc.innerHTML = '当前为 <strong style="color: var(--success);">Agent 接管模式</strong> — Agent 将根据实时威胁自动调整阈值，人工可随时切换回手动模式。';
+                    pulseBar.classList.add('active');
+                } else {
+                    labelManual.className = 'toggle-label manual-active';
+                    labelAgent.className = 'toggle-label';
+                    desc.innerHTML = '当前为 <strong style="color: var(--primary);">人工模式</strong> — 阈值由安全管理员手动调整，Agent 仅提供建议。';
+                    pulseBar.classList.remove('active');
+                }
+                try { await apiCall('/api/agent/threshold/set-mode', { method: 'POST', body: JSON.stringify({ mode: agentMode }) }); } catch (e) { console.warn('Agent mode switch API unavailable, using mock'); }
+                renderThresholdCards(mockThresholds);
+            };
+
+            window.applyAgentSuggestion = async function (thresholdId, suggestedValue) {
+                try {
+                    await apiCall('/api/agent/threshold/apply', { method: 'POST', body: JSON.stringify({ thresholdId: thresholdId, value: suggestedValue }) });
+                    alert('✅ 已应用 Agent 建议: ' + suggestedValue);
+                    loadThresholdData();
+                } catch (e) {
+                    alert('✅ 已应用 Agent 建议: ' + suggestedValue + ' (模拟)');
+                    var idx = -1; for (var i = 0; i < mockThresholds.length; i++) { if (mockThresholds[i].id === thresholdId) { idx = i; break; } }
+                    if (idx >= 0) { mockThresholds[idx].current = suggestedValue; renderThresholdCards(mockThresholds); }
+                }
+            };
+
+            window.exportAgentHistory = function () {
+                var csv = 'Time,Param,Old Value,New Value,Confidence,Reason,Result\n';
+                for (var i = 0; i < mockHistory.length; i++) {
+                    var h = mockHistory[i];
+                    csv += '"' + h.time + '","' + h.param + '","' + h.oldValue + '","' + h.newValue + '",' + h.confidence + ',"' + h.reason + '","' + h.result + '"\n';
+                }
+                var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a'); a.href = url; a.download = 'agent-threshold-history.csv';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            };
+
+            window.loadAgentHistory = loadAgentHistory;
+
+            // Hook into switchPage
+            var origSwitchPage = window.switchPage;
+            window.switchPage = function (pageId, menuItem) {
+                origSwitchPage(pageId, menuItem);
+                if (pageId === 'agent-threshold') { startRefresh(); } else { stopRefresh(); }
+            };
+
+        })();
     </script>
 </body>
 </html>

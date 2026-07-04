@@ -182,7 +182,7 @@ class SecurityManagementAgent {
           current_threshold, suggested_threshold, reason, confidence, action
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        report.analysisTime,
+        new Date(report.analysisTime).toISOString().slice(0, 19).replace('T', ' '),
         report.stats.totalRequests,
         report.stats.attackCount,
         parseFloat(report.stats.attackRatio),

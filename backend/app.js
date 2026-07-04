@@ -64,6 +64,7 @@ class BloomFilter {
         return true;
     }
     _hash1(str) {
+        if (!str) return 0;
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
@@ -71,6 +72,7 @@ class BloomFilter {
         return Math.abs(hash);
     }
     _hash2(str) {
+        if (!str) return 0;
         let hash = 5381;
         for (let i = 0; i < str.length; i++) {
             hash = ((hash << 5) + hash + str.charCodeAt(i)) | 0;
@@ -141,7 +143,7 @@ app.use(async (req, res, next) => {
     return next();
   }
   try {
-    const clientIp = req.ip || req.connection?.remoteAddress;
+    const clientIp = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || "0.0.0.0";
     const [whitelistRows] = await db.pool?.query('SELECT ip_address FROM ip_whitelist WHERE 1=1 AND (ip_address = ? OR ip_address LIKE ?)', [clientIp, clientIp + '.%']);
     if (whitelistRows && whitelistRows.length > 0) {
       return next();
@@ -155,7 +157,7 @@ app.use(async (req, res, next) => {
   if (req.path === '/api/auth/login' || req.path === '/api/auth/verify' || req.path.startsWith('/api/health')) {
     return next();
   }
-  const clientIp = req.ip || req.connection?.remoteAddress;
+  const clientIp = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress || "0.0.0.0";
   try {
     if (!global.__blacklistLoaded && db.pool) {
       try {
@@ -165,7 +167,7 @@ app.use(async (req, res, next) => {
       global.__blacklistLoaded = true;
     }
   } catch (e) {}
-  if (ipBlacklistFilter.has(clientIp)) {
+  if (ipBlacklistFilter.has(clientIp || '')) {
     console.warn(`🚫 已拦截黑名单IP：${clientIp}`);
     return res.status(403).json({ success: false, error: 'Access denied: Your IP is blocked' });
   }

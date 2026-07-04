@@ -81,6 +81,22 @@ class AgentDispatcher {
   }
 
   /**
+   * 格式化时间为北京时间 YYYY-MM-DD HH:MM
+   */
+  _fmtTime(d) {
+    const dt = new Date(d);
+    // +8h offset
+    const utc = dt.getTime() + dt.getTimezoneOffset() * 60000;
+    const bj = new Date(utc + 8 * 3600000);
+    const yy = bj.getFullYear();
+    const mm = String(bj.getMonth() + 1).padStart(2, '0');
+    const dd = String(bj.getDate()).padStart(2, '0');
+    const hh = String(bj.getHours()).padStart(2, '0');
+    const mi = String(bj.getMinutes()).padStart(2, '0');
+    return `${yy}-${mm}-${dd} ${hh}:${mi}`;
+  }
+
+  /**
    * 运行时切换 LLM 配置
    * @param {Object} config - { provider, model, apiKey, baseUrl, temperature, fallbackChain }
    */
@@ -332,7 +348,7 @@ class AgentDispatcher {
 
           let reply = `航班${flightNo}（${f.airline}）：`;
           reply += `${f.departure_city} → ${f.arrival_city}，`;
-          reply += `计划起飞${new Date(f.scheduled_departure).toISOString().replace('T', ' ').substring(0, 16)}，`;
+          reply += `计划起飞${this._fmtTime(f.scheduled_departure)}，`;
           reply += `登机口${f.gate}，`;
           reply += `状态${f.status}。`;
           if (f.status === '延误') {

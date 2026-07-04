@@ -1313,17 +1313,23 @@
             speakText('打开安全须知');
             setTimeout(openSafetyModal, 600);
             return;
+          } else if (cmd === 'elder') {
+            toggleElderMode(true);
+            return;
+          } else if (cmd === 'normal') {
+            toggleElderMode(false);
+            return;
           } else if (CMD_MAP[cmd]) {
             let name = CMD_MAP[cmd];
             let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
-            addChatMessage(desc);
-            speakText(desc);
+            addChatMessage(`🗺️ 为您导航到${name}，请跟着红色路线走~`);
+            speakText(`为您导航到${name}`);
             drawRouteTo(name);
             return;
           }
         }
       }
-      addChatMessage('🤔 没听清,试试说"值机"、"安检"、"登机口"');
+      addChatMessage('🤔 没听清,试试说"值机"、"安检"、"登机口"、"老人机"');
       speakText('请再说一次');
     }
 
@@ -1408,8 +1414,46 @@
     const seatData = generateSeatData();
 
     function addChatMessage(text, type = 'system') { let box = document.getElementById('chatBox'); let div = document.createElement('div'); div.className = `chat-bubble ${type === 'user' ? 'user-bubble' : 'system-bubble'}`; div.textContent = text; box.appendChild(div); box.scrollTop = box.scrollHeight; }
-    function speakText(text) { if (window.speechSynthesis) { window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = 1; window.speechSynthesis.speak(u); } }
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      let u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      // Try to find a natural Chinese voice (Xiao Xia / Yun Yang)
+      let voices = window.speechSynthesis.getVoices();
+      let cnVoice = voices.find(v => v.lang === 'zh-CN' && /Xiao|Yun|Female|Female/.test(v.name)) || voices.find(v => v.lang === 'zh-CN') || voices.find(v => v.lang.startsWith('zh'));
+      if (cnVoice) u.voice = cnVoice;
+      u.rate = isElderMode ? 0.8 : 0.95;
+      u.pitch = isElderMode ? 1.1 : 1.05;
+      u.volume = 1;
+      // Add small pause between sentences for natural rhythm
+      let sentences = text.split(/([。！？；,，])/);
+      let fullText = '';
+      for (let i = 0; i < sentences.length; i += 2) {
+        if (i + 1 < sentences.length) {
+          fullText += sentences[i] + sentences[i+1] + ' ';
+        } else {
+          fullText += sentences[i];
+        }
+      }
+      u.text = fullText;
+      window.speechSynthesis.speak(u);
+    }
     function stopAllVoice() { window.speechSynthesis?.cancel(); addChatMessage('⏹️ 已停止播报'); }
+
+    let isElderMode = false;
+    function toggleElderMode(on) {
+      isElderMode = on;
+      if (on) {
+        document.body.classList.add('elder-mode');
+        addChatMessage('👴 已切换到老人机模式~ 字体已放大，语音已调慢', 'system');
+        speakText('好的，已切换到老人机模式，字体会放大，语音也会放慢');
+      } else {
+        document.body.classList.remove('elder-mode');
+        addChatMessage('✅ 已恢复正常模式', 'system');
+        speakText('已恢复正常模式');
+      }
+    }
 
     function drawRouteTo(destName) {
       const from = AIRPORT_LOCATIONS['值机柜台'], to = AIRPORT_LOCATIONS[destName];
@@ -1537,6 +1581,7 @@
         addChatMessage('🤖 好的，正在打开值机页面~');
         speakText('好的，正在打开值机页面');
         setTimeout(openSafetyModal, 600);
+        addChatMessage('🗺️ 值机柜台在C岛，请跟着红色路线走~', 'system');
       } else if (cmd === 'gate') {
         let name = CMD_MAP[cmd];
         let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;

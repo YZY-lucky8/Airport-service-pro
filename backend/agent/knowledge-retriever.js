@@ -92,15 +92,6 @@ class KnowledgeRetriever {
 
     if (words.length === 0) return [];
 
-    let sql = `SELECT id, title, content, category, keywords, priority FROM knowledge_base WHERE is_active = 1`;
-    const params = [];
-    const conditions = [];
-
-    if (category) {
-      conditions.push('category = ?');
-      params.push(category);
-    }
-
     // 关键词字段匹配：任一关键词命中 keywords/title/content 即可
     // 同时用短词（>=2字符）做子串匹配，解决中文无空格分词问题
     const matchWords = words.filter(w => w.length >= 2);

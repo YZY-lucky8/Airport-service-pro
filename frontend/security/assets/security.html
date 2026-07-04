@@ -3599,11 +3599,35 @@
 
             async function loadThresholdData() {
                 try {
-                    var resp = await fetch(API_BASE_URL + '/api/agent/threshold/current', { headers: authHeaders() });
+                    var resp = await fetch(API_BASE_URL + '/api/agent/threshold/status', { headers: authHeaders() });
                     if (resp.ok) {
                         var data = await resp.json();
-                        renderThresholdCards(data.thresholds || data);
-                        updateAgentStats(data.stats || {});
+                        var raw = (data.data || data).map(function(r) {
+                            var idMap = {
+                                'rate_limit_max_requests': 'rate_limit',
+                                'bloom_filter_capacity': 'bloom_capacity',
+                                'hmac_token_ttl': 'hmac_ttl',
+                                'slow_connection_timeout': 'slow_timeout'
+                            };
+                            var nameMap = {
+                                'rate_limit_max_requests': '滑动窗口请求上限',
+                                'bloom_filter_capacity': 'Bloom Filter 容量',
+                                'hmac_token_ttl': 'HMAC Token 有效期',
+                                'slow_connection_timeout': '慢连接超时'
+                            };
+                            return {
+                                id: idMap[r.config_key] || r.config_key,
+                                name: nameMap[r.config_key] || r.config_key,
+                                current: r.config_value,
+                                suggested: r.agent_suggested_value || r.config_value,
+                                confidence: Math.round((r.confidence || 0.85) * 100),
+                                trend: r.suggestion_reason ? '📈 ' + r.suggestion_reason : '-',
+                                trendType: r.agent_suggested_value && r.agent_suggested_value !== r.config_value ? 'rising' : 'normal',
+                                unit: ''
+                            };
+                        });
+                        renderThresholdCards(raw);
+                        updateAgentStats({});
                     } else if (resp.status === 404) {
                         renderThresholdCards(mockThresholds);
                         updateAgentStats({});
@@ -3619,7 +3643,24 @@
                     var resp = await fetch(API_BASE_URL + '/api/agent/threshold/history', { headers: authHeaders() });
                     if (resp.ok) {
                         var data = await resp.json();
-                        renderAgentHistory(data.records || data);
+                        var raw = (data.data || data).map(function(r) {
+                            var nameMap = {
+                                'rate_limit_max_requests': '滑动窗口请求上限',
+                                'bloom_filter_capacity': 'Bloom Filter 容量',
+                                'hmac_token_ttl': 'HMAC Token 有效期',
+                                'slow_connection_timeout': '慢连接超时'
+                            };
+                            return {
+                                time: r.applied_at,
+                                param: nameMap[r.threshold_key] || r.threshold_key,
+                                oldValue: r.old_value,
+                                newValue: r.new_value,
+                                confidence: Math.round((r.confidence || 0) * 100),
+                                reason: r.reason || '-',
+                                result: r.status || 'applied'
+                            };
+                        });
+                        renderAgentHistory(raw);
                     } else if (resp.status === 404) {
                         renderAgentHistory(mockHistory);
                     }

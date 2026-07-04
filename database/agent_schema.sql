@@ -119,6 +119,42 @@ CREATE TABLE IF NOT EXISTS `security_analysis` (
   INDEX idx_action (`action`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 6. 安全阈值配置表
+CREATE TABLE IF NOT EXISTS `security_threshold_config` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `config_key` VARCHAR(100) NOT NULL UNIQUE,
+  `config_value` VARCHAR(50) NOT NULL,
+  `agent_suggested_value` VARCHAR(50) DEFAULT NULL,
+  `suggestion_reason` TEXT,
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO `security_threshold_config` (`config_key`, `config_value`, `agent_suggested_value`, `suggestion_reason`) VALUES
+('rate_limit_max_requests', '5', '3', '攻击频率上升，建议降低阈值'),
+('bloom_filter_capacity', '10000', '15000', '黑名单IP增长，建议扩容'),
+('hmac_token_ttl', '300', '180', '检测到重放攻击尝试'),
+('slow_connection_timeout', '30', '20', 'Slowloris攻击风险增加');
+
+-- 7. 阈值修改历史表
+CREATE TABLE IF NOT EXISTS `threshold_history` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `threshold_key` VARCHAR(100) NOT NULL,
+  `old_value` VARCHAR(50),
+  `new_value` VARCHAR(50),
+  `suggested_by` VARCHAR(20) DEFAULT 'agent',
+  `confidence` DECIMAL(3,2),
+  `reason` TEXT,
+  `applied_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `status` VARCHAR(20) DEFAULT 'applied'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT IGNORE INTO `threshold_history` (`threshold_key`, `old_value`, `new_value`, `suggested_by`, `confidence`, `reason`, `status`) VALUES
+('rate_limit_max_requests', '8', '5', 'agent', 0.92, '过去1小时内检测到150次高频请求攻击', 'applied'),
+('bloom_filter_capacity', '5000', '10000', 'agent', 0.85, '黑名单IP数量增长至4200，接近容量上限', 'applied'),
+('hmac_token_ttl', '600', '300', 'agent', 0.78, '检测到3次重放攻击尝试', 'applied'),
+('slow_connection_timeout', '60', '30', 'agent', 0.90, 'Slowloris攻击模式识别', 'applied'),
+('rate_limit_max_requests', '10', '8', 'manual', 0.0, '人工调整', 'applied');
+
 -- ============================================
 -- 建表完成
 -- ============================================

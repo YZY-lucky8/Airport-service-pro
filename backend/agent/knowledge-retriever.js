@@ -101,18 +101,16 @@ class KnowledgeRetriever {
       params.push(category);
     }
 
-    // 关键词字段匹配
-    conditions.push('keywords LIKE ?');
-    params.push(`%${words[0]}%`);
-
-    if (words.length > 1) {
-      for (let i = 1; i < words.length; i++) {
-        conditions.push('keywords LIKE ?');
-        params.push(`%${words[i]}%`);
-      }
+    // 关键词字段匹配：任一关键词命中 keywords 即可
+    const kwConditions = words.map(() => 'keywords LIKE ?').join(' OR ');
+    if (category) {
+      sql += ' AND category = ?';
+      params.push(category);
     }
-
-    sql += ' AND (' + conditions.join(' OR ') + ')';
+    sql += ' AND (' + kwConditions + ')';
+    for (const w of words) {
+      params.push(`%${w}%`);
+    }
     sql += ' ORDER BY priority DESC LIMIT ?';
     params.push(limit);
 

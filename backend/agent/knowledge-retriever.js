@@ -101,15 +101,28 @@ class KnowledgeRetriever {
       params.push(category);
     }
 
-    // 关键词字段匹配：任一关键词命中 keywords 即可
-    const kwConditions = words.map(() => 'keywords LIKE ?').join(' OR ');
+    // 关键词字段匹配：任一关键词命中 keywords/title/content 即可
+    // 同时用短词（>=2字符）做子串匹配，解决中文无空格分词问题
+    const matchWords = words.filter(w => w.length >= 2);
+    const allWords = matchWords.length > 0 ? matchWords : words;
+
+    if (allWords.length === 0) return [];
+
+    let sql = `SELECT id, title, content, category, keywords, priority FROM knowledge_base WHERE is_active = 1`;
+    const params = [];
+
     if (category) {
       sql += ' AND category = ?';
       params.push(category);
     }
-    sql += ' AND (' + kwConditions + ')';
-    for (const w of words) {
-      params.push(`%${w}%`);
+
+    // 任一有效词命中 keywords、title 或 content 即算匹配
+    const orParts = allWords.map(w =>
+      `(keywords LIKE ? OR title LIKE ? OR content LIKE ?)`
+    ).join(' OR ');
+    sql += ' AND (' + orParts + ')';
+    for (const w of allWords) {
+      params.push(`%${w}%`, `%${w}%`, `%${w}%`);
     }
     sql += ' ORDER BY priority DESC LIMIT ?';
     params.push(limit);

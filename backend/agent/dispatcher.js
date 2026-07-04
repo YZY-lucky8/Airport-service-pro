@@ -332,7 +332,7 @@ class AgentDispatcher {
 
           let reply = `航班${flightNo}（${f.airline}）：`;
           reply += `${f.departure_city} → ${f.arrival_city}，`;
-          reply += `计划起飞${f.scheduled_departure.replace('T', ' ').substring(0, 16)}，`;
+          reply += `计划起飞${new Date(f.scheduled_departure).toISOString().replace('T', ' ').substring(0, 16)}，`;
           reply += `登机口${f.gate}，`;
           reply += `状态${f.status}。`;
           if (f.status === '延误') {

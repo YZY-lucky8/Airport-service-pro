@@ -137,6 +137,7 @@ class AgentDispatcher {
       state.audit.push({
         phase: 'guardrail',
         flag: guardResult.flag,
+        reason: guardResult.reason,
         timestamp: new Date().toISOString(),
       });
 
@@ -511,7 +512,7 @@ class AgentDispatcher {
         responseText,
         perception.confidence,
         state.audit.find(a => a.phase === 'guardrail')?.flag !== 'clean' ? 1 : 0,
-        state.audit.find(a => a.phase === 'guardrail')?.flag || null,
+        state.audit.find(a => a.phase === 'guardrail')?.reason || null,
         state.latency,
       ]);
     } catch (e) {

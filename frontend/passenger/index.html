@@ -1478,9 +1478,12 @@
 
       const micBtn = document.getElementById('micBtn');
       micBtn.onclick = async () => {
+        if (!recognition) { addChatMessage('❌ 当前浏览器不支持语音识别'); return; }
         if (!micReady) { await preRequestMic(); if (!micReady) return; }
-        try { recognition.abort(); } catch (e) { }
         micBtn.classList.add('listening');
+        try {
+          recognition.stop(); // 安全地停止可能正在运行的识别
+        } catch (e) { /* ignore */ }
         try {
           recognition.start();
         } catch (e) {

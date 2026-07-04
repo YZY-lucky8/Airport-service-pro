@@ -322,6 +322,24 @@ const csrfProtection = (req, res, next) => {
 // app.use(csrfProtection);
 
 // ============================================================
+// GET /api/health
+app.get('/api/health', async (req, res) => {
+  const status = {
+    status: 'ok',
+    uptime: process.uptime(),
+    memory: process.memoryUsage().rss / 1024 / 1024 + ' MB',
+    timestamp: new Date().toISOString(),
+  };
+  try {
+    const [rows] = await db.pool.query('SELECT COUNT(*) as c FROM flight');
+    status.db = 'connected';
+    status.flights = rows[0]?.c || 0;
+  } catch (e) {
+    status.db = 'error: ' + e.message;
+  }
+  res.json(status);
+});
+
 // 🔐 认证路由 (Auth Routes)
 // ============================================================
 

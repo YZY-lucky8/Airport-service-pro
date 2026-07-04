@@ -198,13 +198,19 @@ class AgentDispatcher {
 
       // ─── 情感融合：高情感先安抚 ───
       if (perception.emotionIntensity >= 5 && perception.emotion !== '平静') {
-        const emotionAnalysis = this.emotion.analyze(text);
-        responseText = this.emotion.wrapWithEmotion(responseText, emotionAnalysis);
+        // 仅对纯字符串做情感融合（结构化对象跳过）
+        if (typeof responseText === 'string') {
+          const emotionAnalysis = this.emotion.analyze(text);
+          responseText = this.emotion.wrapWithEmotion(responseText, emotionAnalysis);
+        }
       }
 
       // ─── 安全防线 3：输出过滤 ───
       state.phase = 'OUTPUT_FILTER';
-      responseText = this.guardrail.sanitizeOutput(responseText);
+      // 仅对纯字符串做输出过滤（结构化对象跳过）
+      if (typeof responseText === 'string') {
+        responseText = this.guardrail.sanitizeOutput(responseText);
+      }
 
       // ─── 完成 ───
       state.phase = 'DONE';
@@ -446,7 +452,7 @@ class AgentDispatcher {
           let reply = '';
           matched.slice(0, 3).forEach((r, i) => {
             const step = i + 1;
-            const desc = `${step}. ${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。`;
+            let desc = `${step}. ${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。`;
             if (r.description) {
               desc += `${r.description}。`;
             }

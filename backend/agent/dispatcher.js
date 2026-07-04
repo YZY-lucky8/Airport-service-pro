@@ -57,6 +57,7 @@ const ALLOWED_ACTIONS = new Set([
   'check_in',
   'small_talk_reply',
   'security_analyze',
+  'query_weather',
 ]);
 
 class AgentDispatcher {
@@ -248,6 +249,8 @@ class AgentDispatcher {
       'emotion_support+location_navigation': 'navigate_location',
       'checkin_seat': 'check_in',
       'emotion_support+checkin_seat': 'check_in',
+      'weather_query': 'query_weather',
+      'emotion_support+weather_query': 'query_weather',
       'emotion_support': 'emotion_soothe',
       'small_talk': 'small_talk_reply',
       'security_analyze': 'security_analyze',
@@ -414,23 +417,51 @@ class AgentDispatcher {
           const [rows] = await this.pool.query(`
             SELECT * FROM airport_poi
             WHERE is_active = 1
-            AND (name LIKE ? OR description LIKE ?)
+            AND (name LIKE ? OR description LIKE ? OR type LIKE ?)
             ORDER BY walking_time_min ASC
-            LIMIT 3
-          `, [`%${locationName}%`, `%${locationName}%`]);
+            LIMIT 5
+          `, [`%${locationName}%`, `%${locationName}%`, `%${entities.location}%`]);
 
           if (rows.length === 0) {
             return `抱歉，我暂时找不到${locationName}的准确位置。请查看航站楼导览图或询问工作人员。`;
           }
 
+          // 筛选最匹配的（名称精确匹配优先）
+          let matched = rows.filter(r => r.name === locationName || r.name.includes(locationName));
+          if (matched.length === 0) matched = rows.slice(0, 3);
+
+          // 构建结构化导航数据（供前端渲染卡片+路线）
+          const navResults = matched.slice(0, 3).map(r => ({
+            name: r.name,
+            type: r.type,
+            area: r.area,
+            floor: r.floor,
+            walking_time_min: r.walking_time_min,
+            description: r.description || '',
+            nearby_gates: r.nearby_gates || '',
+          }));
+
+          // 语音播报文本
+          let speechText = '';
           let reply = '';
-          rows.forEach((r, i) => {
-            reply += `${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。`;
-            if (r.description) reply += `${r.description}。`;
-            if (i < rows.length - 1) reply += ' ';
+          matched.slice(0, 3).forEach((r, i) => {
+            const step = i + 1;
+            const desc = `${step}. ${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。`;
+            if (r.description) {
+              desc += `${r.description}。`;
+            }
+            reply += desc + ' ';
+            speechText += desc;
           });
-          return reply;
+
+          // 返回结构化对象（前端识别 navResults 字段）
+          return {
+            reply: reply.trim(),
+            navResults,
+            speechText,
+          };
         } catch (e) {
+          console.error('navigate_location error:', e);
           return '查询位置信息时出错，请查看航站楼导览图或询问工作人员。';
         }
       }
@@ -441,6 +472,85 @@ class AgentDispatcher {
           return '好的呢！选座前先完成值机~ 请点击屏幕上方的"在线值机·选座"按钮，或者告诉我您的航班号，我来帮您看看~';
         }
         return '好的~ 请点击屏幕上方的"在线值机·选座"按钮办理值机哦。需要帮助的话，告诉我您的航班号，我帮您查~';
+      }
+
+      // ── 7.5. 天气查询（问题2 修复） ──
+      case 'query_weather': {
+        // 从实体提取城市，默认北京
+        let city = entities.city || '北京';
+        // 常见城市别名映射
+        const cityAlias = {
+          '上海': '上海', '广州': '广州', '深圳': '深圳', '成都': '成都',
+          '杭州': '杭州', '南京': '南京', '重庆': '重庆', '武汉': '武汉',
+          '长沙': '长沙', '西安': '西安', '昆明': '昆明', '大连': '大连',
+          '贵阳': '贵阳', '郑州': '郑州', '济南': '济南', '沈阳': '沈阳',
+          '哈尔滨': '哈尔滨', '青岛': '青岛', '厦门': '厦门', '珠海': '珠海',
+        };
+        for (const [alias, cn] of Object.entries(cityAlias)) {
+          if (originalText.includes(alias)) { city = cn; break; }
+        }
+        // 从航班目的地提取
+        if (entities.flight_no || state.flightNo) {
+          const fNo = entities.flight_no || state.flightNo;
+          try {
+            const [fRows] = await this.pool.query('SELECT arrival_city FROM flight WHERE flight_no = ?', [fNo]);
+            if (fRows.length > 0 && city === '北京') city = fRows[0].arrival_city;
+          } catch (e) { /* ignore */ }
+        }
+
+        try {
+          const https = require('https');
+          const weatherData = await new Promise((resolve, reject) => {
+            https.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1&lang=zh`, (resp) => {
+              let chunks = [];
+              resp.on('data', c => chunks.push(c));
+              resp.on('end', () => resolve(JSON.parse(Buffer.concat(chunks).toString())));
+            }).on('error', reject);
+          });
+          const current = weatherData.current_condition?.[0] || {};
+          const nearest = weatherData.nearest_area?.[0] || {};
+          const weatherCity = nearest.areaName?.find(a => a.value.includes('市') || a.value.includes('县'))?.value || city;
+          const desc = current.lang_zh?.[0]?.value || current.weatherDesc?.[0]?.value || '未知';
+          const temp = current.temp_C || '--';
+          const feels = current.FeelsLikeC || temp;
+          const humidity = current.humidity || '--';
+          const wind = current.windspeedKmph || '--';
+          const windDir = current.winddir16Point || '';
+          const rain = current.pprecip || '0';
+
+          let reply = `${weatherCity}当前天气：${desc}，气温${temp}℃，体感${feels}℃。`;
+          reply += `湿度${humidity}%，${windDir ? windDir + '' : ''}风速${wind}km/h。`;
+          if (parseFloat(rain) > 0) reply += `当前有降水(${rain}mm)，请携带雨具。`;
+          else if (parseFloat(rain) === 0) reply += `暂无降水。`;
+
+          // 穿衣建议
+          const t = parseFloat(temp);
+          if (t >= 30) reply += '天气炎热，建议穿轻薄透气的夏装。';
+          else if (t >= 25) reply += '天气温暖，建议穿短袖/薄衬衫。';
+          else if (t >= 20) reply += '天气舒适，建议穿长袖衬衫/薄外套。';
+          else if (t >= 15) reply += '天气凉爽，建议穿外套/卫衣。';
+          else if (t >= 10) reply += '天气偏冷，建议穿毛衣/厚外套。';
+          else if (t >= 0) reply += '天气寒冷，建议穿棉服/羽绒服。';
+          else reply += '天气严寒，请注意保暖，穿厚羽绒服。';
+
+          // 结构化数据（前端可渲染天气卡片）
+          return {
+            reply,
+            weather: {
+              city: weatherCity,
+              temp: current.temp_C,
+              feelsLike: current.FeelsLikeC,
+              desc,
+              humidity: current.humidity,
+              wind: current.windspeedKmph,
+              windDir: current.winddir16Point,
+              rain: current.pprecip,
+            },
+          };
+        } catch (e) {
+          console.error('天气查询失败:', e.message);
+          return `暂时无法获取${city}的天气信息，请稍后再试。机场内空调温度约22-24℃，请注意保暖。`;
+        }
       }
 
       // ── 8. 情绪安抚 ──

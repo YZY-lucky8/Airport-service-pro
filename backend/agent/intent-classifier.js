@@ -63,9 +63,10 @@ class IntentClassifier {
       },
 
       // 6. 地点导航（优先级较低，避免与知识库冲突）
+      // 支持口语/品牌词：肯德基、星巴克、麦当劳、海底捞、华为、DUTY FREE 等
       location_navigation: {
-        keywords: ['安检', '卫生间', '厕所', '餐厅', '吃饭', '免税店', '购物', '商店', '值机', '办登机牌', '行李提取', '失物招领', '地铁', '公交', '出租车', '大巴', '停车'],
-        regex: [/.*安检.*在/, /.*卫生间.*在/, /.*餐厅.*在/, /.*在哪/, /.*到.*怎么走/],
+        keywords: ['安检', '卫生间', '厕所', '餐厅', '吃饭', '免税店', '购物', '商店', '值机', '办登机牌', '行李提取', '失物招领', '地铁', '公交', '出租车', '大巴', '停车', '肯德基', 'KFC', '星巴克', '麦当劳', '海底捞', '华为', 'DUTY FREE', 'Duty Free', '真功夫', '书店'],
+        regex: [/.*安检.*在/, /.*卫生间.*在/, /.*餐厅.*在/, /.*在哪/, /.*到.*怎么走/, /.*去哪/, /去.*怎么走/, /找.*在/, /.*肯德基/, /.*星巴克/, /.*麦当劳/, /.*海底捞/, /.*华为/],
         entities: ['location'],
         priority: 70,
       },
@@ -76,6 +77,14 @@ class IntentClassifier {
         regex: [/.*值机/, /.*选座/, /.*靠窗/, /.*靠过道/, /.*换座/],
         entities: ['flight_no', 'seat_pref'],
         priority: 85,
+      },
+
+      // 7.5. 天气查询（问题2 修复）
+      weather_query: {
+        keywords: ['天气', '气温', '温度', '下雨', '晴天', '阴天', '多云', '有雨吗', '会下雨', '冷不冷', '热不热', '穿什么', '带伞', '天气预报'],
+        regex: [/.*天气/, /.*下雨/, /.*气温/, /.*温度/, /.*冷不冷/, /.*热不热/, /.*带.*伞/, /.*穿.*什么/],
+        entities: ['city'],
+        priority: 75,
       },
 
       // 8. 闲聊
@@ -247,6 +256,27 @@ class IntentClassifier {
         entities.location = loc;
         entities.location_name = kw;
         break;
+      }
+    }
+
+    // 品牌词 → POI 名称映射（自然语言导航核心）
+    const brandMap = {
+      '肯德基': '肯德基', 'KFC': '肯德基',
+      '星巴克': '星巴克',
+      '麦当劳': '麦当劳',
+      '海底捞': '海底捞',
+      '华为': '华为旗舰店',
+      'DUTY FREE': 'DUTY FREE免税店', 'Duty Free': 'DUTY FREE免税店', '免税店': 'DUTY FREE免税店',
+      '真功夫': '真功夫',
+      '书店': '机场书店',
+    };
+    // 仅当 location_name 未被通用关键词匹配时，才用品牌名覆盖
+    if (!entities.location_name) {
+      for (const [brand, poiName] of Object.entries(brandMap)) {
+        if (text.includes(brand)) {
+          entities.location_name = poiName;
+          break;
+        }
       }
     }
 

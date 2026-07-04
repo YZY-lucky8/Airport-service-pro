@@ -217,6 +217,91 @@
       transform: translateX(4px);
     }
 
+    /* ── 导航结果卡片 ── */
+    .nav-card {
+      background: white;
+      border: 1.5px solid #c8e1f5;
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.08);
+    }
+    .nav-card:hover {
+      border-color: #1565C0;
+      box-shadow: 0 4px 16px rgba(21, 101, 192, 0.18);
+      transform: translateY(-2px);
+    }
+    .nav-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .nav-card-icon {
+      font-size: 28px;
+    }
+    .nav-card-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0a2f5a;
+    }
+    .nav-card-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: #597a9a;
+      margin-bottom: 4px;
+    }
+    .nav-card-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-card-desc {
+      font-size: 13px;
+      color: #8aa4be;
+    }
+    .nav-card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .nav-card-btn {
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .nav-card-btn.primary {
+      background: #1565C0;
+      color: white;
+    }
+    .nav-card-btn.primary:hover {
+      background: #0d47a1;
+    }
+    .nav-card-btn.secondary {
+      background: #e8f0fe;
+      color: #1565C0;
+    }
+    .nav-card-btn.secondary:hover {
+      background: #d0e2fc;
+    }
+    .elder-mode .nav-card-name {
+      font-size: 22px !important;
+    }
+    .elder-mode .nav-card-meta {
+      font-size: 18px !important;
+    }
+    .elder-mode .nav-card-btn {
+      font-size: 18px !important;
+      padding: 12px 24px !important;
+    }
+
     /* 中间地图区 */
     .center-panel {
       flex: 1;
@@ -450,13 +535,53 @@
     }
 
     .elder-mode .chat-bubble {
-      font-size: 24px !important;
-      padding: 18px 24px !important;
+      font-size: 28px !important;
+      padding: 24px 32px !important;
+      line-height: 1.6 !important;
     }
 
     .elder-mode .func-btn {
-      font-size: 20px !important;
-      padding: 16px !important;
+      font-size: 24px !important;
+      padding: 22px !important;
+      gap: 20px !important;
+      border-radius: 28px !important;
+    }
+
+    .elder-mode .func-icon {
+      font-size: 36px !important;
+      min-width: 50px !important;
+    }
+
+    .elder-mode .nav-card {
+      padding: 28px !important;
+      border-radius: 24px !important;
+    }
+
+    .elder-mode .nav-card-icon {
+      font-size: 42px !important;
+    }
+
+    .elder-mode .mic-btn {
+      width: 80px !important;
+      height: 80px !important;
+      font-size: 40px !important;
+    }
+
+    .elder-mode #textInput {
+      font-size: 26px !important;
+      padding: 18px 24px !important;
+    }
+
+    .elder-mode .page-title {
+      font-size: 32px !important;
+    }
+
+    .elder-mode {
+      background: #FFFEF7 !important;
+    }
+
+    .elder-mode .main-panel {
+      max-width: 800px !important;
     }
 
     /* ── 打字中动画 ── */
@@ -1264,8 +1389,28 @@
         hideTyping(typingEl);
 
         if (data.success) {
-          addChatMessage(data.response, 'system');
-          speakText(data.response);
+          // 处理结构化导航响应（问题1 修复）
+          let displayText = data.response;
+          if (typeof data.response === 'object') {
+            displayText = data.response.reply || JSON.stringify(data.response);
+            addChatMessage(displayText, 'system');
+            // 渲染导航卡片
+            if (data.response.navResults && data.response.navResults.length > 0) {
+              renderNavCards(data.response.navResults);
+            }
+            // 语音播报用 speechText
+            if (data.response.speechText) {
+              speakText(data.response.speechText);
+            }
+          } else {
+            addChatMessage(displayText, 'system');
+            speakText(displayText);
+          }
+
+          // 处理结构化天气响应（问题2 修复）
+          if (typeof data.response === 'object' && data.response.weather) {
+            renderWeatherCard(data.response.weather);
+          }
 
           // ── 根据 intent 触发 UI 动作 ──
           const intent = data.intent || '';
@@ -1414,6 +1559,109 @@
     const seatData = generateSeatData();
 
     function addChatMessage(text, type = 'system') { let box = document.getElementById('chatBox'); let div = document.createElement('div'); div.className = `chat-bubble ${type === 'user' ? 'user-bubble' : 'system-bubble'}`; div.textContent = text; box.appendChild(div); box.scrollTop = box.scrollHeight; }
+
+    // ── 渲染导航结果卡片（问题1修复：自然语言导航） ──
+    function renderNavCards(results) {
+      const box = document.getElementById('chatBox');
+      const typeIcons = { restaurant: '🍽️', shop: '🛍️', toilet: '🚻', security: '🔍', checkin: '🛄', baggage: '🧳', lost: '🔎', special: '👴', transport: '🚌', gate: '🚪' };
+      results.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'nav-card';
+        card.innerHTML = `
+          <div class="nav-card-header">
+            <span class="nav-card-icon">${typeIcons[r.type] || '📍'}</span>
+            <span class="nav-card-name">${r.name}</span>
+          </div>
+          <div class="nav-card-meta">
+            <span>📍 ${r.area}${r.floor}</span>
+            <span>🚶 步行${r.walking_time_min}分钟</span>
+          </div>
+          ${r.description ? `<div class="nav-card-desc">${r.description}</div>` : ''}
+          ${r.nearby_gates ? `<div class="nav-card-desc">附近登机口：${r.nearby_gates}</div>` : ''}
+          <div class="nav-card-actions">
+            <button class="nav-card-btn primary" data-poi="${r.name}">🗺️ 开始导航</button>
+            <button class="nav-card-btn secondary" data-speak="${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。${r.description || ''}">🔊 语音播报</button>
+          </div>
+        `;
+        box.appendChild(card);
+        // 导航按钮
+        card.querySelector('.nav-card-btn.primary').onclick = () => {
+          drawRouteToPoi(r);
+          speakText(`为您导航到${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟`);
+        };
+        // 语音播报按钮
+        card.querySelector('.nav-card-btn.secondary').onclick = () => {
+          speakText(`${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。${r.description || ''}`);
+        };
+        box.scrollTop = box.scrollHeight;
+      });
+    }
+
+    // 根据POI信息在地图上画路线
+    function drawRouteToPoi(poi) {
+      // 从值机柜台出发
+      const from = AIRPORT_LOCATIONS['值机柜台'];
+      if (!from) return;
+      // 生成目的地坐标（基于 area 映射）
+      const areaCoords = {
+        'B区': { lng: 116.610512, lat: 40.080123 },
+        'C区': { lng: 116.608876, lat: 40.081043 },
+        '安检后': { lng: 116.613011, lat: 40.080408 },
+        '到达层': { lng: 116.612567, lat: 40.077867 },
+      };
+      const to = areaCoords[poi.area] || { lng: 116.613011 + Math.random() * 0.001, lat: 40.080408 + Math.random() * 0.001 };
+      if (routePolyline) routePolyline.setMap(null);
+      routePolyline = new AMap.Polyline({
+        path: [[from.lng, from.lat], [to.lng, to.lat]],
+        strokeColor: '#f44336',
+        strokeWeight: 6,
+        zIndex: 100,
+        strokeStyle: 'dashed',
+        strokeDasharray: [15, 10],
+      });
+      routePolyline.setMap(map);
+      // 标注目的地
+      const marker = new AMap.Marker({
+        position: [to.lng, to.lat],
+        content: `<div style="background:#f44336;color:#fff;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3)">${poi.name}</div>`,
+        offset: [0, -10],
+      });
+      marker.setMap(map);
+    }
+
+    // ── 渲染天气卡片（问题2 修复） ──
+    function renderWeatherCard(w) {
+      const box = document.getElementById('chatBox');
+      const rainIcon = parseFloat(w.rain) > 0 ? '🌧️' : (w.desc.includes('晴') ? '☀️' : w.desc.includes('阴') ? '☁️' : w.desc.includes('雨') ? '🌧️' : '🌤️');
+      const card = document.createElement('div');
+      card.className = 'nav-card';
+      card.style.background = 'linear-gradient(135deg, #e3f2fd, #bbdefb)';
+      card.style.cursor = 'default';
+      card.innerHTML = `
+        <div class="nav-card-header">
+          <span class="nav-card-icon">${rainIcon}</span>
+          <span class="nav-card-name">${w.city || '北京'} 天气</span>
+        </div>
+        <div class="nav-card-meta">
+          <span>🌡️ ${w.temp}℃</span>
+          <span>体感 ${w.feelsLike}℃</span>
+          <span>💧 湿度 ${w.humidity}%</span>
+        </div>
+        <div class="nav-card-meta">
+          <span>💨 ${w.windDir || ''}${w.wind}km/h</span>
+          <span>${parseFloat(w.rain) > 0 ? '🌧️ 降水 ' + w.rain + 'mm' : '☀️ 无降水'}</span>
+        </div>
+        <div class="nav-card-desc">${w.desc || ''}</div>
+        <div class="nav-card-actions">
+          <button class="nav-card-btn secondary" data-speak="weather">🔊 语音播报天气</button>
+        </div>
+      `;
+      box.appendChild(card);
+      card.querySelector('.nav-card-btn.secondary').onclick = () => {
+        speakText(`${w.city}当前天气${w.desc}，气温${w.temp}摄氏度，体感${w.feelsLike}摄氏度。湿度${w.humidity}百分比。${w.windDir}${w.wind}公里每小时。${parseFloat(w.rain) > 0 ? '有降水，请携带雨具。' : '暂无降水。'}`);
+      };
+      box.scrollTop = box.scrollHeight;
+    }
     function speakText(text) {
       if (!window.speechSynthesis) return;
       window.speechSynthesis.cancel();
@@ -1423,9 +1671,9 @@
       let voices = window.speechSynthesis.getVoices();
       let cnVoice = voices.find(v => v.lang === 'zh-CN' && /Xiao|Yun|Female|Female/.test(v.name)) || voices.find(v => v.lang === 'zh-CN') || voices.find(v => v.lang.startsWith('zh'));
       if (cnVoice) u.voice = cnVoice;
-      u.rate = isElderMode ? 0.8 : 0.95;
+      u.rate = isElderMode ? 0.7 : 0.95;
       u.pitch = isElderMode ? 1.1 : 1.05;
-      u.volume = 1;
+      u.volume = isElderMode ? 1.0 : 0.8;
       // Add small pause between sentences for natural rhythm
       let sentences = text.split(/([。！？；,，])/);
       let fullText = '';
@@ -1481,6 +1729,12 @@
     let micReady = false;
 
     async function preRequestMic() {
+      // 检查安全上下文（问题4 修复）
+      if (typeof window.isSecureContext === 'boolean' && window.isSecureContext === false) {
+        addChatMessage('⚠️ 当前页面不在安全上下文中。麦克风需要使用 HTTPS 或 localhost 访问。请联系管理员配置 HTTPS 证书。');
+        console.warn('[Mic] Not in secure context — getUserMedia will fail');
+        return;
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(t => t.stop());
@@ -1488,7 +1742,17 @@
         addChatMessage('✅ 麦克风已就绪,点击🎤即可语音');
       } catch (e) {
         console.error('权限请求失败', e);
-        addChatMessage('⚠️ 无法获取麦克风权限,请点击地址栏锁图标→麦克风→允许');
+        if (e.name === 'NotAllowedError') {
+          addChatMessage('⚠️ 麦克风被禁用,请点击地址栏锁图标→麦克风→允许');
+        } else if (e.name === 'NotFoundError') {
+          addChatMessage('⚠️ 未检测到麦克风设备,请检查硬件连接');
+        } else if (e.name === 'NotReadableError' || e.name === 'AbortError') {
+          addChatMessage('⚠️ 麦克风被其他程序占用,请关闭后重试');
+        } else if (e.name === 'SecurityError') {
+          addChatMessage('⚠️ 安全限制: 请在 HTTPS 或 localhost 环境下使用语音功能');
+        } else {
+          addChatMessage('⚠️ 无法获取麦克风权限: ' + e.message);
+        }
       }
     }
 

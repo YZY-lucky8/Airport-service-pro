@@ -325,6 +325,38 @@ const csrfProtection = (req, res, next) => {
 // 🔐 认证路由 (Auth Routes)
 // ============================================================
 
+// GET /api/weather?city=北京 (问题2修复：天气查询)
+app.get('/api/weather', async (req, res) => {
+  const city = req.query.city || '北京';
+  try {
+    const https = require('https');
+    const data = await new Promise((resolve, reject) => {
+      https.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1&lang=zh`, (resp) => {
+        let chunks = [];
+        resp.on('data', c => chunks.push(c));
+        resp.on('end', () => resolve(JSON.parse(Buffer.concat(chunks).toString())));
+      }).on('error', reject);
+    });
+    const current = data.current_condition?.[0] || {};
+    const nearest = data.nearest_area?.[0] || {};
+    res.json({
+      success: true,
+      city: nearest.areaName?.find(a => a.value.includes('市') || a.value.includes('县'))?.value || city,
+      temp_C: current.temp_C,
+      feelsLikeC: current.FeelsLikeC,
+      desc: current.lang_zh?.[0]?.value || current.weatherDesc?.[0]?.value || '',
+      humidity: current.humidity,
+      wind_kmph: current.windspeedKmph,
+      winddirDegree: current.winddir16Point,
+      visibility: current.visibility,
+      pprecipMM: current.pprecip,
+    });
+  } catch (e) {
+    console.error('天气查询失败:', e.message);
+    res.status(502).json({ success: false, error: '天气服务暂不可用' });
+  }
+});
+
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;

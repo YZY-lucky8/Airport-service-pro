@@ -2779,7 +2779,7 @@
             return h;
         }
 
-        const API_BASE_URL = '';
+        const API_BASE_URL = window.location.origin;
 
         // 通用API调用函数（自动附加 auth header，401 时重定向登录）
         async function apiCall(endpoint, options = {}) {
@@ -3114,7 +3114,7 @@
             const errorEl = document.getElementById('loginError');
 
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
@@ -3130,9 +3130,12 @@
                     // 更新用户名显示
                     const userSpan = document.querySelector('.header-user span');
                     if (userSpan) userSpan.textContent = data.username;
-                    initCharts();
-                    loadPageData('logs');
-                    loadPageData('audit');
+                    // 问题5 修复：登录成功后安全初始化图表和数据
+                    setTimeout(() => {
+                        try { initCharts(); } catch (ce) { console.warn('Chart init failed:', ce); }
+                        try { loadPageData('logs'); } catch (le) { console.warn('loadPageData logs failed:', le); }
+                        try { loadPageData('audit'); } catch (ae) { console.warn('loadPageData audit failed:', ae); }
+                    }, 100);
                 } else {
                     errorEl.textContent = data.error || '用户名或密码错误，请重试';
                     errorEl.style.display = 'block';
@@ -3547,7 +3550,14 @@
                 { time: '2026-06-20 18:00:00', param: 'HMAC Token 有效期', oldValue: '300s', newValue: '120s', confidence: 65, reason: '检测到异常 HMAC 签名模式', result: 'rejected' }
             ];
 
-            function confClass(v) { return v >= 90 ? 'high' : v >= 70 ? 'medium' : 'low'; }
+            // 置信度归一化：兼容 0-1 小数和 0-100 整数（问题5 修复）
+            function confClass(v) {
+                var pct = (v > 1) ? v : Math.round(v * 100);
+                return pct >= 90 ? 'high' : pct >= 70 ? 'medium' : 'low';
+            }
+            function confPct(v) {
+                return (v > 1) ? v : Math.round(v * 100);
+            }
 
             function renderThresholdCards(data) {
                 var container = document.getElementById('thresholdCardsRow');
@@ -3559,7 +3569,7 @@
                     html += '<div class="threshold-card' + (isAgent ? ' agent-mode' : '') + '">';
                     html += '<div class="threshold-card-header"><span class="threshold-card-name">' + t.name + '</span><span class="threshold-trend-tag ' + t.trendType + '">' + t.trend + '</span></div>';
                     html += '<div class="threshold-values"><span class="threshold-current">' + t.current + '</span><span class="threshold-suggested"><span class="prefix">Agent 建议: </span>' + t.suggested + '</span></div>';
-                    html += '<div class="confidence-bar-container"><div class="confidence-label"><span>Agent 置信度</span><span>' + t.confidence + '%</span></div><div class="confidence-bar"><div class="confidence-fill ' + confClass(t.confidence) + '" style="width:' + t.confidence + '%"></div></div></div>';
+                    html += '<div class="confidence-bar-container"><div class="confidence-label"><span>Agent 置信度</span><span>' + confPct(t.confidence) + '%</span></div><div class="confidence-bar"><div class="confidence-fill ' + confClass(t.confidence) + '" style="width:' + confPct(t.confidence) + '%"></div></div></div>';
                     if (isAgent) {
                         html += '<div style="text-align:center; margin-top: 8px;"><span class="auto-badge">🤖 Agent 自动管理中</span></div>';
                     } else {
@@ -3582,7 +3592,7 @@
                     html += '<td><strong>' + h.param + '</strong></td>';
                     html += '<td style="text-decoration: line-through; color: var(--text-assist);">' + h.oldValue + '</td>';
                     html += '<td style="color: var(--success); font-weight: 600;">' + h.newValue + '</td>';
-                    html += '<td><div class="confidence-table"><div class="confidence-table-bar"><div class="confidence-table-fill ' + confClass(h.confidence) + '" style="width:' + h.confidence + '%"></div></div><span>' + h.confidence + '%</span></div></td>';
+                    html += '<td><div class="confidence-table"><div class="confidence-table-bar"><div class="confidence-table-fill ' + confClass(h.confidence) + '" style="width:' + confPct(h.confidence) + '%"></div></div><span>' + confPct(h.confidence) + '%</span></div></td>';
                     html += '<td style="max-width: 240px; font-size: 12px;">' + h.reason + '</td>';
                     html += '<td><span class="result-badge ' + h.result + '">' + resultText + '</span></td>';
                     html += '</tr>';

@@ -16,7 +16,7 @@ const crypto = require('crypto');
 const JWT_SECRET = process.env.JWT_SECRET || crypto.createHash('sha256').update('Airport-service-pro-jwt-secret-change-me-in-production').digest('hex');
 const JWT_EXPIRY_SECONDS = parseInt(process.env.JWT_EXPIRY) || 86400; // 默认 24 小时
 const VALID_ADMIN_USERS = new Map();
-VALID_ADMIN_USERS.set('admin', 'Airport@2026Admin'); // 默认管理员，应尽快修改
+VALID_ADMIN_USERS.set('admin', 'admin'); // 默认管理员，应尽快修改
 
 // ── Base64Url 工具 ──
 function base64UrlEncode(str) {

@@ -438,9 +438,9 @@ class AgentDispatcher {
       // ── 7. 值机 ──
       case 'check_in': {
         if (originalText.includes('选座') || originalText.includes('座位') || originalText.includes('靠窗') || originalText.includes('过道')) {
-          return '选座功能需要您先完成值机。请点击屏幕上的"在线值机·选座"按钮，或告诉我您的航班号，我来帮您查看航班信息。';
+          return '好的呢！选座前先完成值机~ 请点击屏幕上方的"在线值机·选座"按钮，或者告诉我您的航班号，我来帮您看看~';
         }
-        return '请点击屏幕上的"在线值机·选座"按钮办理值机。如果需要帮助，请告诉我您的航班号。';
+        return '好的~ 请点击屏幕上方的"在线值机·选座"按钮办理值机哦。需要帮助的话，告诉我您的航班号，我帮您查~';
       }
 
       // ── 8. 情绪安抚 ──

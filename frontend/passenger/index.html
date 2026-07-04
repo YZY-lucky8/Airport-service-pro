@@ -806,61 +806,38 @@
 
     .plane-body {
       position: relative;
-      width: 380px;
+      width: 340px;
       height: 620px;
-      background: #fef9e8;
-      border-radius: 100px 100px 60px 60px;
-      border: 5px solid #1565C0;
       margin-bottom: 20px;
       z-index: 1;
     }
 
-    .plane-nose {
+    /* 用 SVG 绘制真实飞机轮廓 */
+    .plane-svg-wrap {
       position: absolute;
-      top: -18px;
+      top: 0;
       left: 50%;
-      width: 70px;
-      height: 60px;
-      background: #1976d2;
-      border-radius: 50%;
       transform: translateX(-50%);
-      z-index: 2;
+      width: 340px;
+      height: 620px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .plane-nose {
+      display: none;
     }
 
     .plane-tail {
-      position: absolute;
-      bottom: -18px;
-      left: 50%;
-      width: 90px;
-      height: 50px;
-      background: #0d47a1;
-      border-radius: 20px;
-      transform: translateX(-50%);
-      z-index: 2;
+      display: none;
     }
 
     .plane-wing-left {
-      position: absolute;
-      top: 35%;
-      left: -60px;
-      width: 80px;
-      height: 100px;
-      background: #1976d2;
-      border-radius: 30px 0 0 30px;
-      transform: rotate(-10deg);
-      z-index: 2;
+      display: none;
     }
 
     .plane-wing-right {
-      position: absolute;
-      top: 35%;
-      right: -60px;
-      width: 80px;
-      height: 100px;
-      background: #1976d2;
-      border-radius: 0 30px 30px 0;
-      transform: rotate(10deg);
-      z-index: 2;
+      display: none;
     }
 
     /* 舱位标签(不遮挡座位,不偏移) */
@@ -1165,10 +1142,19 @@
           </div>
           <div class="plane-view-area">
             <div class="plane-body" id="planeBody">
-              <div class="plane-nose"></div>
-              <div class="plane-wing-left"></div>
-              <div class="plane-wing-right"></div>
-              <div class="plane-tail"></div>
+              <svg class="plane-svg-wrap" viewBox="0 0 340 620" xmlns="http://www.w3.org/2000/svg">
+                <!-- 机翼 -->
+                <polygon points="60,260 10,190 10,280 60,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2"/>
+                <polygon points="280,260 330,190 330,280 280,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2"/>
+                <!-- 机身 -->
+                <ellipse cx="170" cy="310" rx="72" ry="290" fill="#fef9e8" stroke="#1565C0" stroke-width="4"/>
+                <!-- 驾驶舱 -->
+                <ellipse cx="170" cy="35" rx="38" ry="22" fill="#64b5f6" stroke="#1565C0" stroke-width="2"/>
+                <!-- 尾翼 -->
+                <polygon points="140,540 110,490 155,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1"/>
+                <polygon points="200,540 230,490 185,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1"/>
+                <polygon points="155,540 185,540 170,560" fill="#0d47a1"/>
+              </svg>
               <div class="cabin-section cabin-front">前舱</div>
               <div class="cabin-section cabin-middle">中舱</div>
               <div class="cabin-section cabin-back">后舱</div>
@@ -1282,17 +1268,27 @@
           speakText(data.response);
 
           // ── 根据 intent 触发 UI 动作 ──
-          const intent = data.intent;
-          if (intent === 'checkin') {
+          const intent = data.intent || '';
+          if (intent === 'checkin' || intent === 'check_in' || intent.includes('checkin') || intent.includes('check_in')) {
             addChatMessage('🛄 正在打开值机选座页面...', 'system');
             speakText('正在打开值机选座页面');
-            setTimeout(openSafetyModal, 800);
-          } else if (intent === 'poi_query' || intent === 'navigation') {
-            const poi = data.entities?.poi || data.entities?.gate;
+            setTimeout(openSafetyModal, 600);
+          } else if (intent === 'poi_query' || intent === 'navigation' || intent === 'location_navigation' || intent.includes('navigation') || intent.includes('navigate')) {
+            const poi = data.entities?.poi || data.entities?.gate || data.entities?.location_name || '';
             if (poi) {
               addChatMessage(`🗺️ 正在为您导航到 ${poi}`, 'system');
               speakText(`正在导航到${poi}`);
               drawRouteTo(poi);
+            } else {
+              for (const [cmd, name] of Object.entries(CMD_MAP)) {
+                if (text.includes(name)) { drawRouteTo(name); break; }
+              }
+            }
+          } else if (intent === 'flight_query') {
+            const gateNo = data.entities?.gate;
+            if (gateNo) {
+              addChatMessage(`🗺️ 正在为您导航到登机口 ${gateNo}`, 'system');
+              drawRouteTo('登机口A12');
             }
           }
         } else {
@@ -1507,11 +1503,11 @@
     function renderPlaneView() {
       let container = document.getElementById('planeSeatsContainer');
       container.innerHTML = '';
-      let bodyW = 380, bodyH = 620, seatW = 24, seatGap = 6, aisleW = 28;
+      let bodyW = 280, bodyH = 580, seatW = 22, seatGap = 5, aisleW = 24;
       let leftGroupStart = (bodyW - (3 * seatW + 2 * seatGap) - aisleW - (3 * seatW + 2 * seatGap)) / 2;
       let rightGroupStart = leftGroupStart + 3 * seatW + 2 * seatGap + aisleW;
-      let topStart = 95;
-      let rowRangeHeight = bodyH - topStart - 105; // 可用高度
+      let topStart = 80;
+      let rowRangeHeight = bodyH - topStart - 100; // 可用高度
       let rowH = rowRangeHeight / ROWS;
       seatData.forEach(seat => {
         if (seat.type === 'occupied') return;
@@ -1535,7 +1531,26 @@
 
     // -------------------- 事件绑定 --------------------
     document.getElementById('stopBtn').onclick = stopAllVoice;
-    document.querySelectorAll('.func-btn[data-cmd]').forEach(btn => { btn.addEventListener('click', () => { let cmd = btn.dataset.cmd; if (cmd === 'checkin') { addChatMessage('🛄 打开安全须知'); speakText('打开安全须知'); setTimeout(openSafetyModal, 600); } else if (CMD_MAP[cmd]) { let name = CMD_MAP[cmd]; let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`; addChatMessage(desc); speakText(desc); drawRouteTo(name); } }); });
+    document.querySelectorAll('.func-btn[data-cmd]').forEach(btn => { btn.addEventListener('click', () => {
+      let cmd = btn.dataset.cmd;
+      if (cmd === 'checkin') {
+        addChatMessage('🤖 好的，正在打开值机页面~');
+        speakText('好的，正在打开值机页面');
+        setTimeout(openSafetyModal, 600);
+      } else if (cmd === 'gate') {
+        let name = CMD_MAP[cmd];
+        let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+        addChatMessage(`🗺️ 正在为您导航到${name}，请跟着红色路线走~`);
+        speakText(`正在为您导航到${name}`);
+        drawRouteTo(name);
+      } else if (cmd === 'security' || cmd === 'restaurant' || cmd === 'toilet' || cmd === 'shop' || cmd === 'baggage' || cmd === 'lost' || cmd === 'special' || cmd === 'transport') {
+        let name = CMD_MAP[cmd];
+        let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+        addChatMessage(`🗺️ 为您导航到${name}，请跟着红色路线走~`);
+        speakText(`为您导航到${name}`);
+        drawRouteTo(name);
+      }
+    }); });
     document.getElementById('safetyBack').onclick = closeSafetyModal; document.getElementById('safetyClose').onclick = closeSafetyModal;
     document.getElementById('safetyNext').onclick = openSeatModal; document.getElementById('seatBack').onclick = closeSeatModal;
     document.getElementById('seatConfirm').onclick = confirmSeat;

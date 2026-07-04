@@ -92,12 +92,28 @@ class KnowledgeRetriever {
 
     if (words.length === 0) return [];
 
-    // 关键词字段匹配：任一关键词命中 keywords/title/content 即可
-    // 同时用短词（>=2字符）做子串匹配，解决中文无空格分词问题
-    const matchWords = words.filter(w => w.length >= 2);
-    const allWords = matchWords.length > 0 ? matchWords : words;
+    // 中文无空格，拆成长>=2的有效词
+    let words = query.split(/[,，。.、；:：!?！？]+/)
+      .map(w => w.trim())
+      .filter(w => w.length >= 1 && !stopWords.includes(w));
 
-    if (allWords.length === 0) return [];
+    // 如果只有1个长词（如"充电宝能托运吗"），拆出2-3字符的有意义子串
+    if (words.length === 1 && words[0].length > 3) {
+      const chunks = [];
+      const long = words[0];
+      // 滑动窗口拆词：取所有2-4字符连续子串
+      for (let len = 2; len <= Math.min(4, long.length); len++) {
+        for (let i = 0; i <= long.length - len; i++) {
+          const sub = long.substring(i, i + len);
+          if (!stopWords.includes(sub) && !chunks.includes(sub)) {
+            chunks.push(sub);
+          }
+        }
+      }
+      if (chunks.length > 0) words = chunks;
+    }
+
+    if (words.length === 0) return [];
 
     let sql = `SELECT id, title, content, category, keywords, priority FROM knowledge_base WHERE is_active = 1`;
     const params = [];
@@ -108,11 +124,11 @@ class KnowledgeRetriever {
     }
 
     // 任一有效词命中 keywords、title 或 content 即算匹配
-    const orParts = allWords.map(w =>
+    const orParts = words.map(() =>
       `(keywords LIKE ? OR title LIKE ? OR content LIKE ?)`
     ).join(' OR ');
     sql += ' AND (' + orParts + ')';
-    for (const w of allWords) {
+    for (const w of words) {
       params.push(`%${w}%`, `%${w}%`, `%${w}%`);
     }
     sql += ' ORDER BY priority DESC LIMIT ?';

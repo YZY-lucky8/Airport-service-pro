@@ -62,13 +62,13 @@ class IntentClassifier {
         priority: 70,
       },
 
-      // 6. 地点导航（优先级较低，避免与知识库冲突）
+      // 6. 地点导航（优先级高于知识问答，避免"餐厅在哪里"被误判为知识问答）
       // 支持口语/品牌词：肯德基、星巴克、麦当劳、海底捞、华为、DUTY FREE 等
       location_navigation: {
         keywords: ['安检', '卫生间', '厕所', '餐厅', '吃饭', '免税店', '购物', '商店', '值机', '办登机牌', '行李提取', '失物招领', '地铁', '公交', '出租车', '大巴', '停车', '肯德基', 'KFC', '星巴克', '麦当劳', '海底捞', '华为', 'DUTY FREE', 'Duty Free', '真功夫', '书店'],
-        regex: [/.*安检.*在/, /.*卫生间.*在/, /.*餐厅.*在/, /.*在哪/, /.*到.*怎么走/, /.*去哪/, /去.*怎么走/, /找.*在/, /.*肯德基/, /.*星巴克/, /.*麦当劳/, /.*海底捞/, /.*华为/],
+        regex: [/.*安检.*在/, /.*卫生间.*在/, /.*餐厅.*在/, /.*在哪/, /.*到.*怎么走/, /.*去哪/, /去.*怎么走/, /找.*在/, /.*肯德基/, /.*星巴克/, /.*麦当劳/, /.*海底捞/, /.*华为/, /.*在(哪里|哪|哪了)/, /.*怎么走/],
         entities: ['location'],
-        priority: 70,
+        priority: 82,
       },
 
       // 7. 值机选座
@@ -165,22 +165,26 @@ class IntentClassifier {
 
   /**
    * 意图匹配 — Constrained Decoding 方式
+   * 改进版：regex命中给予更高权重，tie-break时优先regex命中数多的intent
    */
   _matchIntent(text) {
     let bestIntent = 'unknown';
     let bestScore = 0;
+    let bestRegexHits = 0;
 
     for (const [intentName, def] of Object.entries(this.intentLibrary)) {
       let score = 0;
+      let kwHits = 0;
+      let regexHits = 0;
 
       // 关键词命中
       for (const kw of def.keywords) {
-        if (text.includes(kw)) score += 2;
+        if (text.includes(kw)) { kwHits++; score += 2; }
       }
 
-      // 正则命中（权重更高）
+      // 正则命中（权重更高，因为regex更具体）
       for (const re of def.regex) {
-        if (re.test(text)) score += 4;
+        if (re.test(text)) { regexHits++; score += 4; }
       }
 
       // 优先级加权
@@ -188,13 +192,17 @@ class IntentClassifier {
         score = score * (1 + def.priority / 100);
       }
 
-      if (score > bestScore) {
+      // 改进的tie-break：分数相同或接近(差值<10%)时，优先regex命中数多的
+      if (score > bestScore || 
+          (score > bestScore * 0.9 && regexHits > bestRegexHits)) {
         bestScore = score;
         bestIntent = intentName;
+        bestRegexHits = regexHits;
       }
     }
 
-    const confidence = bestScore > 0 ? Math.min(1, bestScore / 20) : 0;
+    // 改进置信度：基于keyword和regex命中数量综合计算
+    const confidence = bestScore > 0 ? Math.min(1, bestScore / 25) : 0;
     return { intent: bestIntent, confidence };
   }
 

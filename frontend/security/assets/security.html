@@ -3714,7 +3714,7 @@
 
             window.applyAgentSuggestion = async function (thresholdId, suggestedValue) {
                 try {
-                    await apiCall('/api/agent/threshold/apply', { method: 'POST', body: JSON.stringify({ thresholdId: thresholdId, value: suggestedValue }) });
+                    await apiCall('/api/agent/threshold/apply-agent', { method: 'POST', body: JSON.stringify({ thresholdId: thresholdId, value: suggestedValue }) });
                     alert('✅ 已应用 Agent 建议: ' + suggestedValue);
                     loadThresholdData();
                 } catch (e) {

@@ -3625,12 +3625,14 @@
                                 'hmac_token_ttl': 'HMAC Token 有效期',
                                 'slow_connection_timeout': '慢连接超时'
                             };
+                            // confidence 不在 security_threshold_config 表中，用默认值
+                            var conf = (typeof r.confidence === 'number') ? r.confidence : 85;
                             return {
                                 id: idMap[r.config_key] || r.config_key,
                                 name: nameMap[r.config_key] || r.config_key,
                                 current: r.config_value,
                                 suggested: r.agent_suggested_value || r.config_value,
-                                confidence: Math.round((r.confidence || 0.85) * 100),
+                                confidence: conf,
                                 trend: r.suggestion_reason ? '📈 ' + r.suggestion_reason : '-',
                                 trendType: r.agent_suggested_value && r.agent_suggested_value !== r.config_value ? 'rising' : 'normal',
                                 unit: ''

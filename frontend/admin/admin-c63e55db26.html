@@ -259,15 +259,61 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script>
-        // 所有 API 请求使用相对路径
-        async function fetchAPI(endpoint, authToken) {
+        // ── Token 管理 ──
+        function getToken() { return localStorage.getItem('admin_token'); }
+
+        // ── 登录 ──
+        function showLogin() {
+            if (document.getElementById('loginOverlay')) return;
+            const ov = document.createElement('div');
+            ov.id = 'loginOverlay';
+            ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0b2b44 0%,#123e60 100%);display:flex;align-items:center;justify-content:center;';
+            ov.innerHTML = '<div style="background:#fff;border-radius:12px;padding:40px 36px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;" id="loginBox"><h2 style="margin-bottom:24px;color:#0f172a;">🔐 管理后台登录</h2><input id="loginUser" placeholder="用户名" style="width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;"><input id="loginPwd" type="password" placeholder="密码" style="width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:16px;outline:none;box-sizing:border-box;"><button id="loginBtn" style="width:100%;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">登录</button><div id="loginErr" style="color:#ef4444;font-size:13px;margin-top:8px;min-height:20px;"></div></div>';
+            document.body.appendChild(ov);
+            document.getElementById('loginBtn').addEventListener('click', doLogin);
+            document.getElementById('loginPwd').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+        }
+        async function doLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPwd').value;
+            const errEl = document.getElementById('loginErr');
+            errEl.textContent = '';
+            if (!u || !p) { errEl.textContent = '请输入用户名和密码'; return; }
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p }),
+                });
+                const json = await res.json();
+                if (json.success && json.token) {
+                    localStorage.setItem('admin_token', json.token);
+                    const ov = document.getElementById('loginOverlay');
+                    if (ov) ov.remove();
+                    refreshAll();
+                    setInterval(() => { if (!refreshing) refreshAll(); }, 60000);
+                } else {
+                    errEl.textContent = json.error || '用户名或密码错误';
+                }
+            } catch (e) {
+                errEl.textContent = '网络错误，请检查后端服务';
+            }
+        }
+
+        // 所有 API 请求使用相对路径（自动带 token）
+        async function fetchAPI(endpoint) {
             try {
                 console.log(`[请求] ${endpoint}`);
+                const token = getToken();
                 const headers = { 'Content-Type': 'application/json' };
-                if (authToken) {
-                    headers['Authorization'] = `Bearer ${authToken}`;
-                }
+                if (token) headers['Authorization'] = `Bearer ${token}`;
                 const response = await fetch(endpoint, { headers });
+                // 401 → 清除 token 并显示登录
+                if (response.status === 401) {
+                    localStorage.removeItem('admin_token');
+                    showLogin();
+                    throw new Error('登录已过期，请重新登录');
+                }
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const json = await response.json();
                 console.log(`[响应] ${endpoint}:`, json);
@@ -446,8 +492,13 @@
                     else if (module === 'attack') renderAttackStatus();
                 }
             });
-            await refreshAll();
-            setInterval(() => { if (!refreshing) refreshAll(); }, 60000);
+            // 检查是否已登录
+            if (!getToken()) {
+                showLogin();
+            } else {
+                await refreshAll();
+                setInterval(() => { if (!refreshing) refreshAll(); }, 60000);
+            }
         });
 
         function escapeHtml(str) {

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>首都机场T3智慧服务 · 布局修正版</title>
+  <title>首都机场T3智慧服务</title>
   <style>
     * {
       margin: 0;
@@ -228,25 +228,30 @@
       transition: 0.2s;
       box-shadow: 0 2px 8px rgba(21, 101, 192, 0.08);
     }
+
     .nav-card:hover {
       border-color: #1565C0;
       box-shadow: 0 4px 16px rgba(21, 101, 192, 0.18);
       transform: translateY(-2px);
     }
+
     .nav-card-header {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 8px;
     }
+
     .nav-card-icon {
       font-size: 28px;
     }
+
     .nav-card-name {
       font-size: 18px;
       font-weight: 700;
       color: #0a2f5a;
     }
+
     .nav-card-meta {
       display: flex;
       gap: 16px;
@@ -254,20 +259,24 @@
       color: #597a9a;
       margin-bottom: 4px;
     }
+
     .nav-card-meta span {
       display: flex;
       align-items: center;
       gap: 4px;
     }
+
     .nav-card-desc {
       font-size: 13px;
       color: #8aa4be;
     }
+
     .nav-card-actions {
       display: flex;
       gap: 10px;
       margin-top: 12px;
     }
+
     .nav-card-btn {
       padding: 8px 18px;
       border-radius: 20px;
@@ -277,26 +286,33 @@
       cursor: pointer;
       transition: 0.2s;
     }
+
     .nav-card-btn.primary {
       background: #1565C0;
       color: white;
     }
+
     .nav-card-btn.primary:hover {
       background: #0d47a1;
     }
+
     .nav-card-btn.secondary {
       background: #e8f0fe;
       color: #1565C0;
     }
+
     .nav-card-btn.secondary:hover {
       background: #d0e2fc;
     }
+
     .elder-mode .nav-card-name {
       font-size: 22px !important;
     }
+
     .elder-mode .nav-card-meta {
       font-size: 18px !important;
     }
+
     .elder-mode .nav-card-btn {
       font-size: 18px !important;
       padding: 12px 24px !important;
@@ -443,8 +459,15 @@
     }
 
     @keyframes micPulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5); }
-      50% { box-shadow: 0 0 0 12px rgba(229, 57, 53, 0); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5);
+      }
+
+      50% {
+        box-shadow: 0 0 0 12px rgba(229, 57, 53, 0);
+      }
     }
 
     .stop-btn {
@@ -604,12 +627,27 @@
       animation: typingBounce 1.2s infinite;
     }
 
-    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
 
     @keyframes typingBounce {
-      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-      30% { transform: translateY(-8px); opacity: 1; }
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+
+      30% {
+        transform: translateY(-8px);
+        opacity: 1;
+      }
     }
 
     /* ── Agent 状态标签 ── */
@@ -634,8 +672,15 @@
     }
 
     @keyframes statusPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
     }
 
     /* 地图标记 */
@@ -698,6 +743,7 @@
     }
 
     /* 模态框通用 */
+    /* 模态框通用 */
     .modal {
       position: fixed;
       top: 0;
@@ -709,6 +755,7 @@
       align-items: center;
       justify-content: center;
       z-index: 100000;
+      z-index: 100000;
     }
 
     .modal-content {
@@ -719,6 +766,28 @@
       display: flex;
       flex-direction: column;
       position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 18px;
+      right: 24px;
+      font-size: 32px;
+      color: white;
+      cursor: pointer;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.3);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(0, 0, 0, 0.5);
     }
 
     /* 安全须知 */
@@ -868,8 +937,8 @@
     }
 
     .seat-card.selected {
-      border-color: #f44336;
-      background: #fff5f0;
+      border-color: #E53935;
+      background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
     }
 
     .seat-card.disabled {
@@ -923,13 +992,37 @@
       background: #eef4fc;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      background: linear-gradient(180deg, #f0f7ff 0%, #e6f2ff 100%);
+      padding: 24px;
+    }
+
+    .plane-view-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .plane-view-header h3 {
+      color: #005599;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .plane-top-view {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
       justify-content: center;
-      padding: 16px;
-      overflow: auto;
+      position: relative;
+      overflow-y: auto;
+      padding: 20px 0 40px 0;
     }
 
     .plane-body {
+      width: 360px;
+      height: 1000px;
+      background: #fafafa;
+      border-radius: 100px 100px 50px 50px;
+      border: 5px solid #0077cc;
       position: relative;
       width: 340px;
       height: 620px;
@@ -973,25 +1066,23 @@
       padding: 4px 18px;
       border-radius: 12px;
       background: white;
-      border: 2px solid #1565C0;
-      font-size: 14px;
-      font-weight: bold;
-      color: #0d47a1;
-      z-index: 10;
+      color: #005599;
+      border: 2px solid #c8e1f5;
+      z-index: 20;
       pointer-events: none;
-      white-space: nowrap;
     }
 
     .cabin-front {
       top: 8%;
+      top: 8%;
     }
 
     .cabin-middle {
-      top: 44%;
+      top: 33%;
     }
 
     .cabin-back {
-      bottom: 12%;
+      top: 60%;
     }
 
     /* 座位容器 - 优化垂直范围 */
@@ -1008,11 +1099,14 @@
       position: absolute;
       width: 24px;
       height: 24px;
-      border-radius: 6px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 11px;
+      color: #fff;
       font-weight: bold;
       color: white;
       cursor: pointer;
@@ -1021,11 +1115,17 @@
     }
 
     .seat-dot.available {
-      background: #4caf50;
+      background: #4CAF50;
+    }
+
+    .seat-dot.selected {
+      background: #E53935;
+      transform: scale(1.2);
+      z-index: 10;
     }
 
     .seat-dot.popular {
-      background: #ff9800;
+      background: #FF9800;
     }
 
     .seat-dot.cheap {
@@ -1033,14 +1133,13 @@
     }
 
     .seat-dot.exit {
-      background: #ffc107;
+      background: #FFC107;
       color: #333;
     }
 
     .seat-dot.occupied {
-      background: #9e9e9e;
-      cursor: not-allowed;
-      opacity: 0.6;
+      background: #9E9E9E;
+      cursor: default;
     }
 
     .seat-dot.selected {
@@ -1144,7 +1243,281 @@
 
     .selected-seat-toast.show {
       opacity: 1;
-      transform: translateX(-50%) translateY(-20px);
+    }
+
+    /* 响应式 */
+    @media (max-width: 1200px) {
+      .seat-list-area {
+        width: 45%;
+      }
+
+      .seat-cards-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .seat-list-area {
+        width: 100%;
+        height: 40%;
+      }
+
+      .plane-view-area {
+        width: 100%;
+        height: 60%;
+      }
+    }
+
+    /* ===== #planeSeatsContainer 定位（Z 功能逻辑依赖，补充自 Z） ===== */
+    #planeSeatsContainer {
+      position: absolute;
+      top: 9%;
+      left: 5%;
+      width: 90%;
+      height: 82%;
+      z-index: 15;
+    }
+
+
+    /* ============================================================
+       【新增】Q版AI机长形象 + 语音音量可视化 + 思考提示（2026-08-03）
+       ============================================================ */
+    /* ── Q版机长头像容器 ── */
+    .captain-avatar {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #1b4d8f 0%, #0a2f5a 72%);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(255, 215, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .captain-avatar svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .captain-avatar[data-status="listening"],
+    .captain-avatar[data-status="speaking"] {
+      animation: captainGlow 1.2s ease-in-out infinite;
+    }
+
+    @keyframes captainGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(255, 215, 0, 0.9), 0 0 0 4px rgba(255, 215, 0, 0.16);
+      }
+
+      50% {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(255, 215, 0, 0.9), 0 0 0 10px rgba(255, 215, 0, 0.05);
+      }
+    }
+
+    .captain-avatar[data-status="error"] {
+      animation: captainShake 0.4s linear 2;
+    }
+
+    @keyframes captainShake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
+    }
+
+    /* 眼睛状态 */
+    .captain-eye {
+      fill: #1a237e;
+      transition: all 0.25s ease;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .captain-avatar[data-status="listening"] .captain-eye {
+      fill: #0a2f5a;
+      animation: captainEyeBlink 1.6s ease-in-out infinite;
+    }
+
+    @keyframes captainEyeBlink {
+
+      0%,
+      90%,
+      100% {
+        transform: scaleY(1);
+      }
+
+      94% {
+        transform: scaleY(0.12);
+      }
+    }
+
+    .captain-avatar[data-status="thinking"] .captain-eye-left {
+      animation: eyeThinkLeft 1.4s ease-in-out infinite;
+    }
+
+    .captain-avatar[data-status="thinking"] .captain-eye-right {
+      animation: eyeThinkRight 1.4s ease-in-out infinite;
+    }
+
+    @keyframes eyeThinkLeft {
+
+      0%,
+      100% {
+        transform: translateX(-1px);
+      }
+
+      50% {
+        transform: translateX(-4px);
+      }
+    }
+
+    @keyframes eyeThinkRight {
+
+      0%,
+      100% {
+        transform: translateX(1px);
+      }
+
+      50% {
+        transform: translateX(4px);
+      }
+    }
+
+    /* 错误表情：X 眼 + 困惑嘴 */
+    .captain-avatar[data-status="error"] .captain-eye,
+    .captain-avatar[data-status="error"] .captain-mouth {
+      display: none !important;
+    }
+
+    .captain-avatar[data-status="error"] .captain-error-eye,
+    .captain-avatar[data-status="error"] .captain-error-mouth {
+      display: block !important;
+    }
+
+    /* 嘴状态 */
+    .captain-mouth {
+      transform-box: fill-box;
+      transform-origin: center;
+      transition: all 0.2s ease;
+    }
+
+    .captain-avatar[data-status="speaking"] .captain-mouth {
+      animation: mouthTalk 0.42s ease-in-out infinite alternate;
+    }
+
+    @keyframes mouthTalk {
+      from {
+        transform: scaleY(0.55);
+      }
+
+      to {
+        transform: scaleY(1.35);
+      }
+    }
+
+    /* 状态文案区（chat-header 副标题） */
+    .chat-header-sub {
+      min-height: 18px;
+    }
+
+    /* ── 语音音量可视化：纯CSS声波动画条 ── */
+    .voice-wave {
+      display: none;
+      align-items: center;
+      gap: 3px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 20px;
+      background: rgba(21, 101, 192, 0.10);
+      border: 1px solid rgba(21, 101, 192, 0.25);
+      flex-shrink: 0;
+    }
+
+    .voice-wave.active {
+      display: inline-flex;
+    }
+
+    .voice-wave span {
+      width: 4px;
+      height: 8px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #ffd700, #1565C0);
+      animation: waveJump 0.9s ease-in-out infinite;
+    }
+
+    .voice-wave span:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .voice-wave span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .voice-wave span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .voice-wave span:nth-child(4) {
+      animation-delay: 0.45s;
+    }
+
+    .voice-wave span:nth-child(5) {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes waveJump {
+
+      0%,
+      100% {
+        height: 8px;
+      }
+
+      50% {
+        height: 26px;
+      }
+    }
+
+    /* ── "正在思考..."提示（追加到打字中指示器） ── */
+    .typing-indicator::after {
+      content: '正在思考...';
+      font-size: 14px;
+      color: #597a9a;
+      margin-left: 8px;
+      align-self: center;
+      white-space: nowrap;
+    }
+
+    /* ── 天气卡片主题（增强版，深蓝+金） ── */
+    .weather-card {
+      background: linear-gradient(135deg, #0a2f5a 0%, #1565C0 100%) !important;
+      border: 1px solid rgba(255, 215, 0, 0.4) !important;
+    }
+
+    .weather-card .nav-card-name {
+      color: #ffd700;
+    }
+
+    .weather-card .nav-card-meta {
+      color: #dcecff;
+    }
+
+    .weather-card .nav-card-desc {
+      color: #cfe3ff;
     }
   </style>
 </head>
@@ -1189,6 +1562,9 @@
         </div>
         <div class="ctrl-bar">
           <button class="mic-btn" id="micBtn" title="语音输入">🎤</button>
+          <div class="voice-wave" id="voiceWave" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
           <div class="text-input-wrap">
             <input type="text" id="textInput" placeholder="输入问题,如:帮我查CA1234航班、导航到安检..." autocomplete="off">
             <button class="send-btn" id="sendBtn" title="发送">➤</button>
@@ -1199,17 +1575,35 @@
 
       <div class="right-panel">
         <div class="chat-header">
-          <div class="captain-avatar"><svg viewBox="0 0 100 100" width="52" height="52">
-              <rect x="22" y="12" width="56" height="8" rx="3" fill="#fff" />
-              <rect x="28" y="4" width="44" height="16" rx="5" fill="#fff" />
-              <ellipse cx="50" cy="44" rx="24" ry="22" fill="#f5d0a9" />
-              <circle cx="40" cy="42" r="2.5" fill="#1a237e" />
-              <circle cx="61" cy="42" r="2.5" fill="#1a237e" />
-              <path d="M40 56 Q50 65 60 56" stroke="#c17a50" stroke-width="2.5" fill="none" />
+          <div class="captain-avatar" id="captainAvatar" data-status="idle"><svg viewBox="0 0 100 100" width="68"
+              height="68" aria-hidden="true">
+              <path d="M18 44 Q18 12 50 12 Q82 12 82 44 Z" fill="#0a2f5a" />
+              <rect x="14" y="40" width="72" height="9" rx="4.5" fill="#ffd700" />
+              <rect x="47" y="17" width="6" height="12" rx="2" fill="#fff" />
+              <circle cx="50" cy="22" r="5" fill="#ffd700" />
+              <circle cx="22" cy="60" r="4" fill="#f5c896" />
+              <circle cx="78" cy="60" r="4" fill="#f5c896" />
+              <ellipse cx="50" cy="62" rx="26" ry="24" fill="#fbe4c8" />
+              <ellipse cx="33" cy="68" rx="5" ry="3" fill="#ffc9a8" opacity="0.75" />
+              <ellipse cx="67" cy="68" rx="5" ry="3" fill="#ffc9a8" opacity="0.75" />
+              <g>
+                <circle class="captain-eye captain-eye-left" cx="40" cy="58" r="3.6" fill="#1a237e" />
+                <circle class="captain-eye captain-eye-right" cx="60" cy="58" r="3.6" fill="#1a237e" />
+                <circle cx="41.4" cy="56.6" r="1.1" fill="#fff" />
+                <circle cx="61.4" cy="56.6" r="1.1" fill="#fff" />
+              </g>
+              <g class="captain-error-eye" style="display:none;">
+                <path d="M37 55 L43 61 M43 55 L37 61" stroke="#1a237e" stroke-width="2.4" stroke-linecap="round" />
+                <path d="M57 55 L63 61 M63 55 L57 61" stroke="#1a237e" stroke-width="2.4" stroke-linecap="round" />
+              </g>
+              <path class="captain-mouth" d="M40 74 Q50 82 60 74" stroke="#c17a50" stroke-width="2.6" fill="none"
+                stroke-linecap="round" />
+              <path class="captain-error-mouth" style="display:none;" d="M42 78 Q50 72 58 78" stroke="#c17a50"
+                stroke-width="2.6" fill="none" stroke-linecap="round" />
             </svg></div>
           <div>
             <div class="chat-header-title">✈️ 机长智能助手</div>
-            <div class="chat-header-sub">语音 / 触控 7x24h</div>
+            <div class="chat-header-sub" id="captainStatusText">在线·随时为您服务</div>
           </div>
         </div>
         <div class="chat-box" id="chatBox">
@@ -1269,42 +1663,47 @@
             <div class="plane-body" id="planeBody">
               <svg class="plane-svg-wrap" viewBox="0 0 340 620" xmlns="http://www.w3.org/2000/svg">
                 <!-- 机翼 -->
-                <polygon points="60,260 10,190 10,280 60,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2"/>
-                <polygon points="280,260 330,190 330,280 280,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2"/>
+                <polygon points="60,260 10,190 10,280 60,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2" />
+                <polygon points="280,260 330,190 330,280 280,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2" />
                 <!-- 机身 -->
-                <ellipse cx="170" cy="310" rx="72" ry="290" fill="#fef9e8" stroke="#1565C0" stroke-width="4"/>
+                <ellipse cx="170" cy="310" rx="72" ry="290" fill="#fef9e8" stroke="#1565C0" stroke-width="4" />
                 <!-- 驾驶舱 -->
-                <ellipse cx="170" cy="35" rx="38" ry="22" fill="#64b5f6" stroke="#1565C0" stroke-width="2"/>
+                <ellipse cx="170" cy="35" rx="38" ry="22" fill="#64b5f6" stroke="#1565C0" stroke-width="2" />
                 <!-- 尾翼 -->
-                <polygon points="140,540 110,490 155,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1"/>
-                <polygon points="200,540 230,490 185,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1"/>
-                <polygon points="155,540 185,540 170,560" fill="#0d47a1"/>
+                <polygon points="140,540 110,490 155,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1" />
+                <polygon points="200,540 230,490 185,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1" />
+                <polygon points="155,540 185,540 170,560" fill="#0d47a1" />
               </svg>
               <div class="cabin-section cabin-front">前舱</div>
               <div class="cabin-section cabin-middle">中舱</div>
               <div class="cabin-section cabin-back">后舱</div>
               <div id="planeSeatsContainer"></div>
             </div>
-            <div class="seat-legend">
-              <div class="legend-grid">
-                <div class="legend-item">
-                  <div class="legend-color" style="background:#4CAF50"></div>可选
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background:#f44336"></div>已选
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background:#795548"></div>已占
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background:#ff9800"></div>热门
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background:#2196F3"></div>优惠
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background:#ffc107"></div>出口
-                </div>
+          </div>
+
+          <div class="seat-legend">
+            <div class="legend-title">座位图例</div>
+            <div class="legend-grid">
+              <div class="legend-item">
+                <div class="legend-color" style="background:#4CAF50"></div>可选
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background:#E53935"></div>已选
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background:#9E9E9E"></div>已占
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background:#FF9800"></div>热门
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background:#2196F3"></div>优惠
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background:#FFC107"></div>出口
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background:#ddd"></div>不可选
               </div>
             </div>
           </div>
@@ -1328,6 +1727,32 @@
     // 全局状态
     // ============================================================
     let agentSessionToken = null; // Agent session token
+    // ============================================================
+    // 【新增】Q版AI机长 · 状态文案映射（2026-08-03）
+    // ============================================================
+    const CAPTAIN_STATUS_MAP = {
+      idle: { text: '在线·随时为您服务' },
+      listening: { text: '🎧 正在听您说话...' },
+      thinking: { text: '🤔 思考中...' },
+      speaking: { text: '🗣️ 正在回答...' },
+      error: { text: '😅 没听清，能再说一遍吗？' }
+    };
+    // ============================================================
+    // 【新增】本地FAQ知识库数据（Agent 不可用时降级）
+    // 覆盖：天气/商店餐厅/航班状态/行李规则/航站楼设施/失物招领/特殊旅客/问候自我介绍
+    // ============================================================
+    const FAQ_ITEMS = [
+      { keywords: ['天气', '气温', '多少度', '温度'], reply: '🌤️ 当前北京首都机场T3航站楼天气：晴，气温约28℃，湿度约40%，东南风3级。如需查询具体城市天气，可尝试对我说"北京天气"哦~', speech: '当前首都机场天气晴朗，气温二十八度，湿度百分之四十，东南风三级。' },
+      { keywords: ['商店', '免税店', '购物', '买什么', '买点'], reply: '🛍️ T3航站楼2层设有免税店专区，主营美妆、烟酒、奢侈品等；另有便利店与纪念品商店，营业时间6:00-22:00。语音说"导航到免税店"可为您带路。', speech: 'T3航站楼二层设有免税店专区，主营美妆、烟酒、奢侈品，营业时间早六点到晚十点。' },
+      { keywords: ['餐厅', '吃饭', '美食', '吃什么', '饿'], reply: '🍽️ T3航站楼2层有中西餐厅、快餐与咖啡厅，营业时间6:00-22:00；另有登机口附近的简餐点。语音说"导航到餐厅"可为您带路。', speech: 'T3航站楼二层有中西餐厅、快餐与咖啡厅，营业时间早六点到晚十点。' },
+      { keywords: ['航班', '航班状态', '延误', '准点', '几点起飞', 'ca1234'], reply: '✈️ 您的航班CA1234（北京→上海）当前状态：准点，计划起飞时间14:30，登机口A12，建议提前30分钟到达登机口。如需查询其他航班，请提供航班号。', speech: '您的航班CA1234当前状态准点，计划起飞时间十四点三十分，登机口A12。' },
+      { keywords: ['行李', '托运', '超重', '登机箱', '携带'], reply: '🧳 行李规则：经济舱免费托运20kg，超重按每公斤收取费用；登机行李尺寸不超过20×40×55cm、重量不超过5kg。充电宝、锂电池必须随身携带，严禁托运。', speech: '经济舱免费托运二十公斤，超重需收费；登机行李不超过五十五厘米长，充电宝必须随身携带。' },
+      { keywords: ['设施', '卫生间', '厕所', '母婴', '充电', 'wifi', '网络', 'atm'], reply: '🏢 航站楼设施：2层设有卫生间（含母婴室）、饮水区、充电桩；全楼覆盖免费WiFi（连接 Airport-Free-WiFi 后按提示认证即可）；2层到达区有ATM机。', speech: '航站楼二层设有卫生间、母婴室、充电桩，全楼覆盖免费无线网络。' },
+      { keywords: ['失物', '丢失', '丢东西', '遗失'], reply: '🔎 失物招领处位于1层服务台旁（电话010-64599567）。您也可在自助终端上选择"失物招领"查看近期失物信息，或向工作人员描述物品特征协助查找。', speech: '失物招领处位于一层服务台旁，电话零一零六四五九九五六七。' },
+      { keywords: ['特殊旅客', '轮椅', '孕妇', '无人陪伴', '儿童', '老人'], reply: '👴 特殊旅客服务：航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务。请前往值机区"特殊旅客服务台"办理，或语音说"导航到特殊旅客"。', speech: '航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务，请到特殊旅客服务台办理。' },
+      { keywords: ['你好', '您好', 'hi', 'hello', '在吗', '哈喽'], reply: '👋 您好！我是首都机场T3智慧服务助手。您可以问我航班信息、导航路线、天气、行李规则等问题，也可以点击屏幕左侧按钮快速导航~', speech: '您好！我是首都机场T3智慧服务助手，很高兴为您服务。' },
+      { keywords: ['你是谁', '自我介绍', '介绍一下', '什么助手'], reply: '🤖 我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等一站式服务，24小时在线~', speech: '我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等服务。' }
+    ];
     let isAgentReplying = false;  // 防止重复发送
 
     // -------------------- 身份证页面 --------------------
@@ -1368,6 +1793,7 @@
     async function sendToAgent(text) {
       if (!text.trim() || isAgentReplying) return;
       isAgentReplying = true;
+      setCaptainStatus('thinking');
 
       // 显示用户消息
       addChatMessage(text, 'user');
@@ -1389,6 +1815,7 @@
         hideTyping(typingEl);
 
         if (data.success) {
+          setCaptainStatus('speaking');
           // 处理结构化导航响应（问题1 修复）
           let displayText = data.response;
           if (typeof data.response === 'object') {
@@ -1443,6 +1870,7 @@
         hideTyping(typingEl);
         console.error('Agent 调用失败:', e);
         // 降级:本地关键词匹配
+        setCaptainStatus('speaking');
         handleLocalFallback(text);
       }
 
@@ -1474,7 +1902,9 @@
           }
         }
       }
-      addChatMessage('🤔 没听清,试试说"值机"、"安检"、"登机口"、"老人机"');
+      // 【新增】本地FAQ知识库兜底（Agent 不可用时）
+      if (handleFAQ(text)) return;
+      addChatMessage('🤔 我没太明白，您能换种方式说吗？');
       speakText('请再说一次');
     }
 
@@ -1634,17 +2064,16 @@
       const box = document.getElementById('chatBox');
       const rainIcon = parseFloat(w.rain) > 0 ? '🌧️' : (w.desc.includes('晴') ? '☀️' : w.desc.includes('阴') ? '☁️' : w.desc.includes('雨') ? '🌧️' : '🌤️');
       const card = document.createElement('div');
-      card.className = 'nav-card';
-      card.style.background = 'linear-gradient(135deg, #e3f2fd, #bbdefb)';
+      card.className = 'nav-card weather-card';
       card.style.cursor = 'default';
       card.innerHTML = `
         <div class="nav-card-header">
           <span class="nav-card-icon">${rainIcon}</span>
           <span class="nav-card-name">${w.city || '北京'} 天气</span>
+          <span style="margin-left:auto;font-size:34px;font-weight:800;color:#ffd700;">${w.temp}℃</span>
         </div>
         <div class="nav-card-meta">
-          <span>🌡️ ${w.temp}℃</span>
-          <span>体感 ${w.feelsLike}℃</span>
+          <span>🌡️ 气温 ${w.temp}℃ / 体感 ${w.feelsLike}℃</span>
           <span>💧 湿度 ${w.humidity}%</span>
         </div>
         <div class="nav-card-meta">
@@ -1679,12 +2108,14 @@
       let fullText = '';
       for (let i = 0; i < sentences.length; i += 2) {
         if (i + 1 < sentences.length) {
-          fullText += sentences[i] + sentences[i+1] + ' ';
+          fullText += sentences[i] + sentences[i + 1] + ' ';
         } else {
           fullText += sentences[i];
         }
       }
       u.text = fullText;
+      u.onend = () => setCaptainStatus('idle');
+      u.onerror = () => setCaptainStatus('idle');
       window.speechSynthesis.speak(u);
     }
     function stopAllVoice() { window.speechSynthesis?.cancel(); addChatMessage('⏹️ 已停止播报'); }
@@ -1762,22 +2193,29 @@
       recognition = new SpeechRecog();
       recognition.lang = 'zh-CN'; recognition.continuous = false; recognition.interimResults = false;
 
-      recognition.onstart = () => addChatMessage('🎤 聆听中,请说话...');
+      recognition.onstart = () => {
+        addChatMessage('🎤 我在听，请说话~');
+        setCaptainStatus('listening');
+        showVoiceWave();
+      };
       recognition.onresult = (e) => {
         let text = e.results[0][0].transcript.trim();
-        addChatMessage(`🗣️ ${text}`, 'user');
-        // 直接发送到 Agent
+        // 用户消息统一由 sendToAgent 入口渲染，避免双重气泡
         sendToAgent(text);
       };
       recognition.onerror = (err) => {
         console.error('语音识别错误:', err);
+        hideVoiceWave();
+        setCaptainStatus('error');
+        setTimeout(() => setCaptainStatus('idle'), 2000);
         if (err.error === 'not-allowed') addChatMessage('⚠️ 麦克风被禁用,请检查权限');
-        else if (err.error === 'no-speech') addChatMessage('⚠️ 没有听到声音,请靠近麦克风');
+        else if (err.error === 'no-speech') addChatMessage('🎤 没听清，可以再说一遍吗？');
         else if (err.error === 'network') addChatMessage('⚠️ 网络错误,无法连接语音服务');
-        else addChatMessage(`⚠️ 识别失败: ${err.error}`);
+        else addChatMessage('🎤 没听清，可以再说一遍吗？');
       };
       recognition.onend = () => {
         micBtn.classList.remove('listening');
+        hideVoiceWave();
       };
 
       const micBtn = document.getElementById('micBtn');
@@ -1807,29 +2245,36 @@
     function getFilteredSeats() { if (currentFilter === 'all') return seatData.filter(s => s.type !== 'occupied'); return seatData.filter(s => { if (s.type === 'occupied') return false; if (currentFilter === 'window') return s.isWindow; if (currentFilter === 'aisle') return s.isAisle; if (currentFilter === 'exit') return s.type === 'exit'; if (currentFilter === 'cheap') return s.type === 'cheap'; return true; }); }
     function renderSeatCards() { let list = getFilteredSeats(); let container = document.getElementById('seatCardsContainer'); container.innerHTML = list.map(s => { let sel = selectedSeat?.seatNo === s.seatNo; let label = '可选', cls = 'seat-type-available'; if (s.type === 'popular') { label = '热门'; cls = 'seat-type-popular'; } else if (s.type === 'cheap') { label = '特惠'; cls = 'seat-type-cheap'; } else if (s.type === 'exit') { label = '出口'; cls = 'seat-type-exit'; } else if (s.type === 'occupied') { label = '已占'; cls = 'seat-type-occupied'; } let priceTxt = s.type === 'occupied' ? '已售' : (s.price > 0 ? `+¥${s.price}` : (s.price < 0 ? `-¥${-s.price}` : '免费')); return `<div class="seat-card ${sel ? 'selected' : ''}" onclick="selectSeat('${s.seatNo}')"><div class="seat-card-header"><span class="seat-number">${s.seatNo}</span><span class="seat-type-badge ${cls}">${label}</span></div><div class="seat-price">${priceTxt}</div></div>`; }).join(''); }
 
-    // 修正后的 renderPlaneView:座位对齐更精准
+    // A320 3+3 布局 renderPlaneView:每排6座(A-B-C|过道|D-E-F),26排,机头朝上
     function renderPlaneView() {
       let container = document.getElementById('planeSeatsContainer');
       container.innerHTML = '';
-      let bodyW = 280, bodyH = 580, seatW = 22, seatGap = 5, aisleW = 24;
-      let leftGroupStart = (bodyW - (3 * seatW + 2 * seatGap) - aisleW - (3 * seatW + 2 * seatGap)) / 2;
-      let rightGroupStart = leftGroupStart + 3 * seatW + 2 * seatGap + aisleW;
-      let topStart = 80;
-      let rowRangeHeight = bodyH - topStart - 100; // 可用高度
-      let rowH = rowRangeHeight / ROWS;
+      let rect = container.getBoundingClientRect();
+      let bodyW = rect.width, bodyH = rect.height;
+      let seatW = 24, seatGap = 6, aisleW = 34;
+      let leftGroupWidth = 3 * seatW + 2 * seatGap;
+      let rightGroupWidth = 3 * seatW + 2 * seatGap;
+      let totalWidth = leftGroupWidth + aisleW + rightGroupWidth;
+      let leftGroupStart = (bodyW - totalWidth) / 2;
+      let rightGroupStart = leftGroupStart + leftGroupWidth + aisleW;
+      let topPad = 50, bottomPad = 50;
+      let rowH = (bodyH - topPad - bottomPad) / ROWS;
       seatData.forEach(seat => {
-        if (seat.type === 'occupied') return;
         let dot = document.createElement('div');
         dot.className = `seat-dot ${seat.type} ${selectedSeat?.seatNo === seat.seatNo ? 'selected' : ''}`;
         dot.textContent = seat.col;
         let colIdx = SEAT_COLS.indexOf(seat.col);
         let x = colIdx < 3 ? leftGroupStart + colIdx * (seatW + seatGap) : rightGroupStart + (colIdx - 3) * (seatW + seatGap);
-        let y = topStart + (seat.row - 1) * rowH;
+        let y = topPad + (seat.row - 1) * rowH;
         dot.style.left = `${x}px`;
         dot.style.top = `${y}px`;
         dot.style.width = `${seatW}px`;
         dot.style.height = `${seatW}px`;
-        dot.onclick = () => selectSeat(seat.seatNo);
+        if (seat.type === 'occupied') {
+          dot.style.cursor = 'not-allowed';
+        } else {
+          dot.onclick = () => selectSeat(seat.seatNo);
+        }
         container.appendChild(dot);
       });
     }
@@ -1839,27 +2284,29 @@
 
     // -------------------- 事件绑定 --------------------
     document.getElementById('stopBtn').onclick = stopAllVoice;
-    document.querySelectorAll('.func-btn[data-cmd]').forEach(btn => { btn.addEventListener('click', () => {
-      let cmd = btn.dataset.cmd;
-      if (cmd === 'checkin') {
-        addChatMessage('🤖 好的，正在打开值机页面~');
-        speakText('好的，正在打开值机页面');
-        setTimeout(openSafetyModal, 600);
-        addChatMessage('🗺️ 值机柜台在C岛，请跟着红色路线走~', 'system');
-      } else if (cmd === 'gate') {
-        let name = CMD_MAP[cmd];
-        let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
-        addChatMessage(`🗺️ 正在为您导航到${name}，请跟着红色路线走~`);
-        speakText(`正在为您导航到${name}`);
-        drawRouteTo(name);
-      } else if (cmd === 'security' || cmd === 'restaurant' || cmd === 'toilet' || cmd === 'shop' || cmd === 'baggage' || cmd === 'lost' || cmd === 'special' || cmd === 'transport') {
-        let name = CMD_MAP[cmd];
-        let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
-        addChatMessage(`🗺️ 为您导航到${name}，请跟着红色路线走~`);
-        speakText(`为您导航到${name}`);
-        drawRouteTo(name);
-      }
-    }); });
+    document.querySelectorAll('.func-btn[data-cmd]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        let cmd = btn.dataset.cmd;
+        if (cmd === 'checkin') {
+          addChatMessage('🤖 好的，正在打开值机页面~');
+          speakText('好的，正在打开值机页面');
+          setTimeout(openSafetyModal, 600);
+          addChatMessage('🗺️ 值机柜台在C岛，请跟着红色路线走~', 'system');
+        } else if (cmd === 'gate') {
+          let name = CMD_MAP[cmd];
+          let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+          addChatMessage(`🗺️ 正在为您导航到${name}，请跟着红色路线走~`);
+          speakText(`正在为您导航到${name}`);
+          drawRouteTo(name);
+        } else if (cmd === 'security' || cmd === 'restaurant' || cmd === 'toilet' || cmd === 'shop' || cmd === 'baggage' || cmd === 'lost' || cmd === 'special' || cmd === 'transport') {
+          let name = CMD_MAP[cmd];
+          let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+          addChatMessage(`🗺️ 为您导航到${name}，请跟着红色路线走~`);
+          speakText(`为您导航到${name}`);
+          drawRouteTo(name);
+        }
+      });
+    });
     document.getElementById('safetyBack').onclick = closeSafetyModal; document.getElementById('safetyClose').onclick = closeSafetyModal;
     document.getElementById('safetyNext').onclick = openSeatModal; document.getElementById('seatBack').onclick = closeSeatModal;
     document.getElementById('seatConfirm').onclick = confirmSeat;
@@ -1874,6 +2321,46 @@
       initVoice();
       initTextInput();
     };
+
+    // ============================================================
+    // 【新增】Q版AI机长形象 · 状态联动（2026-08-03）
+    // 触发点：sendToAgent 被调用→thinking；Agent 返回且触发 speakText→speaking；
+    //         recognition.onstart→listening；speakText 播报结束 onend→idle；
+    //         recognition.onerror→error（2秒后恢复 idle）。
+    // ============================================================
+    function setCaptainStatus(status) {
+      const avatar = document.getElementById('captainAvatar');
+      if (!avatar) return;
+      avatar.setAttribute('data-status', status);
+      const textEl = document.getElementById('captainStatusText');
+      if (textEl && CAPTAIN_STATUS_MAP[status]) textEl.textContent = CAPTAIN_STATUS_MAP[status].text;
+    }
+
+    // ── 语音音量可视化：显示/隐藏声波动画条 ──
+    function showVoiceWave() {
+      const w = document.getElementById('voiceWave');
+      if (w) w.classList.add('active');
+    }
+    function hideVoiceWave() {
+      const w = document.getElementById('voiceWave');
+      if (w) w.classList.remove('active');
+    }
+
+    // ============================================================
+    // 【新增】本地FAQ知识库（Agent 不可用时降级）
+    // 在 handleLocalFallback 未命中分支调用；命中则回复并返回 true。
+    // ============================================================
+    function handleFAQ(text) {
+      const lower = (text || '').toLowerCase();
+      for (const item of FAQ_ITEMS) {
+        if (item.keywords.some(k => lower.includes(k))) {
+          addChatMessage(item.reply, 'system');
+          if (item.speech) speakText(item.speech);
+          return true;
+        }
+      }
+      return false;
+    }
   </script>
 </body>
 

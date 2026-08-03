@@ -743,6 +743,7 @@
     }
 
     /* 模态框通用 */
+    /* 模态框通用 */
     .modal {
       position: fixed;
       top: 0;
@@ -753,6 +754,7 @@
       display: none;
       align-items: center;
       justify-content: center;
+      z-index: 100000;
       z-index: 100000;
     }
 
@@ -788,124 +790,82 @@
       background: rgba(0, 0, 0, 0.5);
     }
 
-    /* ========== 安全须知 ========== */
+    /* 安全须知 */
     .safety-header {
-      background: #0077cc;
+      background: #0a2f5a;
       color: white;
-      padding: 22px 30px;
+      padding: 22px 32px;
       display: flex;
+      gap: 16px;
       align-items: center;
-      gap: 12px;
     }
 
     .safety-header h2 {
-      margin: 0;
       font-size: 28px;
     }
 
     .safety-tip {
-      color: #0077cc;
+      background: #e3f2fd;
+      padding: 14px 28px;
       font-size: 18px;
-      padding: 18px 30px;
-      background: #f2f9ff;
-    }
-
-    .safety-tip span {
-      font-weight: bold;
-      color: #ff6600;
+      color: #0d47a1;
     }
 
     .safety-content {
       flex: 1;
       overflow-y: auto;
-      padding: 20px 30px;
-      color: #333;
-      line-height: 1.9;
+      padding: 24px 32px;
+      line-height: 1.8;
       font-size: 18px;
-    }
-
-    .safety-content h3 {
-      color: #0077cc;
-      margin: 18px 0 10px;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .safety-content p {
-      margin-bottom: 14px;
-      color: #444;
     }
 
     .safety-btn-group {
+      padding: 20px 28px;
       display: flex;
-      gap: 16px;
+      gap: 20px;
       justify-content: flex-end;
-      padding: 20px 30px;
       background: #f8f8f8;
-      border-top: 1px solid #eee;
     }
 
     .safety-btn {
-      padding: 16px 36px;
-      border: none;
-      border-radius: 12px;
+      padding: 14px 32px;
+      border-radius: 40px;
       font-size: 18px;
+      border: none;
       cursor: pointer;
-      transition: all 0.25s;
       font-weight: 500;
     }
 
     .safety-btn-back {
-      background: #f2f9ff;
-      color: #0077cc;
-      border: 2px solid #c8e1f5;
-    }
-
-    .safety-btn-back:hover {
-      background: #d6e9ff;
+      background: #e3f2fd;
+      color: #0d47a1;
+      border: 2px solid #90CAF9;
     }
 
     .safety-btn-next {
-      background: #f2f9ff;
-      color: #0077cc;
-      border: 2px solid #c8e1f5;
+      background: #e3f2fd;
+      color: #0d47a1;
+      border: 2px solid #90CAF9;
     }
 
     .safety-btn-next.active {
-      background: #0077cc;
+      background: #1565C0;
       color: white;
-      border-color: #0077cc;
-      box-shadow: 0 4px 12px rgba(0, 119, 204, 0.3);
     }
 
-    .safety-btn-next:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    /* ========== 选座页面 [核心优化] ========== */
+    /* ========== 选座模块(布局修正版) ========== */
     .seat-modal-content {
       display: flex;
       flex-direction: column;
       height: 100vh;
     }
 
-    /* 顶部导航 */
     .seat-nav {
-      background: linear-gradient(135deg, #0077cc 0%, #005599 100%);
-      padding: 18px 30px;
+      background: linear-gradient(135deg, #0d47a1, #1565C0);
+      padding: 16px 28px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
       color: white;
-    }
-
-    .seat-nav-title {
-      display: flex;
-      align-items: center;
-      gap: 16px;
     }
 
     .seat-nav-title h2 {
@@ -915,66 +875,48 @@
 
     .flight-info {
       display: flex;
-      gap: 30px;
-      font-size: 18px;
-      opacity: 0.95;
+      gap: 24px;
+      font-size: 16px;
     }
 
-    .flight-info span {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    /* 主要内容 */
     .seat-main-container {
       flex: 1;
       display: flex;
       overflow: hidden;
     }
 
-    /* ===== 左侧：座位卡片列表（缩小） ===== */
     .seat-list-area {
       width: 38%;
+      background: #f8fafc;
+      border-right: 2px solid #cde3fc;
       display: flex;
       flex-direction: column;
-      background: #f8fafc;
-      border-right: 2px solid #e0e8f0;
     }
 
-    /* 筛选栏 */
     .seat-filter-bar {
       background: white;
-      padding: 16px 20px;
+      padding: 14px 18px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      border-bottom: 1px solid #e0e8f0;
+      border-bottom: 1px solid #cde3fc;
     }
 
     .filter-btn {
-      padding: 10px 18px;
-      border-radius: 25px;
-      border: 2px solid #c8e1f5;
+      padding: 8px 18px;
+      border-radius: 40px;
       background: white;
-      color: #005599;
-      font-size: 15px;
+      border: 2px solid #90CAF9;
       cursor: pointer;
-      transition: all 0.2s;
       font-weight: 500;
     }
 
-    .filter-btn:hover {
-      background: #f2f9ff;
-    }
-
     .filter-btn.active {
-      background: #0077cc;
-      border-color: #0077cc;
+      background: #1565C0;
       color: white;
+      border-color: #1565C0;
     }
 
-    /* 座位卡片列表 */
     .seat-cards-container {
       flex: 1;
       overflow-y: auto;
@@ -982,23 +924,16 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
-      align-content: start;
     }
 
     .seat-card {
       background: white;
-      border-radius: 14px;
+      border-radius: 20px;
       padding: 16px;
       cursor: pointer;
-      transition: all 0.25s;
-      border: 3px solid transparent;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    .seat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 16px rgba(0, 102, 170, 0.15);
-      border-color: #c8e1f5;
+      border: 2px solid transparent;
+      transition: 0.1s;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 
     .seat-card.selected {
@@ -1011,28 +946,15 @@
       cursor: not-allowed;
     }
 
-    .seat-card.disabled:hover {
-      transform: none;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      border-color: transparent;
-    }
-
-    .seat-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
     .seat-number {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: bold;
-      color: #005599;
+      color: #0d47a1;
     }
 
     .seat-type-badge {
-      padding: 5px 12px;
-      border-radius: 14px;
+      padding: 4px 12px;
+      border-radius: 20px;
       font-size: 13px;
       font-weight: 600;
     }
@@ -1057,39 +979,17 @@
       color: #f9a825;
     }
 
-    .seat-type-occupied {
-      background: #fafafa;
-      color: #999;
-    }
-
-    .seat-card-info {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .seat-info-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 15px;
-      color: #666;
-    }
-
-    .seat-info-row .icon {
-      font-size: 16px;
-    }
-
     .seat-price {
       margin-top: 12px;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
-      color: #0077cc;
+      color: #1565C0;
     }
 
-    /* ===== 右侧：飞机俯视图（放大） ===== */
+    /* 右侧飞机俯视图(修正对齐) */
     .plane-view-area {
       flex: 1;
+      background: #eef4fc;
       display: flex;
       flex-direction: column;
       background: linear-gradient(180deg, #f0f7ff 0%, #e6f2ff 100%);
@@ -1124,63 +1024,47 @@
       border-radius: 100px 100px 50px 50px;
       border: 5px solid #0077cc;
       position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0, 102, 170, 0.2);
+      width: 340px;
+      height: 620px;
+      margin-bottom: 20px;
+      z-index: 1;
     }
 
-    .plane-nose {
+    /* 用 SVG 绘制真实飞机轮廓 */
+    .plane-svg-wrap {
       position: absolute;
       top: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: 60px;
-      height: 85px;
-      background: linear-gradient(180deg, #0077cc 0%, #fafafa 100%);
-      border-radius: 60px 60px 0 0;
+      width: 340px;
+      height: 620px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .plane-nose {
+      display: none;
     }
 
     .plane-tail {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 85px;
-      height: 100px;
-      background: linear-gradient(180deg, #fafafa 0%, #0077cc 100%);
-      border-radius: 0 0 50px 50px;
+      display: none;
     }
 
     .plane-wing-left {
-      position: absolute;
-      top: 35%;
-      left: -70px;
-      width: 90px;
-      height: 120px;
-      background: #0077cc;
-      border-radius: 25px 0 0 25px;
-      transform: rotate(-12deg);
+      display: none;
     }
 
     .plane-wing-right {
-      position: absolute;
-      top: 35%;
-      right: -70px;
-      width: 90px;
-      height: 120px;
-      background: #0077cc;
-      border-radius: 0 25px 25px 0;
-      transform: rotate(12deg);
+      display: none;
     }
 
-    /* 舱位区域标签 */
+    /* 舱位标签(不遮挡座位,不偏移) */
     .cabin-section {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      padding: 5px 16px;
+      padding: 4px 18px;
       border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
       background: white;
       color: #005599;
       border: 2px solid #c8e1f5;
@@ -1189,6 +1073,7 @@
     }
 
     .cabin-front {
+      top: 8%;
       top: 8%;
     }
 
@@ -1200,7 +1085,16 @@
       top: 60%;
     }
 
-    /* 座位点位 */
+    /* 座位容器 - 优化垂直范围 */
+    #planeSeatsContainer {
+      position: absolute;
+      top: 9%;
+      left: 5%;
+      width: 90%;
+      height: 82%;
+      z-index: 15;
+    }
+
     .seat-dot {
       position: absolute;
       width: 24px;
@@ -1214,12 +1108,10 @@
       font-size: 11px;
       color: #fff;
       font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .seat-dot:hover {
-      transform: scale(1.3);
-      z-index: 10;
+      color: white;
+      cursor: pointer;
+      transition: 0.1s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     .seat-dot.available {
@@ -1237,7 +1129,7 @@
     }
 
     .seat-dot.cheap {
-      background: #2196F3;
+      background: #2196f3;
     }
 
     .seat-dot.exit {
@@ -1250,41 +1142,35 @@
       cursor: default;
     }
 
-    .seat-dot.disabled {
-      background: #ddd;
-      cursor: default;
-      opacity: 0.5;
+    .seat-dot.selected {
+      background: #e53935;
+      transform: scale(1.2);
+      border: 2px solid white;
+      z-index: 20;
     }
 
-    /* 图例 */
     .seat-legend {
-      margin-top: 20px;
       background: white;
-      border-radius: 14px;
-      padding: 18px;
+      border-radius: 20px;
+      padding: 12px 20px;
+      width: 100%;
+      max-width: 380px;
       border: 1px solid #c8e1f5;
-    }
-
-    .legend-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #005599;
-      margin-bottom: 14px;
-      text-align: center;
+      margin-top: 8px;
     }
 
     .legend-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 14px;
-      color: #666;
+      font-size: 13px;
     }
 
     .legend-color {
@@ -1293,105 +1179,69 @@
       border-radius: 4px;
     }
 
-    /* ===== 底部操作栏 ===== */
     .seat-bottom-bar {
       background: white;
-      padding: 20px 30px;
+      padding: 16px 28px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      border-top: 2px solid #e0e8f0;
-    }
-
-    .selected-summary {
-      display: flex;
-      align-items: center;
-      gap: 30px;
+      border-top: 2px solid #cde3fc;
     }
 
     .summary-item {
       display: flex;
-      align-items: center;
       gap: 10px;
       color: #666;
-      font-size: 17px;
+      font-size: 16px;
+      align-items: baseline;
     }
 
     .summary-item .value {
-      color: #0077cc;
+      color: #1565C0;
       font-weight: 700;
       font-size: 22px;
     }
 
-    .seat-btn-group {
-      display: flex;
-      gap: 16px;
+    .seat-btn-back,
+    .seat-btn-confirm {
+      padding: 12px 32px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
     }
 
     .seat-btn-back {
-      padding: 16px 36px;
-      background: #f2f9ff;
-      color: #005599;
-      border: 2px solid #c8e1f5;
-      border-radius: 12px;
-      font-size: 18px;
-      cursor: pointer;
-      transition: all 0.25s;
-      font-weight: 500;
-    }
-
-    .seat-btn-back:hover {
-      background: #d6e9ff;
+      background: #e3f2fd;
+      color: #0d47a1;
+      border: 2px solid #90CAF9;
     }
 
     .seat-btn-confirm {
-      padding: 16px 44px;
-      background: #0077cc;
+      background: #1565C0;
       color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 18px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.25s;
-      box-shadow: 0 4px 12px rgba(0, 119, 204, 0.3);
-    }
-
-    .seat-btn-confirm:hover {
-      background: #005599;
-      transform: translateY(-2px);
     }
 
     .seat-btn-confirm:disabled {
-      background: #ccc;
-      box-shadow: none;
+      background: #aaa;
       cursor: not-allowed;
-      transform: none;
     }
 
-    /* 选中提示 */
     .selected-seat-toast {
       position: fixed;
-      bottom: 120px;
+      bottom: 100px;
       left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: linear-gradient(135deg, #0077cc 0%, #005599 100%);
+      transform: translateX(-50%);
+      background: #0d47a1;
       color: white;
-      padding: 16px 32px;
-      border-radius: 30px;
-      font-size: 18px;
-      font-weight: 500;
-      box-shadow: 0 8px 30px rgba(0, 119, 204, 0.4);
+      padding: 12px 30px;
+      border-radius: 60px;
       opacity: 0;
-      transition: all 0.4s ease;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      transition: 0.2s;
+      z-index: 100001;
     }
 
     .selected-seat-toast.show {
-      transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
 
@@ -1713,7 +1563,8 @@
         <div class="ctrl-bar">
           <button class="mic-btn" id="micBtn" title="语音输入">🎤</button>
           <div class="voice-wave" id="voiceWave" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span></div>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
           <div class="text-input-wrap">
             <input type="text" id="textInput" placeholder="输入问题,如:帮我查CA1234航班、导航到安检..." autocomplete="off">
             <button class="send-btn" id="sendBtn" title="发送">➤</button>
@@ -1766,99 +1617,66 @@
 
   <!-- 安全须知弹窗 -->
   <div class="modal" id="safetyModal">
-    <div class="modal-content">
-      <span class="modal-close" id="safetyClose">✕</span>
-      <div class="safety-header">
-        <span style="font-size: 30px;">✈️</span>
+    <div class="modal-content"><span class="modal-close"
+        style="position:absolute;right:24px;top:18px;font-size:36px;color:white;cursor:pointer;z-index:100;"
+        id="safetyClose">✕</span>
+      <div class="safety-header"><span style="font-size:32px;">✈️</span>
         <h2>航班安全须知</h2>
       </div>
-      <div class="safety-tip">
-        请仔细阅读安全须知，<span id="countdown">5</span> 秒后可进入选座
-      </div>
+      <div class="safety-tip">请仔细阅读,<span id="countdown">5</span>秒后可进入选座</div>
       <div class="safety-content">
         <h3>⚠️ 1. 紧急出口位置</h3>
-        <p>本次航班紧急出口位于第12-13排。请确认您座位附近最近的紧急出口，紧急时请听从机组人员指挥。</p>
-
-        <h3>🫁 2. 氧气面罩使用</h3>
-        <p>机舱失压时氧气面罩会自动脱落，先戴好自己的面罩（拉紧绑带），确认有氧气后再协助他人。</p>
-
-        <h3>🔒 3. 安全带使用</h3>
-        <p>请全程系好安全带，遇气流颠簸时请立即坐好并系紧安全带。解开时请按住安全带扣再拔出。</p>
-
-        <h3>🦺 4. 救生衣使用</h3>
-        <p>救生衣位于座位下方，取出后套头穿戴，拉紧绑带，在离开飞机后再充气（切勿在机舱内充气）。</p>
-
+        <p>位于12-13排,请勿堆放行李。</p>
+        <h3>🫁 2. 氧气面罩</h3>
+        <p>先戴好自己的面罩再帮助他人。</p>
+        <h3>🔒 3. 全程系好安全带</h3>
+        <p>遇颠簸立即坐好。</p>
+        <h3>🦺 4. 救生衣</h3>
+        <p>离开飞机后再充气。</p>
         <h3>🚭 5. 禁止吸烟</h3>
-        <p>机舱内及洗手间全程禁烟，电子香烟同样禁止使用。违者将依法受到处理。</p>
-
-        <h3>📱 6. 电子设备使用</h3>
-        <p>起飞和降落阶段请关闭所有电子设备。巡航阶段可使用飞行模式。请遵守机组人员的指示。</p>
-
-        <h3>🧘 7. 紧急着陆姿势</h3>
-        <p>紧急着陆时，双手抓住小腿，头部贴近膝盖，弯腰直到飞机完全停稳。</p>
-
-        <h3>👶 8. 特殊旅客服务</h3>
-        <p>老人、孕妇、无人陪伴儿童等特殊旅客可向乘务员申请协助服务。</p>
+        <p>机舱全段禁烟。</p>
       </div>
-      <div class="safety-btn-group">
-        <button class="safety-btn safety-btn-back" id="safetyBack">返回主页</button>
-        <button class="safety-btn safety-btn-next" id="safetyNext" disabled>已阅读，前往选座</button>
-      </div>
+      <div class="safety-btn-group"><button class="safety-btn safety-btn-back" id="safetyBack">返回主页</button><button
+          class="safety-btn safety-btn-next" id="safetyNext" disabled>已阅读,选座</button></div>
     </div>
   </div>
 
-  <!-- 选座弹窗 -->
+  <!-- 选座弹窗(布局已修正) -->
   <div class="modal" id="seatModal">
-    <div class="seat-modal-content">
-      <!-- 顶部导航 -->
-      <div class="seat-nav">
-        <div class="seat-nav-title">
-          <span style="font-size: 32px;">💺</span>
-          <h2>选择座位</h2>
-        </div>
-        <div class="flight-info">
-          <span>✈️ CA1234</span>
-          <span>🛫 北京 → 上海</span>
-          <span>320-214机型</span>
-          <span>经济舱</span>
-        </div>
-      </div>
-
-      <!-- 主要内容 -->
-      <div class="seat-main-container">
-        <!-- 左侧：座位卡片列表 -->
-        <div class="seat-list-area">
-          <div class="seat-filter-bar">
-            <button class="filter-btn active" data-filter="all">全部</button>
-            <button class="filter-btn" data-filter="window">靠窗</button>
-            <button class="filter-btn" data-filter="aisle">靠过道</button>
-            <button class="filter-btn" data-filter="middle">中间</button>
-            <button class="filter-btn" data-filter="exit">安全出口</button>
-            <button class="filter-btn" data-filter="cheap">最优惠</button>
+    <div class="modal-content">
+      <div class="seat-modal-content">
+        <div class="seat-nav">
+          <div class="seat-nav-title"><span style="font-size:32px;">💺</span>
+            <h2>选择座位</h2>
           </div>
-
-          <div class="seat-cards-container" id="seatCardsContainer">
-            <!-- 动态生成 -->
-          </div>
+          <div class="flight-info"><span>✈️ CA1234</span><span>🛫 北京→上海</span><span>320机型</span><span>经济舱</span></div>
         </div>
-
-        <!-- 右侧：飞机俯视图 -->
-        <div class="plane-view-area">
-          <div class="plane-view-header">
-            <h3>点击座位直接选择</h3>
+        <div class="seat-main-container">
+          <div class="seat-list-area">
+            <div class="seat-filter-bar"><button class="filter-btn active" data-filter="all">全部</button><button
+                class="filter-btn" data-filter="window">靠窗</button><button class="filter-btn"
+                data-filter="aisle">靠过道</button><button class="filter-btn" data-filter="exit">安全出口</button><button
+                class="filter-btn" data-filter="cheap">最优惠</button></div>
+            <div class="seat-cards-container" id="seatCardsContainer"></div>
           </div>
-
-          <div class="plane-top-view">
+          <div class="plane-view-area">
             <div class="plane-body" id="planeBody">
-              <div class="plane-nose"></div>
-              <div class="plane-tail"></div>
-              <div class="plane-wing-left"></div>
-              <div class="plane-wing-right"></div>
-
+              <svg class="plane-svg-wrap" viewBox="0 0 340 620" xmlns="http://www.w3.org/2000/svg">
+                <!-- 机翼 -->
+                <polygon points="60,260 10,190 10,280 60,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2" />
+                <polygon points="280,260 330,190 330,280 280,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2" />
+                <!-- 机身 -->
+                <ellipse cx="170" cy="310" rx="72" ry="290" fill="#fef9e8" stroke="#1565C0" stroke-width="4" />
+                <!-- 驾驶舱 -->
+                <ellipse cx="170" cy="35" rx="38" ry="22" fill="#64b5f6" stroke="#1565C0" stroke-width="2" />
+                <!-- 尾翼 -->
+                <polygon points="140,540 110,490 155,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1" />
+                <polygon points="200,540 230,490 185,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1" />
+                <polygon points="155,540 185,540 170,560" fill="#0d47a1" />
+              </svg>
               <div class="cabin-section cabin-front">前舱</div>
               <div class="cabin-section cabin-middle">中舱</div>
               <div class="cabin-section cabin-back">后舱</div>
-
               <div id="planeSeatsContainer"></div>
             </div>
           </div>
@@ -1890,37 +1708,19 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- 底部操作栏 -->
-      <div class="seat-bottom-bar">
-        <div class="selected-summary">
-          <div class="summary-item">
-            <span>已选座位：</span>
-            <span class="value" id="summarySeat">--</span>
+        <div class="seat-bottom-bar">
+          <div class="selected-summary">
+            <div class="summary-item">已选座位:<span class="value" id="summarySeat">--</span></div>
+            <div class="summary-item">位置:<span class="value" id="summaryPos">--</span></div>
+            <div class="summary-item">加价:<span class="value" id="summaryPrice">--</span></div>
           </div>
-          <div class="summary-item">
-            <span>位置：</span>
-            <span class="value" id="summaryPos">--</span>
-          </div>
-          <div class="summary-item">
-            <span>加价：</span>
-            <span class="value" id="summaryPrice">--</span>
-          </div>
-        </div>
-        <div class="seat-btn-group">
-          <button class="seat-btn-back" id="seatBack">返回</button>
-          <button class="seat-btn-confirm" id="seatConfirm" disabled>确认选座并打印登机牌</button>
+          <div class="seat-btn-group"><button class="seat-btn-back" id="seatBack">返回</button><button
+              class="seat-btn-confirm" id="seatConfirm" disabled>确认选座</button></div>
         </div>
       </div>
     </div>
   </div>
-
-  <!-- 选中提示 -->
-  <div class="selected-seat-toast" id="seatToast">
-    <span>✓</span>
-    <span id="toastText">座位已选中</span>
-  </div>
+  <div class="selected-seat-toast" id="seatToast"><span>✓</span><span id="toastText"></span></div>
 
   <script>
     // ============================================================

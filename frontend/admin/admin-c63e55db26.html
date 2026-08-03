@@ -259,11 +259,61 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script>
-        // 所有 API 请求使用相对路径
+        // ── Token 管理 ──
+        function getToken() { return localStorage.getItem('admin_token'); }
+
+        // ── 登录 ──
+        function showLogin() {
+            if (document.getElementById('loginOverlay')) return;
+            const ov = document.createElement('div');
+            ov.id = 'loginOverlay';
+            ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0b2b44 0%,#123e60 100%);display:flex;align-items:center;justify-content:center;';
+            ov.innerHTML = '<div style="background:#fff;border-radius:12px;padding:40px 36px;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center;" id="loginBox"><h2 style="margin-bottom:24px;color:#0f172a;">🔐 管理后台登录</h2><input id="loginUser" placeholder="用户名" style="width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;"><input id="loginPwd" type="password" placeholder="密码" style="width:100%;padding:12px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;margin-bottom:16px;outline:none;box-sizing:border-box;"><button id="loginBtn" style="width:100%;padding:12px;border:none;border-radius:8px;background:#3b82f6;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">登录</button><div id="loginErr" style="color:#ef4444;font-size:13px;margin-top:8px;min-height:20px;"></div></div>';
+            document.body.appendChild(ov);
+            document.getElementById('loginBtn').addEventListener('click', doLogin);
+            document.getElementById('loginPwd').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+        }
+        async function doLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPwd').value;
+            const errEl = document.getElementById('loginErr');
+            errEl.textContent = '';
+            if (!u || !p) { errEl.textContent = '请输入用户名和密码'; return; }
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p }),
+                });
+                const json = await res.json();
+                if (json.success && json.token) {
+                    localStorage.setItem('admin_token', json.token);
+                    const ov = document.getElementById('loginOverlay');
+                    if (ov) ov.remove();
+                    refreshAll();
+                    setInterval(() => { if (!refreshing) refreshAll(); }, 60000);
+                } else {
+                    errEl.textContent = json.error || '用户名或密码错误';
+                }
+            } catch (e) {
+                errEl.textContent = '网络错误，请检查后端服务';
+            }
+        }
+
+        // 所有 API 请求使用相对路径（自动带 token）
         async function fetchAPI(endpoint) {
             try {
                 console.log(`[请求] ${endpoint}`);
-                const response = await fetch(endpoint);
+                const token = getToken();
+                const headers = { 'Content-Type': 'application/json' };
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                const response = await fetch(endpoint, { headers });
+                // 401 → 清除 token 并显示登录
+                if (response.status === 401) {
+                    localStorage.removeItem('admin_token');
+                    showLogin();
+                    throw new Error('登录已过期，请重新登录');
+                }
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const json = await response.json();
                 console.log(`[响应] ${endpoint}:`, json);
@@ -290,9 +340,9 @@
         function getField(obj, ...keys) {
             if (!obj) return undefined;
             for (let key of keys) {
-                if (obj[key] !== undefined) return obj[key];
+                if (obj[key] !== undefined && obj[key] !== null) return obj[key];
                 const altKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-                if (obj[altKey] !== undefined) return obj[altKey];
+                if (obj[altKey] !== undefined && obj[altKey] !== null) return obj[altKey];
             }
             return undefined;
         }
@@ -303,15 +353,14 @@
             if (!container) return;
             if (data) {
                 container.innerHTML = `
-                    <div class="card"><h3>📱 在线终端</h3><div class="value">${getField(data, 'onlineTerminals', 'online_terminals') ?? '0'}</div><div class="subtext">当前活跃设备</div></div>
-                    <div class="card"><h3>👥 今日使用人次</h3><div class="value">${getField(data, 'todayUsage', 'today_usage') ?? '0'}</div><div class="subtext">较昨日动态</div></div>
-                    <div class="card"><h3>🔥 Top1 问题</h3><div class="value">${escapeHtml(String(getField(data, 'top1Question', 'top1_question') ?? '无数据'))}</div><div class="subtext">高频咨询</div></div>
-                    <div class="card"><h3>⚠️ 未处理告警</h3><div class="value">${getField(data, 'unhandledAlerts', 'unhandled_alerts') ?? '0'}</div><div class="subtext">需立即关注</div></div>
-                    <div class="card"><h3>📶 实时流量</h3><div class="value">${getField(data, 'realtimeTraffic', 'traffic') ?? '0'} <span style="font-size:14px;">Mbps</span></div><div class="subtext">出入口总和</div></div>
-                    <div class="card"><h3>⚙️ CPU / 内存</h3><div class="value">${getField(data, 'cpuUsage', 'cpu') ?? '--'}% / ${getField(data, 'memoryUsage', 'memory') ?? '--'}%</div><div class="subtext">系统负载</div></div>
+                    <div class="card"><h3>📱 在线终端</h3><div class="value">${getField(data, 'online_terminals', 'onlineTerminals') ?? '0'}</div><div class="subtext">当前活跃设备</div></div>
+                    <div class="card"><h3>🔥 Top1 问题</h3><div class="value">${escapeHtml(String(getField(data, 'top_question', 'top1Question', 'top1_question') ?? '无数据'))}</div><div class="subtext">高频咨询</div></div>
+                    <div class="card"><h3>📥 入站流量</h3><div class="value">${getField(data, 'inbound_traffic', 'inboundTraffic') ?? '0'} <span style="font-size:14px;">Mbps</span></div><div class="subtext">入口流量</div></div>
+                    <div class="card"><h3>📤 出站流量</h3><div class="value">${getField(data, 'outbound_traffic', 'outboundTraffic') ?? '0'} <span style="font-size:14px;">Mbps</span></div><div class="subtext">出口流量</div></div>
+                    <div class="card"><h3>⚙️ CPU / 内存</h3><div class="value">${getField(data, 'cpu_usage', 'cpuUsage', 'cpu') ?? '--'}% / ${getField(data, 'memory_usage', 'memoryUsage', 'memory') ?? '--'}%</div><div class="subtext">系统负载</div></div>
                 `;
             } else {
-                container.innerHTML = '<div class="card"><h3>⚠️ 无法获取数据</h3><div class="value">--</div><div class="subtext">请检查后端服务</div></div>'.repeat(6);
+                container.innerHTML = '<div class="card"><h3>⚠️ 无法获取数据</h3><div class="value">--</div><div class="subtext">请检查后端服务</div></div>'.repeat(5);
             }
         }
 
@@ -326,7 +375,7 @@
                     const status = getField(item, 'status');
                     if (status === 'online') { statusClass = 'status-online'; statusText = '在线'; }
                     else if (status === 'fault') { statusClass = 'status-critical'; statusText = '故障'; }
-                    html += `<tr><td>${escapeHtml(String(getField(item, 'terminalId', 'id') ?? '-'))}</td><td>${escapeHtml(String(getField(item, 'deviceName', 'name') ?? '-'))}</td><td>${escapeHtml(String(getField(item, 'ipAddress', 'ip') ?? '-'))}</td><td><span class="status-badge ${statusClass}">${statusText}</span></td><td>${escapeHtml(String(getField(item, 'lastSeen', 'lastOnline') ?? '-'))}</td></tr>`;
+                    html += `<tr><td>${escapeHtml(String(getField(item, 'device_id', 'terminalId', 'id') ?? '-'))}</td><td>${escapeHtml(String(getField(item, 'location', 'deviceName', 'name') ?? '-'))}</td><td>${escapeHtml(String(getField(item, 'ip_address', 'ipAddress', 'ip') ?? '-'))}</td><td><span class="status-badge ${statusClass}">${statusText}</span></td><td>${escapeHtml(String(getField(item, 'last_heartbeat', 'lastSeen', 'lastOnline') ?? '-'))}</td></tr>`;
                 }
                 tbody.innerHTML = html;
             } else {
@@ -383,7 +432,7 @@
             if (data && Array.isArray(data) && data.length) {
                 let html = '';
                 for (let call of data) {
-                    html += `<tr><td>${escapeHtml(String(getField(call, 'callId', 'id') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'userNumber', 'phone') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'reason', 'alertReason') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'time', 'createdAt') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'state', 'status') ?? '待处理'))}</td></tr>`;
+                    html += `<tr><td>${escapeHtml(String(getField(call, 'terminal_id', 'callId', 'id') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'call_type', 'userNumber', 'phone') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'reason', 'alertReason', 'call_time') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'call_time', 'time', 'createdAt') ?? '-'))}</td><td>${escapeHtml(String(getField(call, 'status', 'state') ?? '待处理'))}</td></tr>`;
                 }
                 tbody.innerHTML = html;
             } else {
@@ -394,10 +443,10 @@
         async function renderAttackStatus() {
             const data = await fetchAPI('/api/attack-status');
             if (data) {
-                document.getElementById('attackType').innerText = getField(data, 'attackType', 'type') ?? '无攻击';
-                document.getElementById('protectStatus').innerText = getField(data, 'protectStatus', 'status') ?? '防护中';
-                document.getElementById('blockCount').innerText = getField(data, 'blockCount', 'block_today') ?? '0';
-                document.getElementById('threatLevel').innerText = getField(data, 'threatLevel', 'level') ?? '低';
+                document.getElementById('attackType').innerText = getField(data, 'ddos_status', 'attackType', 'type') ?? '无攻击';
+                document.getElementById('protectStatus').innerText = getField(data, 'attack_count_24h', 'protectStatus', 'status') ?? '0';
+                document.getElementById('blockCount').innerText = getField(data, 'blocked_requests', 'blockCount', 'block_today') ?? '0';
+                document.getElementById('threatLevel').innerText = getField(data, 'threat_level', 'threatLevel', 'level') ?? '低';
             }
         }
 
@@ -443,13 +492,18 @@
                     else if (module === 'attack') renderAttackStatus();
                 }
             });
-            await refreshAll();
-            setInterval(() => { if (!refreshing) refreshAll(); }, 60000);
+            // 检查是否已登录
+            if (!getToken()) {
+                showLogin();
+            } else {
+                await refreshAll();
+                setInterval(() => { if (!refreshing) refreshAll(); }, 60000);
+            }
         });
 
         function escapeHtml(str) {
             if (!str) return '';
-            return String(str).replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
+            return String(str).replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
         }
     </script>
 </body>

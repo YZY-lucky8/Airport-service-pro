@@ -4,65 +4,68 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>首都机场T3 飞机值机选座</title>
+  <title>首都机场T3智慧服务</title>
   <style>
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Roboto, sans-serif;
     }
 
     html,
     body {
-      font-size: 18px;
       width: 100vw;
       height: 100vh;
       overflow: hidden;
-      background: #e6f2ff;
-      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="%23c7e2ff" fill-opacity="0.2" d="M35,20 Q50,5 65,20 L90,40 Q80,50 90,60 L65,80 Q50,95 35,80 L10,60 Q20,50 10,40 Z"></path></svg>');
-      background-repeat: repeat;
-      background-attachment: fixed;
+      background: linear-gradient(145deg, #e6f2ff 0%, #cce5ff 100%);
     }
 
-    /* ========== 身份证识别页面 [新增] ========== */
+    /* 身份证页面 */
     #idCardPage {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: linear-gradient(180deg, #0077cc 0%, #005599 100%);
+      background: linear-gradient(135deg, #0066aa, #003366);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       z-index: 99999;
       color: white;
-      padding: 30px;
+      text-align: center;
     }
 
     .id-title {
       font-size: 52px;
       font-weight: bold;
       margin-bottom: 40px;
-      text-align: center;
-      text-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .id-card-area {
-      width: 420px;
-      height: 260px;
-      border: 4px dashed #ffffff;
-      border-radius: 20px;
+      width: 460px;
+      height: 280px;
+      border: 4px dashed #fff;
+      border-radius: 28px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 20px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+      transition: 0.2s;
       margin-bottom: 50px;
-      background: rgba(255, 255, 255, 0.1);
-      animation: pulse 2s infinite ease-in-out;
+      animation: pulse 2s infinite;
+    }
+
+    .id-card-area:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.01);
     }
 
     @keyframes pulse {
@@ -72,8 +75,8 @@
       }
 
       50% {
-        transform: scale(1.03);
-        border-color: #a8dfff;
+        transform: scale(1.02);
+        border-color: #aaf;
       }
 
       100% {
@@ -83,7 +86,7 @@
     }
 
     .id-icon {
-      font-size: 80px;
+      font-size: 88px;
     }
 
     .id-tip {
@@ -97,288 +100,606 @@
     }
 
     .id-success-text {
-      font-size: 36px;
+      font-size: 38px;
       font-weight: bold;
-      color: #fff;
       margin-bottom: 40px;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .id-confirm-btn {
-      padding: 24px 60px;
+      padding: 20px 56px;
       font-size: 30px;
       font-weight: bold;
-      background: #ffffff;
-      color: #005599;
+      background: #ffd966;
+      color: #003366;
       border: none;
-      border-radius: 16px;
+      border-radius: 60px;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s;
+      transition: 0.2s;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
 
     .id-confirm-btn:hover {
-      transform: translateY(-4px);
-      background: #f0f7ff;
+      transform: translateY(-3px);
+      background: #ffcc44;
     }
 
-    /* ========== 主布局 ========== */
-    .app-layout {
-      display: flex;
+    /* 主布局 */
+    #mainApp {
+      display: none;
       width: 100vw;
       height: 100vh;
-      padding: 16px;
-      gap: 16px;
-    }
-
-    .left-major {
-      flex: 5;
-      display: flex;
       flex-direction: column;
-      gap: 12px;
-      min-width: 0;
+      overflow: hidden;
     }
 
-    .quick-panel {
-      background: #ffffff;
-      border-radius: 16px;
-      border: 1px solid #b8d9f7;
-      box-shadow: 0 6px 18px rgba(0, 102, 170, 0.1), inset 0 1px 3px rgba(255, 255, 255, 0.6);
-      padding: 12px 16px;
-    }
-
-    .panel-title {
-      font-size: 22px;
+    .top-banner {
+      height: 64px;
+      background: linear-gradient(95deg, #0a2f5a, #0d47a1);
+      color: white;
+      font-size: 26px;
       font-weight: 700;
-      color: #0066aa;
-      margin-bottom: 10px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      padding: 0 28px;
+      gap: 16px;
+      flex-shrink: 0;
     }
 
-    .func-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+    .main-body {
+      flex: 1;
+      display: flex;
+      padding: 18px;
+      gap: 20px;
+      overflow: hidden;
+    }
+
+    /* 左侧导航 */
+    .left-panel {
+      width: 310px;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      border: 1px solid rgba(100, 160, 220, 0.5);
+      padding: 18px 14px;
+      overflow-y: auto;
+    }
+
+    .left-panel-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0a2f5a;
+      border-bottom: 2px solid #90CAF9;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
       gap: 8px;
     }
 
     .func-btn {
-      background: #f2f9ff;
-      border: 1px solid #c8e1f5;
-      border-radius: 12px;
-      padding: 12px 4px;
+      background: white;
+      border: 1.5px solid #c8e1f5;
+      border-radius: 20px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
       cursor: pointer;
-      transition: all 0.25s ease;
-      color: #005599;
-      font-weight: 500;
+      transition: 0.2s;
+      color: #0a2f5a;
+      font-weight: 600;
+      font-size: 16px;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      font-size: 15px;
+      gap: 14px;
     }
 
     .func-btn:hover {
-      background: #0077cc;
+      background: #1565C0;
       color: white;
-      border-color: #0077cc;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(0, 119, 204, 0.2);
+      transform: translateX(4px);
+      border-color: #1565C0;
     }
 
     .func-icon {
       font-size: 26px;
+      min-width: 36px;
+      text-align: center;
     }
 
     .func-btn-checkin {
-      background: #0077cc;
+      background: linear-gradient(95deg, #1565C0, #0a2f5a);
       color: white;
-      grid-column: span 2;
-      border: 1px solid #005599;
-      font-size: 16px;
+      border: none;
     }
 
     .func-btn-checkin:hover {
-      background: #005599;
+      background: #0d47a1;
+      transform: translateX(4px);
     }
 
-    .map-card {
+    /* ── 导航结果卡片 ── */
+    .nav-card {
       background: white;
+      border: 1.5px solid #c8e1f5;
       border-radius: 16px;
-      border: 1px solid #b8d9f7;
-      box-shadow: 0 6px 18px rgba(0, 102, 170, 0.1);
-      padding: 12px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.08);
+    }
+
+    .nav-card:hover {
+      border-color: #1565C0;
+      box-shadow: 0 4px 16px rgba(21, 101, 192, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .nav-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .nav-card-icon {
+      font-size: 28px;
+    }
+
+    .nav-card-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0a2f5a;
+    }
+
+    .nav-card-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 14px;
+      color: #597a9a;
+      margin-bottom: 4px;
+    }
+
+    .nav-card-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-card-desc {
+      font-size: 13px;
+      color: #8aa4be;
+    }
+
+    .nav-card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .nav-card-btn {
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .nav-card-btn.primary {
+      background: #1565C0;
+      color: white;
+    }
+
+    .nav-card-btn.primary:hover {
+      background: #0d47a1;
+    }
+
+    .nav-card-btn.secondary {
+      background: #e8f0fe;
+      color: #1565C0;
+    }
+
+    .nav-card-btn.secondary:hover {
+      background: #d0e2fc;
+    }
+
+    .elder-mode .nav-card-name {
+      font-size: 22px !important;
+    }
+
+    .elder-mode .nav-card-meta {
+      font-size: 18px !important;
+    }
+
+    .elder-mode .nav-card-btn {
+      font-size: 18px !important;
+      padding: 12px 24px !important;
+    }
+
+    /* 中间地图区 */
+    .center-panel {
       flex: 1;
       display: flex;
       flex-direction: column;
-      min-height: 65%;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .map-card {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      border: 1px solid rgba(100, 160, 220, 0.5);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .map-title {
       font-size: 18px;
-      font-weight: 600;
-      color: #0066aa;
-      margin-bottom: 6px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      font-weight: 700;
+      color: #0a2f5a;
+      margin-bottom: 10px;
     }
 
     .map-container {
       flex: 1;
-      border-radius: 14px;
+      border-radius: 20px;
       overflow: hidden;
+      position: relative;
       border: 1px solid #c8e1f5;
     }
 
     #mapContainer {
       width: 100%;
       height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
+    /* ── 文本输入 + 语音控制条 ── */
     .ctrl-bar {
-      background: white;
-      border-radius: 50px;
-      border: 1px solid #b8d9f7;
-      box-shadow: 0 4px 12px rgba(0, 102, 170, 0.1);
-      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(18px);
+      border-radius: 60px;
+      padding: 10px 16px;
       display: flex;
-      gap: 16px;
+      gap: 10px;
+      align-items: center;
+      border: 1.5px solid rgba(100, 160, 220, 0.6);
+      box-shadow: 0 2px 12px rgba(13, 71, 161, 0.08);
+    }
+
+    .text-input-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .text-input-wrap input {
+      width: 100%;
+      padding: 12px 52px 12px 20px;
+      border: 1.5px solid #c8e1f5;
+      border-radius: 48px;
+      font-size: 16px;
+      outline: none;
+      transition: 0.2s;
+      background: #f8fbff;
+      color: #1e293b;
+    }
+
+    .text-input-wrap input:focus {
+      border-color: #1565C0;
+      box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.15);
+      background: #fff;
+    }
+
+    .text-input-wrap input::placeholder {
+      color: #94a3b8;
+    }
+
+    .send-btn {
+      position: absolute;
+      right: 6px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1565C0, #0d47a1);
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
       align-items: center;
       justify-content: center;
+      transition: 0.15s;
+    }
+
+    .send-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.4);
+    }
+
+    .send-btn:active {
+      transform: scale(0.95);
     }
 
     .mic-btn {
-      width: 60px;
-      height: 60px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
-      background: #0077cc;
-      border: 3px solid #005599;
-      font-size: 28px;
+      background: linear-gradient(135deg, #1565C0, #0a2f5a);
+      border: none;
+      font-size: 26px;
       color: white;
       cursor: pointer;
-      transition: all 0.25s;
-      box-shadow: 0 4px 12px rgba(0, 119, 204, 0.3);
+      transition: 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
     }
 
     .mic-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(0, 119, 204, 0.4);
+      transform: scale(1.08);
+      box-shadow: 0 4px 20px rgba(21, 101, 192, 0.4);
+    }
+
+    .mic-btn:active {
+      transform: scale(0.94);
+    }
+
+    .mic-btn.listening {
+      background: linear-gradient(135deg, #e53935, #c62828);
+      animation: micPulse 1s infinite;
+    }
+
+    @keyframes micPulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5);
+      }
+
+      50% {
+        box-shadow: 0 0 0 12px rgba(229, 57, 53, 0);
+      }
     }
 
     .stop-btn {
-      background: #f2f9ff;
-      border: 1px solid #c8e1f5;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-size: 16px;
-      color: #005599;
+      background: #f0f7ff;
+      border: 1.5px solid #90CAF9;
+      padding: 10px 22px;
+      border-radius: 48px;
+      font-weight: 600;
+      font-size: 14px;
       cursor: pointer;
-      font-weight: 500;
+      color: #0a2f5a;
+      flex-shrink: 0;
+      transition: 0.15s;
     }
 
     .stop-btn:hover {
-      background: #d6e9ff;
+      background: #e3f2fd;
     }
 
+    /* 右侧对话 */
     .right-panel {
-      width: 400px;
-      background: white;
-      border-radius: 20px;
-      border: 1px solid #b8d9f7;
-      box-shadow: 0 8px 24px rgba(0, 102, 170, 0.15);
+      width: 460px;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(18px);
+      border-radius: 28px;
+      border: 1px solid rgba(100, 160, 220, 0.5);
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
     .chat-header {
+      background: linear-gradient(95deg, #0a2f5a, #1565C0);
       padding: 20px 24px;
-      background: #0077cc;
-      color: white;
-      font-weight: bold;
-      font-size: 20px;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 16px;
+    }
+
+    .captain-avatar svg {
+      width: 56px;
+      height: 56px;
+    }
+
+    .chat-header-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .chat-header-sub {
+      font-size: 13px;
+      opacity: 0.85;
+      color: #e3f2fd;
     }
 
     .chat-box {
       flex: 1;
       overflow-y: auto;
-      padding: 18px;
-      gap: 12px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
+      gap: 14px;
     }
 
     .chat-bubble {
       max-width: 92%;
-      padding: 12px 16px;
-      border-radius: 16px;
+      padding: 14px 20px;
+      border-radius: 28px;
       font-size: 17px;
-      line-height: 1.6;
+      line-height: 1.5;
     }
 
     .user-bubble {
-      background: #0077cc;
+      background: #1565C0;
       color: white;
       align-self: flex-end;
       border-bottom-right-radius: 8px;
     }
 
     .system-bubble {
-      background: #f2f9ff;
-      color: #222;
+      background: #f0f7ff;
+      color: #1e293b;
       align-self: flex-start;
-      border: 1px solid #c8e1f5;
+      border: 1px solid #b9d9ff;
       border-bottom-left-radius: 8px;
     }
 
     .elder-mode .chat-bubble {
-      font-size: 24px !important;
-      padding: 16px 20px !important;
-    }
-
-    .elder-mode .chat-header {
-      font-size: 26px !important;
-    }
-
-    .elder-mode .panel-title {
-      font-size: 26px !important;
+      font-size: 28px !important;
+      padding: 24px 32px !important;
+      line-height: 1.6 !important;
     }
 
     .elder-mode .func-btn {
-      font-size: 18px !important;
-      padding: 14px 6px !important;
+      font-size: 24px !important;
+      padding: 22px !important;
+      gap: 20px !important;
+      border-radius: 28px !important;
     }
 
     .elder-mode .func-icon {
-      font-size: 30px !important;
+      font-size: 36px !important;
+      min-width: 50px !important;
     }
 
-    .elder-mode .map-title {
-      font-size: 22px !important;
+    .elder-mode .nav-card {
+      padding: 28px !important;
+      border-radius: 24px !important;
     }
 
-    /* ========== 地标样式 ========== */
+    .elder-mode .nav-card-icon {
+      font-size: 42px !important;
+    }
+
+    .elder-mode .mic-btn {
+      width: 80px !important;
+      height: 80px !important;
+      font-size: 40px !important;
+    }
+
+    .elder-mode #textInput {
+      font-size: 26px !important;
+      padding: 18px 24px !important;
+    }
+
+    .elder-mode .page-title {
+      font-size: 32px !important;
+    }
+
+    .elder-mode {
+      background: #FFFEF7 !important;
+    }
+
+    .elder-mode .main-panel {
+      max-width: 800px !important;
+    }
+
+    /* ── 打字中动画 ── */
+    .typing-indicator {
+      display: flex;
+      gap: 5px;
+      padding: 14px 20px;
+      align-self: flex-start;
+      background: #f0f7ff;
+      border: 1px solid #b9d9ff;
+      border-radius: 28px;
+      border-bottom-left-radius: 8px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: #1565C0;
+      border-radius: 50%;
+      animation: typingBounce 1.2s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typingBounce {
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+
+      30% {
+        transform: translateY(-8px);
+        opacity: 1;
+      }
+    }
+
+    /* ── Agent 状态标签 ── */
+    .agent-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: #e8f5e9;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #2e7d32;
+      font-weight: 500;
+    }
+
+    .agent-status-dot {
+      width: 6px;
+      height: 6px;
+      background: #4caf50;
+      border-radius: 50%;
+      animation: statusPulse 2s infinite;
+    }
+
+    @keyframes statusPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    /* 地图标记 */
     .custom-marker {
-      width: 48px;
-      height: 48px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      border: 3px solid #fff;
+      font-size: 26px;
+      border: 3px solid white;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: 0.1s;
     }
 
     .custom-marker:hover {
-      transform: scale(1.2);
+      transform: scale(1.1);
     }
 
     .marker-checkin {
@@ -393,6 +714,10 @@
       background: #009966;
     }
 
+    .marker-restaurant {
+      background: #ff9933;
+    }
+
     .marker-toilet {
       background: #3399cc;
     }
@@ -401,16 +726,12 @@
       background: #9933cc;
     }
 
-    .marker-restaurant {
-      background: #ff9933;
-    }
-
     .marker-baggage {
       background: #0099cc;
     }
 
     .marker-lost {
-      background: #666666;
+      background: #666;
     }
 
     .marker-special {
@@ -421,7 +742,7 @@
       background: #6633cc;
     }
 
-    /* ========== 弹窗 ========== */
+    /* 模态框通用 */
     .modal {
       position: fixed;
       top: 0;
@@ -432,18 +753,17 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 9999;
+      z-index: 100000;
     }
 
     .modal-content {
       background: white;
       width: 100vw;
       height: 100vh;
-      padding: 0;
-      position: relative;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     .modal-close {
@@ -682,7 +1002,7 @@
     }
 
     .seat-card.selected {
-      border-color: #f44336;
+      border-color: #E53935;
       background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
     }
 
@@ -790,14 +1110,16 @@
     .plane-top-view {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       position: relative;
+      overflow-y: auto;
+      padding: 20px 0 40px 0;
     }
 
     .plane-body {
       width: 360px;
-      height: 600px;
+      height: 1000px;
       background: #fafafa;
       border-radius: 100px 100px 50px 50px;
       border: 5px solid #0077cc;
@@ -862,32 +1184,34 @@
       background: white;
       color: #005599;
       border: 2px solid #c8e1f5;
+      z-index: 20;
+      pointer-events: none;
     }
 
     .cabin-front {
-      top: 12%;
+      top: 8%;
     }
 
     .cabin-middle {
-      top: 45%;
+      top: 33%;
     }
 
     .cabin-back {
-      bottom: 10%;
+      top: 60%;
     }
 
     /* 座位点位 */
     .seat-dot {
       position: absolute;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       border-radius: 5px;
       cursor: pointer;
       transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 11px;
       color: #fff;
       font-weight: bold;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -903,13 +1227,13 @@
     }
 
     .seat-dot.selected {
-      background: #f44336;
+      background: #E53935;
       transform: scale(1.2);
       z-index: 10;
     }
 
     .seat-dot.popular {
-      background: #81C784;
+      background: #FF9800;
     }
 
     .seat-dot.cheap {
@@ -917,12 +1241,12 @@
     }
 
     .seat-dot.exit {
-      background: #FFEB3B;
+      background: #FFC107;
       color: #333;
     }
 
     .seat-dot.occupied {
-      background: #795548;
+      background: #9E9E9E;
       cursor: default;
     }
 
@@ -1083,15 +1407,6 @@
     }
 
     @media (max-width: 900px) {
-      .app-layout {
-        flex-direction: column;
-      }
-
-      .right-panel {
-        width: 100%;
-        height: 320px;
-      }
-
       .seat-list-area {
         width: 100%;
         height: 40%;
@@ -1102,12 +1417,262 @@
         height: 60%;
       }
     }
+
+    /* ===== #planeSeatsContainer 定位（Z 功能逻辑依赖，补充自 Z） ===== */
+    #planeSeatsContainer {
+      position: absolute;
+      top: 9%;
+      left: 5%;
+      width: 90%;
+      height: 82%;
+      z-index: 15;
+    }
+
+
+    /* ============================================================
+       【新增】Q版AI机长形象 + 语音音量可视化 + 思考提示（2026-08-03）
+       ============================================================ */
+    /* ── Q版机长头像容器 ── */
+    .captain-avatar {
+      position: relative;
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 28%, #1b4d8f 0%, #0a2f5a 72%);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(255, 215, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .captain-avatar svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .captain-avatar[data-status="listening"],
+    .captain-avatar[data-status="speaking"] {
+      animation: captainGlow 1.2s ease-in-out infinite;
+    }
+
+    @keyframes captainGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(255, 215, 0, 0.9), 0 0 0 4px rgba(255, 215, 0, 0.16);
+      }
+
+      50% {
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 2px rgba(255, 215, 0, 0.9), 0 0 0 10px rgba(255, 215, 0, 0.05);
+      }
+    }
+
+    .captain-avatar[data-status="error"] {
+      animation: captainShake 0.4s linear 2;
+    }
+
+    @keyframes captainShake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
+    }
+
+    /* 眼睛状态 */
+    .captain-eye {
+      fill: #1a237e;
+      transition: all 0.25s ease;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .captain-avatar[data-status="listening"] .captain-eye {
+      fill: #0a2f5a;
+      animation: captainEyeBlink 1.6s ease-in-out infinite;
+    }
+
+    @keyframes captainEyeBlink {
+
+      0%,
+      90%,
+      100% {
+        transform: scaleY(1);
+      }
+
+      94% {
+        transform: scaleY(0.12);
+      }
+    }
+
+    .captain-avatar[data-status="thinking"] .captain-eye-left {
+      animation: eyeThinkLeft 1.4s ease-in-out infinite;
+    }
+
+    .captain-avatar[data-status="thinking"] .captain-eye-right {
+      animation: eyeThinkRight 1.4s ease-in-out infinite;
+    }
+
+    @keyframes eyeThinkLeft {
+
+      0%,
+      100% {
+        transform: translateX(-1px);
+      }
+
+      50% {
+        transform: translateX(-4px);
+      }
+    }
+
+    @keyframes eyeThinkRight {
+
+      0%,
+      100% {
+        transform: translateX(1px);
+      }
+
+      50% {
+        transform: translateX(4px);
+      }
+    }
+
+    /* 错误表情：X 眼 + 困惑嘴 */
+    .captain-avatar[data-status="error"] .captain-eye,
+    .captain-avatar[data-status="error"] .captain-mouth {
+      display: none !important;
+    }
+
+    .captain-avatar[data-status="error"] .captain-error-eye,
+    .captain-avatar[data-status="error"] .captain-error-mouth {
+      display: block !important;
+    }
+
+    /* 嘴状态 */
+    .captain-mouth {
+      transform-box: fill-box;
+      transform-origin: center;
+      transition: all 0.2s ease;
+    }
+
+    .captain-avatar[data-status="speaking"] .captain-mouth {
+      animation: mouthTalk 0.42s ease-in-out infinite alternate;
+    }
+
+    @keyframes mouthTalk {
+      from {
+        transform: scaleY(0.55);
+      }
+
+      to {
+        transform: scaleY(1.35);
+      }
+    }
+
+    /* 状态文案区（chat-header 副标题） */
+    .chat-header-sub {
+      min-height: 18px;
+    }
+
+    /* ── 语音音量可视化：纯CSS声波动画条 ── */
+    .voice-wave {
+      display: none;
+      align-items: center;
+      gap: 3px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 20px;
+      background: rgba(21, 101, 192, 0.10);
+      border: 1px solid rgba(21, 101, 192, 0.25);
+      flex-shrink: 0;
+    }
+
+    .voice-wave.active {
+      display: inline-flex;
+    }
+
+    .voice-wave span {
+      width: 4px;
+      height: 8px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #ffd700, #1565C0);
+      animation: waveJump 0.9s ease-in-out infinite;
+    }
+
+    .voice-wave span:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .voice-wave span:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .voice-wave span:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .voice-wave span:nth-child(4) {
+      animation-delay: 0.45s;
+    }
+
+    .voice-wave span:nth-child(5) {
+      animation-delay: 0.6s;
+    }
+
+    @keyframes waveJump {
+
+      0%,
+      100% {
+        height: 8px;
+      }
+
+      50% {
+        height: 26px;
+      }
+    }
+
+    /* ── "正在思考..."提示（追加到打字中指示器） ── */
+    .typing-indicator::after {
+      content: '正在思考...';
+      font-size: 14px;
+      color: #597a9a;
+      margin-left: 8px;
+      align-self: center;
+      white-space: nowrap;
+    }
+
+    /* ── 天气卡片主题（增强版，深蓝+金） ── */
+    .weather-card {
+      background: linear-gradient(135deg, #0a2f5a 0%, #1565C0 100%) !important;
+      border: 1px solid rgba(255, 215, 0, 0.4) !important;
+    }
+
+    .weather-card .nav-card-name {
+      color: #ffd700;
+    }
+
+    .weather-card .nav-card-meta {
+      color: #dcecff;
+    }
+
+    .weather-card .nav-card-desc {
+      color: #cfe3ff;
+    }
   </style>
 </head>
 
 <body>
-
-  <!-- ========== 身份证识别页面 [新增] ========== -->
   <div id="idCardPage">
     <div class="id-title">✈️ 首都机场T3自助服务</div>
     <div class="id-card-area" id="idCardArea">
@@ -1115,80 +1680,86 @@
       <div class="id-tip">请将身份证放置感应区</div>
     </div>
     <div class="id-success-box" id="idSuccessBox">
-      <div class="id-success-text">身份识别成功，请确认身份进入</div>
+      <div class="id-success-text">身份识别成功,请确认身份进入</div>
       <button class="id-confirm-btn" id="idConfirmBtn">确认进入系统</button>
     </div>
   </div>
 
-  <!-- 原有主页面 -->
-  <div class="app-layout" id="mainApp" style="display:none;">
-    <div class="left-major">
-      <div class="quick-panel">
-        <div class="panel-title">✈️ 首都机场 T3 智慧导航</div>
-        <div class="func-grid">
-          <button class="func-btn func-btn-checkin" id="checkinBtn">
-            <div class="func-icon">🛄</div>
-            <div>在线值机 · 选座</div>
-          </button>
-          <button class="func-btn" data-cmd="security">
-            <div class="func-icon">🔍</div>
-            <div>安检区</div>
-          </button>
-          <button class="func-btn" data-cmd="gate">
-            <div class="func-icon">🚪</div>
-            <div>登机口A12</div>
-          </button>
-          <button class="func-btn" data-cmd="restaurant">
-            <div class="func-icon">🍽️</div>
-            <div>餐厅</div>
-          </button>
-          <button class="func-btn" data-cmd="toilet">
-            <div class="func-icon">🚻</div>
-            <div>卫生间</div>
-          </button>
-          <button class="func-btn" data-cmd="shop">
-            <div class="func-icon">🛍️</div>
-            <div>免税店</div>
-          </button>
-          <button class="func-btn" data-cmd="baggage">
-            <div class="func-icon">🧳</div>
-            <div>行李提取</div>
-          </button>
-          <button class="func-btn" data-cmd="lost">
-            <div class="func-icon">🔎</div>
-            <div>失物招领</div>
-          </button>
-          <button class="func-btn" data-cmd="special">
-            <div class="func-icon">👴</div>
-            <div>特殊旅客</div>
-          </button>
-          <button class="func-btn" data-cmd="transport">
-            <div class="func-icon">🚌</div>
-            <div>交通中心</div>
-          </button>
+  <div id="mainApp">
+    <div class="top-banner"><span>✈️</span> 首都机场T3智慧服务 · 全程陪伴</div>
+    <div class="main-body">
+      <div class="left-panel">
+        <div class="left-panel-title">📍 快捷导航</div>
+        <div class="func-btn func-btn-checkin" data-cmd="checkin"><span class="func-icon">🛄</span><span>在线值机 ·
+            选座</span></div>
+        <div class="func-btn" data-cmd="security"><span class="func-icon">🔍</span><span>安检区</span></div>
+        <div class="func-btn" data-cmd="gate"><span class="func-icon">🚪</span><span>登机口A12</span></div>
+        <div class="func-btn" data-cmd="restaurant"><span class="func-icon">🍽️</span><span>餐厅</span></div>
+        <div class="func-btn" data-cmd="toilet"><span class="func-icon">🚻</span><span>卫生间</span></div>
+        <div class="func-btn" data-cmd="shop"><span class="func-icon">🛍️</span><span>免税店</span></div>
+        <div class="func-btn" data-cmd="baggage"><span class="func-icon">🧳</span><span>行李提取</span></div>
+        <div class="func-btn" data-cmd="lost"><span class="func-icon">🔎</span><span>失物招领</span></div>
+        <div class="func-btn" data-cmd="special"><span class="func-icon">👴</span><span>特殊旅客</span></div>
+        <div class="func-btn" data-cmd="transport"><span class="func-icon">🚌</span><span>交通中心</span></div>
+      </div>
+
+      <div class="center-panel">
+        <div class="map-card">
+          <div class="map-title">🗺️ 航站楼动态地图 · 点击地标可导航</div>
+          <div class="map-container">
+            <div id="mapContainer"></div>
+          </div>
+        </div>
+        <div class="ctrl-bar">
+          <button class="mic-btn" id="micBtn" title="语音输入">🎤</button>
+          <div class="voice-wave" id="voiceWave" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span></div>
+          <div class="text-input-wrap">
+            <input type="text" id="textInput" placeholder="输入问题,如:帮我查CA1234航班、导航到安检..." autocomplete="off">
+            <button class="send-btn" id="sendBtn" title="发送">➤</button>
+          </div>
+          <button class="stop-btn" id="stopBtn">⏹️ 停止</button>
         </div>
       </div>
 
-      <div class="map-card">
-        <div class="map-title">📍 航站楼动态地图 · 点击地标可语音介绍</div>
-        <div class="map-container">
-          <div id="mapContainer"></div>
+      <div class="right-panel">
+        <div class="chat-header">
+          <div class="captain-avatar" id="captainAvatar" data-status="idle"><svg viewBox="0 0 100 100" width="68"
+              height="68" aria-hidden="true">
+              <path d="M18 44 Q18 12 50 12 Q82 12 82 44 Z" fill="#0a2f5a" />
+              <rect x="14" y="40" width="72" height="9" rx="4.5" fill="#ffd700" />
+              <rect x="47" y="17" width="6" height="12" rx="2" fill="#fff" />
+              <circle cx="50" cy="22" r="5" fill="#ffd700" />
+              <circle cx="22" cy="60" r="4" fill="#f5c896" />
+              <circle cx="78" cy="60" r="4" fill="#f5c896" />
+              <ellipse cx="50" cy="62" rx="26" ry="24" fill="#fbe4c8" />
+              <ellipse cx="33" cy="68" rx="5" ry="3" fill="#ffc9a8" opacity="0.75" />
+              <ellipse cx="67" cy="68" rx="5" ry="3" fill="#ffc9a8" opacity="0.75" />
+              <g>
+                <circle class="captain-eye captain-eye-left" cx="40" cy="58" r="3.6" fill="#1a237e" />
+                <circle class="captain-eye captain-eye-right" cx="60" cy="58" r="3.6" fill="#1a237e" />
+                <circle cx="41.4" cy="56.6" r="1.1" fill="#fff" />
+                <circle cx="61.4" cy="56.6" r="1.1" fill="#fff" />
+              </g>
+              <g class="captain-error-eye" style="display:none;">
+                <path d="M37 55 L43 61 M43 55 L37 61" stroke="#1a237e" stroke-width="2.4" stroke-linecap="round" />
+                <path d="M57 55 L63 61 M63 55 L57 61" stroke="#1a237e" stroke-width="2.4" stroke-linecap="round" />
+              </g>
+              <path class="captain-mouth" d="M40 74 Q50 82 60 74" stroke="#c17a50" stroke-width="2.6" fill="none"
+                stroke-linecap="round" />
+              <path class="captain-error-mouth" style="display:none;" d="M42 78 Q50 72 58 78" stroke="#c17a50"
+                stroke-width="2.6" fill="none" stroke-linecap="round" />
+            </svg></div>
+          <div>
+            <div class="chat-header-title">✈️ 机长智能助手</div>
+            <div class="chat-header-sub" id="captainStatusText">在线·随时为您服务</div>
+          </div>
         </div>
-      </div>
-
-      <div class="ctrl-bar">
-        <button class="stop-btn" id="stopBtn">⏹️ 停止播报</button>
-        <button class="mic-btn" id="micBtn">🎤</button>
-      </div>
-    </div>
-
-    <div class="right-panel" id="chatPanel">
-      <div class="chat-header">💬 智能语音助手</div>
-      <div class="chat-box" id="chatBox">
-        <div class="chat-bubble system-bubble">✈️ 欢迎使用首都机场T3智慧服务</div>
-        <div class="chat-bubble system-bubble">🎤 点击麦克风说话，或点击下方按钮导航</div>
-        <div class="chat-bubble system-bubble">🛄 点击【在线值机·选座】将进入安全须知阅读流程</div>
-        <div class="chat-bubble system-bubble">👴 语音指令：老人机模式 → 字体放大</div>
+        <div class="chat-box" id="chatBox">
+          <div class="chat-bubble system-bubble">✈️ 欢迎使用首都机场T3智慧服务</div>
+          <div class="chat-bubble system-bubble">🎤 点击麦克风说话,或点击下方按钮导航</div>
+          <div class="chat-bubble system-bubble">👴 语音指令:老人机模式 → 字体放大</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1299,19 +1870,19 @@
                 <div class="legend-color" style="background:#4CAF50"></div>可选
               </div>
               <div class="legend-item">
-                <div class="legend-color" style="background:#f44336"></div>已选
+                <div class="legend-color" style="background:#E53935"></div>已选
               </div>
               <div class="legend-item">
-                <div class="legend-color" style="background:#795548"></div>已占
+                <div class="legend-color" style="background:#9E9E9E"></div>已占
               </div>
               <div class="legend-item">
-                <div class="legend-color" style="background:#81C784"></div>热门
+                <div class="legend-color" style="background:#FF9800"></div>热门
               </div>
               <div class="legend-item">
                 <div class="legend-color" style="background:#2196F3"></div>优惠
               </div>
               <div class="legend-item">
-                <div class="legend-color" style="background:#FFEB3B"></div>出口
+                <div class="legend-color" style="background:#FFC107"></div>出口
               </div>
               <div class="legend-item">
                 <div class="legend-color" style="background:#ddd"></div>不可选
@@ -1352,541 +1923,644 @@
   </div>
 
   <script>
-    // ========== 身份证识别功能 [新增] ==========
-    function initIdCardPage() {
-      const idCardPage = document.getElementById('idCardPage');
-      const idCardArea = document.getElementById('idCardArea');
-      const idSuccessBox = document.getElementById('idSuccessBox');
-      const idConfirmBtn = document.getElementById('idConfirmBtn');
+    // ============================================================
+    // 全局状态
+    // ============================================================
+    let agentSessionToken = null; // Agent session token
+    // ============================================================
+    // 【新增】Q版AI机长 · 状态文案映射（2026-08-03）
+    // ============================================================
+    const CAPTAIN_STATUS_MAP = {
+      idle: { text: '在线·随时为您服务' },
+      listening: { text: '🎧 正在听您说话...' },
+      thinking: { text: '🤔 思考中...' },
+      speaking: { text: '🗣️ 正在回答...' },
+      error: { text: '😅 没听清，能再说一遍吗？' }
+    };
+    // ============================================================
+    // 【新增】本地FAQ知识库数据（Agent 不可用时降级）
+    // 覆盖：天气/商店餐厅/航班状态/行李规则/航站楼设施/失物招领/特殊旅客/问候自我介绍
+    // ============================================================
+    const FAQ_ITEMS = [
+      { keywords: ['天气', '气温', '多少度', '温度'], reply: '🌤️ 当前北京首都机场T3航站楼天气：晴，气温约28℃，湿度约40%，东南风3级。如需查询具体城市天气，可尝试对我说"北京天气"哦~', speech: '当前首都机场天气晴朗，气温二十八度，湿度百分之四十，东南风三级。' },
+      { keywords: ['商店', '免税店', '购物', '买什么', '买点'], reply: '🛍️ T3航站楼2层设有免税店专区，主营美妆、烟酒、奢侈品等；另有便利店与纪念品商店，营业时间6:00-22:00。语音说"导航到免税店"可为您带路。', speech: 'T3航站楼二层设有免税店专区，主营美妆、烟酒、奢侈品，营业时间早六点到晚十点。' },
+      { keywords: ['餐厅', '吃饭', '美食', '吃什么', '饿'], reply: '🍽️ T3航站楼2层有中西餐厅、快餐与咖啡厅，营业时间6:00-22:00；另有登机口附近的简餐点。语音说"导航到餐厅"可为您带路。', speech: 'T3航站楼二层有中西餐厅、快餐与咖啡厅，营业时间早六点到晚十点。' },
+      { keywords: ['航班', '航班状态', '延误', '准点', '几点起飞', 'ca1234'], reply: '✈️ 您的航班CA1234（北京→上海）当前状态：准点，计划起飞时间14:30，登机口A12，建议提前30分钟到达登机口。如需查询其他航班，请提供航班号。', speech: '您的航班CA1234当前状态准点，计划起飞时间十四点三十分，登机口A12。' },
+      { keywords: ['行李', '托运', '超重', '登机箱', '携带'], reply: '🧳 行李规则：经济舱免费托运20kg，超重按每公斤收取费用；登机行李尺寸不超过20×40×55cm、重量不超过5kg。充电宝、锂电池必须随身携带，严禁托运。', speech: '经济舱免费托运二十公斤，超重需收费；登机行李不超过五十五厘米长，充电宝必须随身携带。' },
+      { keywords: ['设施', '卫生间', '厕所', '母婴', '充电', 'wifi', '网络', 'atm'], reply: '🏢 航站楼设施：2层设有卫生间（含母婴室）、饮水区、充电桩；全楼覆盖免费WiFi（连接 Airport-Free-WiFi 后按提示认证即可）；2层到达区有ATM机。', speech: '航站楼二层设有卫生间、母婴室、充电桩，全楼覆盖免费无线网络。' },
+      { keywords: ['失物', '丢失', '丢东西', '遗失'], reply: '🔎 失物招领处位于1层服务台旁（电话010-64599567）。您也可在自助终端上选择"失物招领"查看近期失物信息，或向工作人员描述物品特征协助查找。', speech: '失物招领处位于一层服务台旁，电话零一零六四五九九五六七。' },
+      { keywords: ['特殊旅客', '轮椅', '孕妇', '无人陪伴', '儿童', '老人'], reply: '👴 特殊旅客服务：航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务。请前往值机区"特殊旅客服务台"办理，或语音说"导航到特殊旅客"。', speech: '航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务，请到特殊旅客服务台办理。' },
+      { keywords: ['你好', '您好', 'hi', 'hello', '在吗', '哈喽'], reply: '👋 您好！我是首都机场T3智慧服务助手。您可以问我航班信息、导航路线、天气、行李规则等问题，也可以点击屏幕左侧按钮快速导航~', speech: '您好！我是首都机场T3智慧服务助手，很高兴为您服务。' },
+      { keywords: ['你是谁', '自我介绍', '介绍一下', '什么助手'], reply: '🤖 我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等一站式服务，24小时在线~', speech: '我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等服务。' }
+    ];
+    let isAgentReplying = false;  // 防止重复发送
+
+    // -------------------- 身份证页面 --------------------
+    function initIdCard() {
+      const idPage = document.getElementById('idCardPage');
+      const idArea = document.getElementById('idCardArea');
+      const idSuccess = document.getElementById('idSuccessBox');
+      const idBtn = document.getElementById('idConfirmBtn');
       const mainApp = document.getElementById('mainApp');
-
-      // 模拟点击感应区 → 识别成功
-      idCardArea.addEventListener('click', () => {
-        idCardArea.style.display = 'none';
-        idSuccessBox.style.display = 'block';
-
-        // 语音播报
-        speakText('身份识别成功，请确认身份进入');
-      });
-
-      // 确认进入主系统
-      idConfirmBtn.addEventListener('click', () => {
-        idCardPage.style.display = 'none';
-        mainApp.style.display = 'flex';
-        speakText('欢迎使用首都机场T3智慧服务系统');
-      });
+      idArea.onclick = () => { idArea.style.display = 'none'; idSuccess.style.display = 'block'; speakText('身份识别成功,请确认身份进入'); };
+      idBtn.onclick = async () => { idPage.style.display = 'none'; mainApp.style.display = 'flex'; speakText('欢迎使用首都机场T3智慧服务系统'); await preRequestMic(); await createAgentSession(); };
     }
 
-    // ========== 原有配置与数据 ==========
-    const API_CONFIG = { LOG_API_URL: '/api/log', ENABLE_LOG: true };
+    // ============================================================
+    // Agent 会话管理
+    // ============================================================
+    async function createAgentSession() {
+      try {
+        const resp = await fetch('/api/agent/session/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const data = await resp.json();
+        if (data.success && data.session_token) {
+          agentSessionToken = data.session_token;
+          addChatMessage('🤖 Agent 助手已就绪,可以语音或打字交互', 'system');
+        }
+      } catch (e) {
+        console.warn('Agent session 创建失败,使用匿名模式');
+        agentSessionToken = 'anonymous_' + Date.now();
+      }
+    }
 
+    // ============================================================
+    // 发送消息到 Agent
+    // ============================================================
+    async function sendToAgent(text) {
+      if (!text.trim() || isAgentReplying) return;
+      isAgentReplying = true;
+      setCaptainStatus('thinking');
+
+      // 显示用户消息
+      addChatMessage(text, 'user');
+
+      // 显示打字中
+      const typingEl = showTyping();
+
+      try {
+        const resp = await fetch('/api/agent/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: text,
+            session_token: agentSessionToken,
+            flight_no: 'CA1234' // 可从选择中提取
+          })
+        });
+        const data = await resp.json();
+        hideTyping(typingEl);
+
+        if (data.success) {
+          setCaptainStatus('speaking');
+          // 处理结构化导航响应（问题1 修复）
+          let displayText = data.response;
+          if (typeof data.response === 'object') {
+            displayText = data.response.reply || JSON.stringify(data.response);
+            addChatMessage(displayText, 'system');
+            // 渲染导航卡片
+            if (data.response.navResults && data.response.navResults.length > 0) {
+              renderNavCards(data.response.navResults);
+            }
+            // 语音播报用 speechText
+            if (data.response.speechText) {
+              speakText(data.response.speechText);
+            }
+          } else {
+            addChatMessage(displayText, 'system');
+            speakText(displayText);
+          }
+
+          // 处理结构化天气响应（问题2 修复）
+          if (typeof data.response === 'object' && data.response.weather) {
+            renderWeatherCard(data.response.weather);
+          }
+
+          // ── 根据 intent 触发 UI 动作 ──
+          const intent = data.intent || '';
+          if (intent === 'checkin' || intent === 'check_in' || intent.includes('checkin') || intent.includes('check_in')) {
+            addChatMessage('🛄 正在打开值机选座页面...', 'system');
+            speakText('正在打开值机选座页面');
+            setTimeout(openSafetyModal, 600);
+          } else if (intent === 'poi_query' || intent === 'navigation' || intent === 'location_navigation' || intent.includes('navigation') || intent.includes('navigate')) {
+            const poi = data.entities?.poi || data.entities?.gate || data.entities?.location_name || '';
+            if (poi) {
+              addChatMessage(`🗺️ 正在为您导航到 ${poi}`, 'system');
+              speakText(`正在导航到${poi}`);
+              drawRouteTo(poi);
+            } else {
+              for (const [cmd, name] of Object.entries(CMD_MAP)) {
+                if (text.includes(name)) { drawRouteTo(name); break; }
+              }
+            }
+          } else if (intent === 'flight_query') {
+            const gateNo = data.entities?.gate;
+            if (gateNo) {
+              addChatMessage(`🗺️ 正在为您导航到登机口 ${gateNo}`, 'system');
+              drawRouteTo('登机口A12');
+            }
+          }
+        } else {
+          addChatMessage(data.response || '抱歉,暂时无法回答', 'system');
+        }
+      } catch (e) {
+        hideTyping(typingEl);
+        console.error('Agent 调用失败:', e);
+        // 降级:本地关键词匹配
+        setCaptainStatus('speaking');
+        handleLocalFallback(text);
+      }
+
+      isAgentReplying = false;
+    }
+
+    // ── 本地降级(Agent 不可用时) ──
+    function handleLocalFallback(text) {
+      for (let cmd in KEYWORDS) {
+        if (KEYWORDS[cmd].some(k => text.includes(k))) {
+          if (cmd === 'checkin') {
+            addChatMessage('🛄 打开安全须知');
+            speakText('打开安全须知');
+            setTimeout(openSafetyModal, 600);
+            return;
+          } else if (cmd === 'elder') {
+            toggleElderMode(true);
+            return;
+          } else if (cmd === 'normal') {
+            toggleElderMode(false);
+            return;
+          } else if (CMD_MAP[cmd]) {
+            let name = CMD_MAP[cmd];
+            let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+            addChatMessage(`🗺️ 为您导航到${name}，请跟着红色路线走~`);
+            speakText(`为您导航到${name}`);
+            drawRouteTo(name);
+            return;
+          }
+        }
+      }
+      // 【新增】本地FAQ知识库兜底（Agent 不可用时）
+      if (handleFAQ(text)) return;
+      addChatMessage('🤔 我没太明白，您能换种方式说吗？');
+      speakText('请再说一次');
+    }
+
+    // ── 打字中指示器 ──
+    function showTyping() {
+      const box = document.getElementById('chatBox');
+      const div = document.createElement('div');
+      div.className = 'typing-indicator';
+      div.id = 'typingIndicator';
+      div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+      return div;
+    }
+
+    function hideTyping(el) {
+      if (el && el.parentNode) el.remove();
+      const existing = document.getElementById('typingIndicator');
+      if (existing) existing.remove();
+    }
+
+    // ============================================================
+    // 文本输入处理
+    // ============================================================
+    function initTextInput() {
+      const input = document.getElementById('textInput');
+      const sendBtn = document.getElementById('sendBtn');
+
+      if (!input || !sendBtn) return;
+
+      function doSend() {
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = '';
+        sendToAgent(text);
+      }
+
+      sendBtn.onclick = doSend;
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          doSend();
+        }
+      };
+    }
+
+    // -------------------- 机场数据 --------------------
     const AIRPORT_LOCATIONS = {
-      '值机柜台': { lng: 116.610512, lat: 40.080123, type: 'checkin', icon: '🛄', desc: '国内值机区C岛，可办理登机牌与行李托运' },
-      '餐厅': { lng: 116.608876, lat: 40.081043, type: 'restaurant', icon: '🍽️', desc: '2层中西餐厅，营业时间6:00-22:00' },
-      '登机口A12': { lng: 116.613011, lat: 40.080408, type: 'gate', icon: '🚪', desc: 'A12登机口，步行约3分钟' },
-      '安检区': { lng: 116.612534, lat: 40.079812, type: 'security', icon: '🔍', desc: '国内安检通道1-5，请提前取出电脑' },
+      '值机柜台': { lng: 116.610512, lat: 40.080123, type: 'checkin', icon: '🛄', desc: '国内值机区C岛,可办理登机牌与行李托运' },
+      '安检区': { lng: 116.612534, lat: 40.079812, type: 'security', icon: '🔍', desc: '国内安检通道1-5,请提前取出电脑' },
+      '登机口A12': { lng: 116.613011, lat: 40.080408, type: 'gate', icon: '🚪', desc: 'A12登机口,步行约3分钟' },
+      '餐厅': { lng: 116.608876, lat: 40.081043, type: 'restaurant', icon: '🍽️', desc: '2层中西餐厅,营业时间6:00-22:00' },
+      '卫生间': { lng: 116.608943, lat: 40.078643, type: 'toilet', icon: '🚻', desc: '安检后2层卫生间,含母婴室' },
       '免税店': { lng: 116.613234, lat: 40.079734, type: 'shop', icon: '🛍️', desc: '2层免税店美妆烟酒专区' },
       '行李提取': { lng: 116.612567, lat: 40.077867, type: 'baggage', icon: '🧳', desc: '1层行李提取转盘10-15' },
-      '交通中心': { lng: 116.611734, lat: 40.077954, type: 'transport', icon: '🚌', desc: 'T3交通中心，机场快轨/大巴/出租' },
-      '失物招领': { lng: 116.608543, lat: 40.078876, type: 'lost', icon: '🔎', desc: '1层服务台旁，电话010-64599567' },
-      '卫生间': { lng: 116.608943, lat: 40.078643, type: 'toilet', icon: '🚻', desc: '安检后2层卫生间，含母婴室' },
-      '特殊旅客': { lng: 116.608289, lat: 40.079845, type: 'special', icon: '👴', desc: '值机区特殊旅客服务台，轮椅服务' }
+      '失物招领': { lng: 116.608543, lat: 40.078876, type: 'lost', icon: '🔎', desc: '1层服务台旁,电话010-64599567' },
+      '特殊旅客': { lng: 116.608289, lat: 40.079845, type: 'special', icon: '👴', desc: '值机区特殊旅客服务台,轮椅服务' },
+      '交通中心': { lng: 116.611734, lat: 40.077954, type: 'transport', icon: '🚌', desc: 'T3交通中心,机场快轨/大巴/出租' }
     };
+    const CMD_MAP = { checkin: '值机柜台', security: '安检区', gate: '登机口A12', restaurant: '餐厅', toilet: '卫生间', shop: '免税店', baggage: '行李提取', lost: '失物招领', special: '特殊旅客', transport: '交通中心' };
+    const KEYWORDS = { checkin: ['值机', '登机牌', '选座'], security: ['安检'], gate: ['登机口', 'A12'], restaurant: ['餐厅', '吃饭'], toilet: ['卫生间', '厕所'], shop: ['免税店'], baggage: ['行李'], lost: ['失物'], special: ['轮椅', '老人服务'], transport: ['交通', '大巴'], elder: ['老人机', '放大字体', '大字'], normal: ['正常模式'] };
 
-    const CMD_MAP = {
-      checkin: { name: '值机柜台', desc: '已为您打开值机安全须知页面，请阅读后进行选座。' },
-      security: { name: '安检区', desc: '安检通道在值机柜台后方50米，请提前取出电脑、充电宝。' },
-      gate: { name: '登机口A12', desc: '登机口A12位于安检区右侧，步行约3分钟。' },
-      restaurant: { name: '餐厅', desc: '餐厅位于2层西侧，提供中西餐及咖啡。' },
-      toilet: { name: '卫生间', desc: '卫生间位于安检区右侧10米。' },
-      shop: { name: '免税店', desc: '免税店位于2层候机区，涵盖美妆、烟酒、奢侈品。' },
-      baggage: { name: '行李提取', desc: '行李提取区位于1层到达大厅。' },
-      lost: { name: '失物招领', desc: '失物招领处位于1层服务台旁，工作时间8:00-20:00。' },
-      special: { name: '特殊旅客', desc: '特殊旅客服务台提供轮椅、优先登机等服务。' },
-      transport: { name: '交通中心', desc: '交通中心包含机场快轨、机场大巴、出租车。' }
-    };
-
-    const KEYWORDS = {
-      checkin: ['值机', '登机牌', '办票', '选座', '自助值机'],
-      security: ['安检', '安全检查', '过安检'],
-      gate: ['登机口', 'A12', '登机'],
-      restaurant: ['餐厅', '吃饭', '咖啡'],
-      toilet: ['卫生间', '厕所', '洗手间'],
-      shop: ['免税店', '购物'],
-      baggage: ['行李', '提取', '转盘'],
-      lost: ['失物', '招领'],
-      special: ['特殊旅客', '轮椅', '老人'],
-      transport: ['交通', '大巴', '地铁', '快轨'],
-      elder: ['老人机', '老人机模式', '大字模式', '放大字体'],
-      normal: ['正常模式', '标准模式', '恢复字体']
-    };
-
-    // ========== 状态 ==========
-    let map = null;
-    let routePolyline = null;
-    let selectedSeat = null;
-    let currentFilter = 'all';
-
-    const SEAT_COLS = ['A', 'B', 'C', 'D', 'E', 'F'];
-    const ROWS = 26;
+    let map = null, routePolyline = null;
+    let selectedSeat = null, currentFilter = 'all';
+    const SEAT_COLS = ['A', 'B', 'C', 'D', 'E', 'F'], ROWS = 26;
 
     function generateSeatData() {
       const seats = [];
-      for (let row = 1; row <= ROWS; row++) {
-        SEAT_COLS.forEach((col, colIndex) => {
-          let type = 'available';
-          let price = 0;
-          let isWindow = colIndex === 0 || colIndex === 5;
-          let isAisle = colIndex === 2 || colIndex === 3;
-
-          if (row === 12 || row === 13) {
-            type = 'exit';
-            price = 50;
-          } else if (row === 9 || row === 10) {
-            type = 'cheap';
-            price = -20;
-          } else if (row === 7 || row === 8) {
-            type = 'popular';
-            price = 30;
-          } else if (row === 1 || row === 25 || row === 26) {
-            type = 'occupied';
-          } else if (Math.random() < 0.15) {
-            type = 'occupied';
-          }
-
-          if (type === 'available') {
-            price = isWindow ? 20 : (isAisle ? 10 : 0);
-          }
-
-          seats.push({
-            row, col, seatNo: `${row}${col}`, type, price, isWindow, isAisle,
-            position: isWindow ? '靠窗' : (isAisle ? '靠过道' : '中间'),
-            cabin: row <= 8 ? '前舱' : (row <= 18 ? '中舱' : '后舱')
-          });
+      for (let r = 1; r <= ROWS; r++) {
+        SEAT_COLS.forEach((c, i) => {
+          let type = 'available', price = 0, isWin = (i === 0 || i === 5), isAisle = (i === 2 || i === 3);
+          if (r === 12 || r === 13) { type = 'exit'; price = 50; }
+          else if (r === 9 || r === 10) { type = 'cheap'; price = -20; }
+          else if (r === 7 || r === 8) { type = 'popular'; price = 30; }
+          else if (r === 1 || r === 25 || r === 26 || Math.random() < 0.12) type = 'occupied';
+          if (type === 'available') price = isWin ? 20 : (isAisle ? 10 : 0);
+          seats.push({ row: r, col: c, seatNo: `${r}${c}`, type, price, isWindow: isWin, isAisle, position: isWin ? '靠窗' : (isAisle ? '靠过道' : '中间'), cabin: r <= 8 ? '前舱' : (r <= 18 ? '中舱' : '后舱') });
         });
       }
       return seats;
     }
-
     const seatData = generateSeatData();
 
-    // ========== 工具函数 ==========
-    function addChatMessage(text, type = 'system') {
-      const chatBox = document.getElementById('chatBox');
-      const div = document.createElement('div');
-      div.className = `chat-bubble ${type === 'user' ? 'user-bubble' : 'system-bubble'}`;
-      div.textContent = text;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    function addChatMessage(text, type = 'system') { let box = document.getElementById('chatBox'); let div = document.createElement('div'); div.className = `chat-bubble ${type === 'user' ? 'user-bubble' : 'system-bubble'}`; div.textContent = text; box.appendChild(div); box.scrollTop = box.scrollHeight; }
+
+    // ── 渲染导航结果卡片（问题1修复：自然语言导航） ──
+    function renderNavCards(results) {
+      const box = document.getElementById('chatBox');
+      const typeIcons = { restaurant: '🍽️', shop: '🛍️', toilet: '🚻', security: '🔍', checkin: '🛄', baggage: '🧳', lost: '🔎', special: '👴', transport: '🚌', gate: '🚪' };
+      results.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'nav-card';
+        card.innerHTML = `
+          <div class="nav-card-header">
+            <span class="nav-card-icon">${typeIcons[r.type] || '📍'}</span>
+            <span class="nav-card-name">${r.name}</span>
+          </div>
+          <div class="nav-card-meta">
+            <span>📍 ${r.area}${r.floor}</span>
+            <span>🚶 步行${r.walking_time_min}分钟</span>
+          </div>
+          ${r.description ? `<div class="nav-card-desc">${r.description}</div>` : ''}
+          ${r.nearby_gates ? `<div class="nav-card-desc">附近登机口：${r.nearby_gates}</div>` : ''}
+          <div class="nav-card-actions">
+            <button class="nav-card-btn primary" data-poi="${r.name}">🗺️ 开始导航</button>
+            <button class="nav-card-btn secondary" data-speak="${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。${r.description || ''}">🔊 语音播报</button>
+          </div>
+        `;
+        box.appendChild(card);
+        // 导航按钮
+        card.querySelector('.nav-card-btn.primary').onclick = () => {
+          drawRouteToPoi(r);
+          speakText(`为您导航到${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟`);
+        };
+        // 语音播报按钮
+        card.querySelector('.nav-card-btn.secondary').onclick = () => {
+          speakText(`${r.name}，位于${r.area}${r.floor}，步行约${r.walking_time_min}分钟。${r.description || ''}`);
+        };
+        box.scrollTop = box.scrollHeight;
+      });
     }
 
-    function speakText(text) {
-      try {
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'zh-CN';
-        u.rate = 1.1;
-        window.speechSynthesis.speak(u);
-      } catch (e) { }
-    }
-
-    function drawRoute(toName) {
+    // 根据POI信息在地图上画路线
+    function drawRouteToPoi(poi) {
+      // 从值机柜台出发
       const from = AIRPORT_LOCATIONS['值机柜台'];
-      const to = AIRPORT_LOCATIONS[toName];
-      if (!from || !to) return;
+      if (!from) return;
+      // 生成目的地坐标（基于 area 映射）
+      const areaCoords = {
+        'B区': { lng: 116.610512, lat: 40.080123 },
+        'C区': { lng: 116.608876, lat: 40.081043 },
+        '安检后': { lng: 116.613011, lat: 40.080408 },
+        '到达层': { lng: 116.612567, lat: 40.077867 },
+      };
+      const to = areaCoords[poi.area] || { lng: 116.613011 + Math.random() * 0.001, lat: 40.080408 + Math.random() * 0.001 };
       if (routePolyline) routePolyline.setMap(null);
       routePolyline = new AMap.Polyline({
         path: [[from.lng, from.lat], [to.lng, to.lat]],
-        strokeColor: '#ff0000',
-        strokeWeight: 8,
-        zIndex: 50
+        strokeColor: '#f44336',
+        strokeWeight: 6,
+        zIndex: 100,
+        strokeStyle: 'dashed',
+        strokeDasharray: [15, 10],
       });
+      routePolyline.setMap(map);
+      // 标注目的地
+      const marker = new AMap.Marker({
+        position: [to.lng, to.lat],
+        content: `<div style="background:#f44336;color:#fff;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3)">${poi.name}</div>`,
+        offset: [0, -10],
+      });
+      marker.setMap(map);
+    }
+
+    // ── 渲染天气卡片（问题2 修复） ──
+    function renderWeatherCard(w) {
+      const box = document.getElementById('chatBox');
+      const rainIcon = parseFloat(w.rain) > 0 ? '🌧️' : (w.desc.includes('晴') ? '☀️' : w.desc.includes('阴') ? '☁️' : w.desc.includes('雨') ? '🌧️' : '🌤️');
+      const card = document.createElement('div');
+      card.className = 'nav-card weather-card';
+      card.style.cursor = 'default';
+      card.innerHTML = `
+        <div class="nav-card-header">
+          <span class="nav-card-icon">${rainIcon}</span>
+          <span class="nav-card-name">${w.city || '北京'} 天气</span>
+          <span style="margin-left:auto;font-size:34px;font-weight:800;color:#ffd700;">${w.temp}℃</span>
+        </div>
+        <div class="nav-card-meta">
+          <span>🌡️ 气温 ${w.temp}℃ / 体感 ${w.feelsLike}℃</span>
+          <span>💧 湿度 ${w.humidity}%</span>
+        </div>
+        <div class="nav-card-meta">
+          <span>💨 ${w.windDir || ''}${w.wind}km/h</span>
+          <span>${parseFloat(w.rain) > 0 ? '🌧️ 降水 ' + w.rain + 'mm' : '☀️ 无降水'}</span>
+        </div>
+        <div class="nav-card-desc">${w.desc || ''}</div>
+        <div class="nav-card-actions">
+          <button class="nav-card-btn secondary" data-speak="weather">🔊 语音播报天气</button>
+        </div>
+      `;
+      box.appendChild(card);
+      card.querySelector('.nav-card-btn.secondary').onclick = () => {
+        speakText(`${w.city}当前天气${w.desc}，气温${w.temp}摄氏度，体感${w.feelsLike}摄氏度。湿度${w.humidity}百分比。${w.windDir}${w.wind}公里每小时。${parseFloat(w.rain) > 0 ? '有降水，请携带雨具。' : '暂无降水。'}`);
+      };
+      box.scrollTop = box.scrollHeight;
+    }
+    function speakText(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      let u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      // Try to find a natural Chinese voice (Xiao Xia / Yun Yang)
+      let voices = window.speechSynthesis.getVoices();
+      let cnVoice = voices.find(v => v.lang === 'zh-CN' && /Xiao|Yun|Female|Female/.test(v.name)) || voices.find(v => v.lang === 'zh-CN') || voices.find(v => v.lang.startsWith('zh'));
+      if (cnVoice) u.voice = cnVoice;
+      u.rate = isElderMode ? 0.7 : 0.95;
+      u.pitch = isElderMode ? 1.1 : 1.05;
+      u.volume = isElderMode ? 1.0 : 0.8;
+      // Add small pause between sentences for natural rhythm
+      let sentences = text.split(/([。！？；,，])/);
+      let fullText = '';
+      for (let i = 0; i < sentences.length; i += 2) {
+        if (i + 1 < sentences.length) {
+          fullText += sentences[i] + sentences[i + 1] + ' ';
+        } else {
+          fullText += sentences[i];
+        }
+      }
+      u.text = fullText;
+      u.onend = () => setCaptainStatus('idle');
+      u.onerror = () => setCaptainStatus('idle');
+      window.speechSynthesis.speak(u);
+    }
+    function stopAllVoice() { window.speechSynthesis?.cancel(); addChatMessage('⏹️ 已停止播报'); }
+
+    let isElderMode = false;
+    function toggleElderMode(on) {
+      isElderMode = on;
+      if (on) {
+        document.body.classList.add('elder-mode');
+        addChatMessage('👴 已切换到老人机模式~ 字体已放大，语音已调慢', 'system');
+        speakText('好的，已切换到老人机模式，字体会放大，语音也会放慢');
+      } else {
+        document.body.classList.remove('elder-mode');
+        addChatMessage('✅ 已恢复正常模式', 'system');
+        speakText('已恢复正常模式');
+      }
+    }
+
+    function drawRouteTo(destName) {
+      const from = AIRPORT_LOCATIONS['值机柜台'], to = AIRPORT_LOCATIONS[destName];
+      if (!from || !to) return;
+      if (routePolyline) routePolyline.setMap(null);
+      routePolyline = new AMap.Polyline({ path: [[from.lng, from.lat], [to.lng, to.lat]], strokeColor: '#f44336', strokeWeight: 6, zIndex: 100 });
       routePolyline.setMap(map);
     }
 
-    function showToast(text) {
-      const toast = document.getElementById('seatToast');
-      document.getElementById('toastText').textContent = text;
-      toast.classList.add('show');
-      setTimeout(() => toast.classList.remove('show'), 2000);
-    }
-
-    // ========== 地图功能 ==========
     function initMap() {
-      map = new AMap.Map('mapContainer', {
-        zoom: 16,
-        center: [116.610512, 40.080123]
-      });
-
+      map = new AMap.Map('mapContainer', { zoom: 16, center: [116.610512, 40.080123] });
       map.on('complete', () => {
-        for (const name in AIRPORT_LOCATIONS) {
-          const loc = AIRPORT_LOCATIONS[name];
-          const markerDom = document.createElement('div');
-          markerDom.className = `custom-marker marker-${loc.type}`;
-          markerDom.innerText = loc.icon;
-          const marker = new AMap.Marker({
-            position: [loc.lng, loc.lat],
-            content: markerDom,
-            offset: new AMap.Pixel(-24, -24)
-          });
-          marker.on('click', () => {
-            addChatMessage(`📍 ${name}：${loc.desc}`);
-            speakText(loc.desc);
-            drawRoute(name);
-          });
+        for (let name in AIRPORT_LOCATIONS) {
+          let p = AIRPORT_LOCATIONS[name];
+          let div = document.createElement('div'); div.className = `custom-marker marker-${p.type}`; div.innerText = p.icon;
+          let marker = new AMap.Marker({ position: [p.lng, p.lat], content: div, offset: new AMap.Pixel(-24, -24) });
+          marker.on('click', () => { addChatMessage(`📍 ${name}:${p.desc}`); speakText(p.desc); drawRouteTo(name); });
           marker.setMap(map);
         }
       });
     }
 
-    // ========== 语音功能 ==========
-    function initVoice() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        addChatMessage('⚠️ 当前浏览器不支持语音识别');
+    // -------------------- 语音识别集成(稳定版)--------------------
+    let recognition = null;
+    let micReady = false;
+
+    async function preRequestMic() {
+      // 检查安全上下文（问题4 修复）
+      if (typeof window.isSecureContext === 'boolean' && window.isSecureContext === false) {
+        addChatMessage('⚠️ 当前页面不在安全上下文中。麦克风需要使用 HTTPS 或 localhost 访问。请联系管理员配置 HTTPS 证书。');
+        console.warn('[Mic] Not in secure context — getUserMedia will fail');
         return;
       }
-      const recog = new SpeechRecognition();
-      recog.lang = 'zh-CN';
-      recog.continuous = false;
-      recog.interimResults = false;
-
-      recog.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        addChatMessage(text, 'user');
-
-        if (KEYWORDS.elder.some(word => text.includes(word))) {
-          enableElderMode();
-          return;
-        }
-        if (KEYWORDS.normal.some(word => text.includes(word))) {
-          disableElderMode();
-          return;
-        }
-
-        for (const key in KEYWORDS) {
-          if (KEYWORDS[key].some(word => text.includes(word))) {
-            handleNavigation(key);
-            return;
-          }
-        }
-        addChatMessage('抱歉，我没有理解您的意思，请尝试导航指令或说"老人机模式"');
-      };
-
-      recog.onerror = () => {
-        addChatMessage('语音识别出错，请重试');
-      };
-
-      document.getElementById('micBtn').onclick = () => {
-        try {
-          recog.start();
-          addChatMessage('🎤 正在倾听...');
-        } catch (e) {
-          addChatMessage('请先停止当前的语音识别');
-        }
-      };
-    }
-
-    // ========== 导航功能 ==========
-    function enableElderMode() {
-      document.getElementById('chatPanel').classList.add('elder-mode');
-      addChatMessage('✅ 已开启老人机模式，字体已放大');
-      speakText('老人机模式已开启，字体放大');
-    }
-
-    function disableElderMode() {
-      document.getElementById('chatPanel').classList.remove('elder-mode');
-      addChatMessage('✅ 已恢复正常模式');
-      speakText('已恢复正常模式');
-    }
-
-    function handleNavigation(cmdKey) {
-      // ✅ 修复：语音说值机/选座 打开安全须知
-      if (cmdKey === 'checkin') {
-        addChatMessage('🛄 正在打开安全须知页面，请阅读后选座');
-        speakText('正在打开安全须知页面');
-        setTimeout(openSafetyModal, 600);
-        return;
-      }
-
-      if (!CMD_MAP[cmdKey]) return;
-      const cfg = CMD_MAP[cmdKey];
-      addChatMessage(cfg.desc);
-      speakText(cfg.desc);
-      drawRoute(cfg.name);
-    }
-
-    // ========== 安全须知 ==========
-    let safetyTimer = null;
-
-    function openSafetyModal() {
-      document.getElementById('safetyModal').style.display = 'flex';
-      let sec = 5;
-      document.getElementById('countdown').textContent = sec;
-      const nextBtn = document.getElementById('safetyNext');
-      nextBtn.disabled = true;
-      nextBtn.classList.remove('active');
-
-      safetyTimer = setInterval(() => {
-        sec--;
-        document.getElementById('countdown').textContent = sec;
-        if (sec <= 0) {
-          clearInterval(safetyTimer);
-          nextBtn.disabled = false;
-          nextBtn.classList.add('active');
-        }
-      }, 1000);
-    }
-
-    function closeSafetyModal() {
-      document.getElementById('safetyModal').style.display = 'none';
-      if (safetyTimer) {
-        clearInterval(safetyTimer);
-        safetyTimer = null;
-      }
-    }
-
-    // ========== 选座功能 ==========
-    function openSeatModal() {
-      closeSafetyModal();
-      document.getElementById('seatModal').style.display = 'flex';
-      selectedSeat = null;
-      currentFilter = 'all';
-      updateSummary();
-      renderSeatCards();
-      renderPlaneView();
-
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === 'all');
-      });
-    }
-
-    function closeSeatModal() {
-      document.getElementById('seatModal').style.display = 'none';
-    }
-
-    function updateSummary() {
-      const summarySeat = document.getElementById('summarySeat');
-      const summaryPos = document.getElementById('summaryPos');
-      const summaryPrice = document.getElementById('summaryPrice');
-      const confirmBtn = document.getElementById('seatConfirm');
-
-      if (selectedSeat) {
-        summarySeat.textContent = selectedSeat.seatNo;
-        summaryPos.textContent = `${selectedSeat.position} · ${selectedSeat.cabin}`;
-        const priceText = selectedSeat.price > 0 ? `+¥${selectedSeat.price}` :
-          selectedSeat.price < 0 ? `-¥${Math.abs(selectedSeat.price)}` : '免费';
-        summaryPrice.textContent = priceText;
-        confirmBtn.disabled = false;
-      } else {
-        summarySeat.textContent = '--';
-        summaryPos.textContent = '--';
-        summaryPrice.textContent = '--';
-        confirmBtn.disabled = true;
-      }
-    }
-
-    function getFilteredSeats() {
-      if (currentFilter === 'all') return seatData;
-
-      return seatData.filter(seat => {
-        if (seat.type === 'occupied') return false;
-
-        switch (currentFilter) {
-          case 'window': return seat.isWindow;
-          case 'aisle': return seat.isAisle;
-          case 'middle': return !seat.isWindow && !seat.isAisle;
-          case 'exit': return seat.type === 'exit';
-          case 'cheap': return seat.type === 'cheap';
-          default: return true;
-        }
-      });
-    }
-
-    function renderSeatCards() {
-      const container = document.getElementById('seatCardsContainer');
-      const filteredSeats = getFilteredSeats();
-
-      container.innerHTML = filteredSeats.map(seat => {
-        const isSelected = selectedSeat && selectedSeat.seatNo === seat.seatNo;
-        const isDisabled = seat.type === 'occupied';
-
-        let typeLabel = '';
-        let typeClass = 'seat-type-available';
-
-        switch (seat.type) {
-          case 'popular': typeLabel = '热门'; typeClass = 'seat-type-popular'; break;
-          case 'cheap': typeLabel = '优惠'; typeClass = 'seat-type-cheap'; break;
-          case 'exit': typeLabel = '出口'; typeClass = 'seat-type-exit'; break;
-          case 'occupied': typeLabel = '已占'; typeClass = 'seat-type-occupied'; break;
-          default: typeLabel = '可选'; break;
-        }
-
-        const priceDisplay = seat.type === 'occupied' ? '已售' :
-          (seat.price > 0 ? `+¥${seat.price}` :
-            seat.price < 0 ? `-¥${Math.abs(seat.price)}` : '免费');
-
-        return `
-          <div class="seat-card ${isSelected ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}" 
-               data-seat="${seat.seatNo}"
-               ${isDisabled ? '' : `onclick="selectSeat('${seat.seatNo}')"`}>
-            <div class="seat-card-header">
-              <span class="seat-number">${seat.seatNo}</span>
-              <span class="seat-type-badge ${typeClass}">${typeLabel}</span>
-            </div>
-            <div class="seat-card-info">
-              <div class="seat-info-row">
-                <span class="icon">📍</span>
-                <span>${seat.position}</span>
-              </div>
-              <div class="seat-info-row">
-                <span class="icon">🚪</span>
-                <span>${seat.cabin}</span>
-              </div>
-            </div>
-            <div class="seat-price">${priceDisplay}</div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderPlaneView() {
-      const container = document.getElementById('planeSeatsContainer');
-      container.innerHTML = '';
-
-      const planeBody = document.getElementById('planeBody');
-      const bodyWidth = 360;
-      const bodyHeight = 600;
-
-      const seatWidth = 20;
-      const seatHeight = 20;
-      const seatGap = 5;
-      const aisleWidth = 28;
-
-      const leftGroupStart = (bodyWidth - (3 * seatWidth + 2 * seatGap) - aisleWidth - (3 * seatWidth + 2 * seatGap)) / 2;
-      const rightGroupStart = leftGroupStart + 3 * seatWidth + 2 * seatGap + aisleWidth;
-
-      const seatAreaTop = 90;
-      const seatAreaHeight = bodyHeight - 90 - 105;
-      const rowHeight = seatAreaHeight / ROWS;
-
-      seatData.forEach(seat => {
-        const dot = document.createElement('div');
-        dot.className = `seat-dot ${seat.type === 'selected' && selectedSeat?.seatNo === seat.seatNo ? 'selected' : seat.type}`;
-        dot.textContent = seat.col;
-
-        const colIndex = SEAT_COLS.indexOf(seat.col);
-        let x;
-        if (colIndex < 3) {
-          x = leftGroupStart + colIndex * (seatWidth + seatGap);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(t => t.stop());
+        micReady = true;
+        addChatMessage('✅ 麦克风已就绪,点击🎤即可语音');
+      } catch (e) {
+        console.error('权限请求失败', e);
+        if (e.name === 'NotAllowedError') {
+          addChatMessage('⚠️ 麦克风被禁用,请点击地址栏锁图标→麦克风→允许');
+        } else if (e.name === 'NotFoundError') {
+          addChatMessage('⚠️ 未检测到麦克风设备,请检查硬件连接');
+        } else if (e.name === 'NotReadableError' || e.name === 'AbortError') {
+          addChatMessage('⚠️ 麦克风被其他程序占用,请关闭后重试');
+        } else if (e.name === 'SecurityError') {
+          addChatMessage('⚠️ 安全限制: 请在 HTTPS 或 localhost 环境下使用语音功能');
         } else {
-          x = rightGroupStart + (colIndex - 3) * (seatWidth + seatGap);
+          addChatMessage('⚠️ 无法获取麦克风权限: ' + e.message);
         }
+      }
+    }
 
-        const y = seatAreaTop + (seat.row - 1) * rowHeight;
+    function initVoice() {
+      const SpeechRecog = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecog) { addChatMessage('❌ 请使用Chrome或Edge浏览器'); return; }
+      recognition = new SpeechRecog();
+      recognition.lang = 'zh-CN'; recognition.continuous = false; recognition.interimResults = false;
 
+      recognition.onstart = () => {
+        addChatMessage('🎤 我在听，请说话~');
+        setCaptainStatus('listening');
+        showVoiceWave();
+      };
+      recognition.onresult = (e) => {
+        let text = e.results[0][0].transcript.trim();
+        // 用户消息统一由 sendToAgent 入口渲染，避免双重气泡
+        sendToAgent(text);
+      };
+      recognition.onerror = (err) => {
+        console.error('语音识别错误:', err);
+        hideVoiceWave();
+        setCaptainStatus('error');
+        setTimeout(() => setCaptainStatus('idle'), 2000);
+        if (err.error === 'not-allowed') addChatMessage('⚠️ 麦克风被禁用,请检查权限');
+        else if (err.error === 'no-speech') addChatMessage('🎤 没听清，可以再说一遍吗？');
+        else if (err.error === 'network') addChatMessage('⚠️ 网络错误,无法连接语音服务');
+        else addChatMessage('🎤 没听清，可以再说一遍吗？');
+      };
+      recognition.onend = () => {
+        micBtn.classList.remove('listening');
+        hideVoiceWave();
+      };
+
+      const micBtn = document.getElementById('micBtn');
+      micBtn.onclick = async () => {
+        if (!recognition) { addChatMessage('❌ 当前浏览器不支持语音识别'); return; }
+        if (!micReady) { await preRequestMic(); if (!micReady) return; }
+        micBtn.classList.add('listening');
+        try {
+          recognition.stop(); // 安全地停止可能正在运行的识别
+        } catch (e) { /* ignore */ }
+        try {
+          recognition.start();
+        } catch (e) {
+          micBtn.classList.remove('listening');
+          addChatMessage('启动失败，请刷新页面重试');
+        }
+      };
+    }
+
+    // -------------------- 安全须知与选座逻辑 --------------------
+    let safetyTimer = null;
+    function openSafetyModal() { let modal = document.getElementById('safetyModal'); modal.style.display = 'flex'; let s = 5, next = document.getElementById('safetyNext'); document.getElementById('countdown').innerText = s; next.disabled = true; safetyTimer = setInterval(() => { s--; document.getElementById('countdown').innerText = s; if (s <= 0) { clearInterval(safetyTimer); next.disabled = false; next.classList.add('active'); } }, 1000); }
+    function closeSafetyModal() { document.getElementById('safetyModal').style.display = 'none'; if (safetyTimer) clearInterval(safetyTimer); }
+    function openSeatModal() { closeSafetyModal(); document.getElementById('seatModal').style.display = 'flex'; selectedSeat = null; currentFilter = 'all'; updateSummary(); renderSeatCards(); renderPlaneView(); document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); document.querySelector('.filter-btn[data-filter="all"]').classList.add('active'); }
+    function closeSeatModal() { document.getElementById('seatModal').style.display = 'none'; }
+    function updateSummary() { let s1 = document.getElementById('summarySeat'), s2 = document.getElementById('summaryPos'), s3 = document.getElementById('summaryPrice'), btn = document.getElementById('seatConfirm'); if (selectedSeat) { s1.innerText = selectedSeat.seatNo; s2.innerText = `${selectedSeat.position}·${selectedSeat.cabin}`; s3.innerText = selectedSeat.price > 0 ? `+¥${selectedSeat.price}` : (selectedSeat.price < 0 ? `-¥${-selectedSeat.price}` : '免费'); btn.disabled = false; } else { s1.innerText = '--'; s2.innerText = '--'; s3.innerText = '--'; btn.disabled = true; } }
+    function getFilteredSeats() { if (currentFilter === 'all') return seatData.filter(s => s.type !== 'occupied'); return seatData.filter(s => { if (s.type === 'occupied') return false; if (currentFilter === 'window') return s.isWindow; if (currentFilter === 'aisle') return s.isAisle; if (currentFilter === 'exit') return s.type === 'exit'; if (currentFilter === 'cheap') return s.type === 'cheap'; return true; }); }
+    function renderSeatCards() { let list = getFilteredSeats(); let container = document.getElementById('seatCardsContainer'); container.innerHTML = list.map(s => { let sel = selectedSeat?.seatNo === s.seatNo; let label = '可选', cls = 'seat-type-available'; if (s.type === 'popular') { label = '热门'; cls = 'seat-type-popular'; } else if (s.type === 'cheap') { label = '特惠'; cls = 'seat-type-cheap'; } else if (s.type === 'exit') { label = '出口'; cls = 'seat-type-exit'; } else if (s.type === 'occupied') { label = '已占'; cls = 'seat-type-occupied'; } let priceTxt = s.type === 'occupied' ? '已售' : (s.price > 0 ? `+¥${s.price}` : (s.price < 0 ? `-¥${-s.price}` : '免费')); return `<div class="seat-card ${sel ? 'selected' : ''}" onclick="selectSeat('${s.seatNo}')"><div class="seat-card-header"><span class="seat-number">${s.seatNo}</span><span class="seat-type-badge ${cls}">${label}</span></div><div class="seat-price">${priceTxt}</div></div>`; }).join(''); }
+
+    // A320 3+3 布局 renderPlaneView:每排6座(A-B-C|过道|D-E-F),26排,机头朝上
+    function renderPlaneView() {
+      let container = document.getElementById('planeSeatsContainer');
+      container.innerHTML = '';
+      let rect = container.getBoundingClientRect();
+      let bodyW = rect.width, bodyH = rect.height;
+      let seatW = 24, seatGap = 6, aisleW = 34;
+      let leftGroupWidth = 3 * seatW + 2 * seatGap;
+      let rightGroupWidth = 3 * seatW + 2 * seatGap;
+      let totalWidth = leftGroupWidth + aisleW + rightGroupWidth;
+      let leftGroupStart = (bodyW - totalWidth) / 2;
+      let rightGroupStart = leftGroupStart + leftGroupWidth + aisleW;
+      let topPad = 50, bottomPad = 50;
+      let rowH = (bodyH - topPad - bottomPad) / ROWS;
+      seatData.forEach(seat => {
+        let dot = document.createElement('div');
+        dot.className = `seat-dot ${seat.type} ${selectedSeat?.seatNo === seat.seatNo ? 'selected' : ''}`;
+        dot.textContent = seat.col;
+        let colIdx = SEAT_COLS.indexOf(seat.col);
+        let x = colIdx < 3 ? leftGroupStart + colIdx * (seatW + seatGap) : rightGroupStart + (colIdx - 3) * (seatW + seatGap);
+        let y = topPad + (seat.row - 1) * rowH;
         dot.style.left = `${x}px`;
         dot.style.top = `${y}px`;
-
-        if (seat.type !== 'occupied') {
+        dot.style.width = `${seatW}px`;
+        dot.style.height = `${seatW}px`;
+        if (seat.type === 'occupied') {
+          dot.style.cursor = 'not-allowed';
+        } else {
           dot.onclick = () => selectSeat(seat.seatNo);
         }
-
         container.appendChild(dot);
       });
     }
 
-    function selectSeat(seatNo) {
-      const seat = seatData.find(s => s.seatNo === seatNo);
-      if (!seat || seat.type === 'occupied') return;
+    window.selectSeat = function (no) { let s = seatData.find(x => x.seatNo === no); if (!s || s.type === 'occupied') return; selectedSeat = s; let toast = document.getElementById('seatToast'); document.getElementById('toastText').innerText = `✓ 已选座位 ${no}`; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 1800); speakText(`已选择座位${s.seatNo}`); renderSeatCards(); renderPlaneView(); updateSummary(); };
+    function confirmSeat() { if (!selectedSeat) { alert('请先选择座位'); return; } alert(`✅ 值机成功!\n座位:${selectedSeat.seatNo}\n祝您旅途愉快!`); closeSeatModal(); }
 
-      if (selectedSeat && selectedSeat.seatNo === seatNo) {
-        selectedSeat = null;
-      } else {
-        selectedSeat = seat;
-        showToast(`✓ 已选择座位 ${seatNo}`);
-        speakText(`已选择座位${seat.row}${seat.col}，${seat.position}，${seat.cabin}`);
-      }
-
-      renderSeatCards();
-      renderPlaneView();
-      updateSummary();
-    }
-
-    function confirmSeat() {
-      if (!selectedSeat) {
-        alert('请先选择座位！');
-        return;
-      }
-
-      const confirmBtn = document.getElementById('seatConfirm');
-      confirmBtn.textContent = '打印中...';
-      confirmBtn.disabled = true;
-
-      setTimeout(() => {
-        alert(`✅ 值机成功！
-
-航班：CA1234
-座位：${selectedSeat.seatNo}
-位置：${selectedSeat.position}
-舱位：${selectedSeat.cabin}
-登机口：请查看短信
-
-祝您旅途愉快！`);
-        closeSeatModal();
-        confirmBtn.textContent = '确认选座并打印登机牌';
-      }, 1500);
-    }
-
-    // ========== 事件绑定 ==========
-    document.getElementById('checkinBtn').onclick = function () {
-      addChatMessage('🛄 正在打开安全须知页面，请阅读后选座');
-      speakText('正在打开安全须知页面');
-      setTimeout(openSafetyModal, 600);
-    };
-
-    document.getElementById('safetyBack').onclick = closeSafetyModal;
-    document.getElementById('safetyClose').onclick = closeSafetyModal;
-    document.getElementById('safetyNext').onclick = openSeatModal;
-    document.getElementById('seatBack').onclick = closeSeatModal;
-    document.getElementById('seatConfirm').onclick = confirmSeat;
-
-    document.getElementById('stopBtn').onclick = () => {
-      window.speechSynthesis.cancel();
-      addChatMessage('⏹️ 已停止语音播报');
-    };
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        renderSeatCards();
-      });
-    });
-
+    // -------------------- 事件绑定 --------------------
+    document.getElementById('stopBtn').onclick = stopAllVoice;
     document.querySelectorAll('.func-btn[data-cmd]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const cmd = btn.dataset.cmd;
-        handleNavigation(cmd);
+        let cmd = btn.dataset.cmd;
+        if (cmd === 'checkin') {
+          addChatMessage('🤖 好的，正在打开值机页面~');
+          speakText('好的，正在打开值机页面');
+          setTimeout(openSafetyModal, 600);
+          addChatMessage('🗺️ 值机柜台在C岛，请跟着红色路线走~', 'system');
+        } else if (cmd === 'gate') {
+          let name = CMD_MAP[cmd];
+          let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+          addChatMessage(`🗺️ 正在为您导航到${name}，请跟着红色路线走~`);
+          speakText(`正在为您导航到${name}`);
+          drawRouteTo(name);
+        } else if (cmd === 'security' || cmd === 'restaurant' || cmd === 'toilet' || cmd === 'shop' || cmd === 'baggage' || cmd === 'lost' || cmd === 'special' || cmd === 'transport') {
+          let name = CMD_MAP[cmd];
+          let desc = AIRPORT_LOCATIONS[name]?.desc || `前往${name}`;
+          addChatMessage(`🗺️ 为您导航到${name}，请跟着红色路线走~`);
+          speakText(`为您导航到${name}`);
+          drawRouteTo(name);
+        }
       });
     });
+    document.getElementById('safetyBack').onclick = closeSafetyModal; document.getElementById('safetyClose').onclick = closeSafetyModal;
+    document.getElementById('safetyNext').onclick = openSeatModal; document.getElementById('seatBack').onclick = closeSeatModal;
+    document.getElementById('seatConfirm').onclick = confirmSeat;
+    document.querySelectorAll('.filter-btn').forEach(b => { b.addEventListener('click', () => { document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active')); b.classList.add('active'); currentFilter = b.dataset.filter; renderSeatCards(); }); });
 
-    // ========== 初始化 ==========
-    window.onload = function () {
-      // 先初始化身份证页面
-      initIdCardPage();
-
-      // 加载高德地图
-      const script = document.createElement('script');
+    window.onload = () => {
+      initIdCard();
+      let script = document.createElement('script');
       script.src = 'https://webapi.amap.com/maps?v=2.0&key=37998adb2d5488949647812aebeaf528';
-      script.onload = () => {
-        initMap();
-      };
+      script.onload = initMap;
       document.head.appendChild(script);
-
       initVoice();
+      initTextInput();
     };
+
+    // ============================================================
+    // 【新增】Q版AI机长形象 · 状态联动（2026-08-03）
+    // 触发点：sendToAgent 被调用→thinking；Agent 返回且触发 speakText→speaking；
+    //         recognition.onstart→listening；speakText 播报结束 onend→idle；
+    //         recognition.onerror→error（2秒后恢复 idle）。
+    // ============================================================
+    function setCaptainStatus(status) {
+      const avatar = document.getElementById('captainAvatar');
+      if (!avatar) return;
+      avatar.setAttribute('data-status', status);
+      const textEl = document.getElementById('captainStatusText');
+      if (textEl && CAPTAIN_STATUS_MAP[status]) textEl.textContent = CAPTAIN_STATUS_MAP[status].text;
+    }
+
+    // ── 语音音量可视化：显示/隐藏声波动画条 ──
+    function showVoiceWave() {
+      const w = document.getElementById('voiceWave');
+      if (w) w.classList.add('active');
+    }
+    function hideVoiceWave() {
+      const w = document.getElementById('voiceWave');
+      if (w) w.classList.remove('active');
+    }
+
+    // ============================================================
+    // 【新增】本地FAQ知识库（Agent 不可用时降级）
+    // 在 handleLocalFallback 未命中分支调用；命中则回复并返回 true。
+    // ============================================================
+    function handleFAQ(text) {
+      const lower = (text || '').toLowerCase();
+      for (const item of FAQ_ITEMS) {
+        if (item.keywords.some(k => lower.includes(k))) {
+          addChatMessage(item.reply, 'system');
+          if (item.speech) speakText(item.speech);
+          return true;
+        }
+      }
+      return false;
+    }
   </script>
 </body>
 

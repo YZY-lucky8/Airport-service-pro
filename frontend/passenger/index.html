@@ -743,7 +743,6 @@
     }
 
     /* 模态框通用 */
-    /* 模态框通用 */
     .modal {
       position: fixed;
       top: 0;
@@ -754,7 +753,6 @@
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 100000;
       z-index: 100000;
     }
 
@@ -790,82 +788,124 @@
       background: rgba(0, 0, 0, 0.5);
     }
 
-    /* 安全须知 */
+    /* ========== 安全须知 ========== */
     .safety-header {
-      background: #0a2f5a;
+      background: #0077cc;
       color: white;
-      padding: 22px 32px;
+      padding: 22px 30px;
       display: flex;
-      gap: 16px;
       align-items: center;
+      gap: 12px;
     }
 
     .safety-header h2 {
+      margin: 0;
       font-size: 28px;
     }
 
     .safety-tip {
-      background: #e3f2fd;
-      padding: 14px 28px;
+      color: #0077cc;
       font-size: 18px;
-      color: #0d47a1;
+      padding: 18px 30px;
+      background: #f2f9ff;
+    }
+
+    .safety-tip span {
+      font-weight: bold;
+      color: #ff6600;
     }
 
     .safety-content {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 32px;
-      line-height: 1.8;
+      padding: 20px 30px;
+      color: #333;
+      line-height: 1.9;
       font-size: 18px;
+    }
+
+    .safety-content h3 {
+      color: #0077cc;
+      margin: 18px 0 10px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .safety-content p {
+      margin-bottom: 14px;
+      color: #444;
     }
 
     .safety-btn-group {
-      padding: 20px 28px;
       display: flex;
-      gap: 20px;
+      gap: 16px;
       justify-content: flex-end;
+      padding: 20px 30px;
       background: #f8f8f8;
+      border-top: 1px solid #eee;
     }
 
     .safety-btn {
-      padding: 14px 32px;
-      border-radius: 40px;
-      font-size: 18px;
+      padding: 16px 36px;
       border: none;
+      border-radius: 12px;
+      font-size: 18px;
       cursor: pointer;
+      transition: all 0.25s;
       font-weight: 500;
     }
 
     .safety-btn-back {
-      background: #e3f2fd;
-      color: #0d47a1;
-      border: 2px solid #90CAF9;
+      background: #f2f9ff;
+      color: #0077cc;
+      border: 2px solid #c8e1f5;
+    }
+
+    .safety-btn-back:hover {
+      background: #d6e9ff;
     }
 
     .safety-btn-next {
-      background: #e3f2fd;
-      color: #0d47a1;
-      border: 2px solid #90CAF9;
+      background: #f2f9ff;
+      color: #0077cc;
+      border: 2px solid #c8e1f5;
     }
 
     .safety-btn-next.active {
-      background: #1565C0;
+      background: #0077cc;
       color: white;
+      border-color: #0077cc;
+      box-shadow: 0 4px 12px rgba(0, 119, 204, 0.3);
     }
 
-    /* ========== 选座模块(布局修正版) ========== */
+    .safety-btn-next:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* ========== 选座页面 [核心优化] ========== */
     .seat-modal-content {
       display: flex;
       flex-direction: column;
       height: 100vh;
     }
 
+    /* 顶部导航 */
     .seat-nav {
-      background: linear-gradient(135deg, #0d47a1, #1565C0);
-      padding: 16px 28px;
+      background: linear-gradient(135deg, #0077cc 0%, #005599 100%);
+      padding: 18px 30px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
       color: white;
+    }
+
+    .seat-nav-title {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
     .seat-nav-title h2 {
@@ -875,48 +915,66 @@
 
     .flight-info {
       display: flex;
-      gap: 24px;
-      font-size: 16px;
+      gap: 30px;
+      font-size: 18px;
+      opacity: 0.95;
     }
 
+    .flight-info span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 主要内容 */
     .seat-main-container {
       flex: 1;
       display: flex;
       overflow: hidden;
     }
 
+    /* ===== 左侧：座位卡片列表（缩小） ===== */
     .seat-list-area {
       width: 38%;
-      background: #f8fafc;
-      border-right: 2px solid #cde3fc;
       display: flex;
       flex-direction: column;
+      background: #f8fafc;
+      border-right: 2px solid #e0e8f0;
     }
 
+    /* 筛选栏 */
     .seat-filter-bar {
       background: white;
-      padding: 14px 18px;
+      padding: 16px 20px;
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      border-bottom: 1px solid #cde3fc;
+      border-bottom: 1px solid #e0e8f0;
     }
 
     .filter-btn {
-      padding: 8px 18px;
-      border-radius: 40px;
+      padding: 10px 18px;
+      border-radius: 25px;
+      border: 2px solid #c8e1f5;
       background: white;
-      border: 2px solid #90CAF9;
+      color: #005599;
+      font-size: 15px;
       cursor: pointer;
+      transition: all 0.2s;
       font-weight: 500;
     }
 
-    .filter-btn.active {
-      background: #1565C0;
-      color: white;
-      border-color: #1565C0;
+    .filter-btn:hover {
+      background: #f2f9ff;
     }
 
+    .filter-btn.active {
+      background: #0077cc;
+      border-color: #0077cc;
+      color: white;
+    }
+
+    /* 座位卡片列表 */
     .seat-cards-container {
       flex: 1;
       overflow-y: auto;
@@ -924,16 +982,23 @@
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
+      align-content: start;
     }
 
     .seat-card {
       background: white;
-      border-radius: 20px;
+      border-radius: 14px;
       padding: 16px;
       cursor: pointer;
-      border: 2px solid transparent;
-      transition: 0.1s;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      transition: all 0.25s;
+      border: 3px solid transparent;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .seat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0, 102, 170, 0.15);
+      border-color: #c8e1f5;
     }
 
     .seat-card.selected {
@@ -946,15 +1011,28 @@
       cursor: not-allowed;
     }
 
+    .seat-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border-color: transparent;
+    }
+
+    .seat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
     .seat-number {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: bold;
-      color: #0d47a1;
+      color: #005599;
     }
 
     .seat-type-badge {
-      padding: 4px 12px;
-      border-radius: 20px;
+      padding: 5px 12px;
+      border-radius: 14px;
       font-size: 13px;
       font-weight: 600;
     }
@@ -979,17 +1057,39 @@
       color: #f9a825;
     }
 
-    .seat-price {
-      margin-top: 12px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #1565C0;
+    .seat-type-occupied {
+      background: #fafafa;
+      color: #999;
     }
 
-    /* 右侧飞机俯视图(修正对齐) */
+    .seat-card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .seat-info-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      color: #666;
+    }
+
+    .seat-info-row .icon {
+      font-size: 16px;
+    }
+
+    .seat-price {
+      margin-top: 12px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #0077cc;
+    }
+
+    /* ===== 右侧：飞机俯视图（放大） ===== */
     .plane-view-area {
       flex: 1;
-      background: #eef4fc;
       display: flex;
       flex-direction: column;
       background: linear-gradient(180deg, #f0f7ff 0%, #e6f2ff 100%);
@@ -1024,47 +1124,63 @@
       border-radius: 100px 100px 50px 50px;
       border: 5px solid #0077cc;
       position: relative;
-      width: 340px;
-      height: 620px;
-      margin-bottom: 20px;
-      z-index: 1;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 102, 170, 0.2);
     }
 
-    /* 用 SVG 绘制真实飞机轮廓 */
-    .plane-svg-wrap {
+    .plane-nose {
       position: absolute;
       top: 0;
       left: 50%;
       transform: translateX(-50%);
-      width: 340px;
-      height: 620px;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    .plane-nose {
-      display: none;
+      width: 60px;
+      height: 85px;
+      background: linear-gradient(180deg, #0077cc 0%, #fafafa 100%);
+      border-radius: 60px 60px 0 0;
     }
 
     .plane-tail {
-      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85px;
+      height: 100px;
+      background: linear-gradient(180deg, #fafafa 0%, #0077cc 100%);
+      border-radius: 0 0 50px 50px;
     }
 
     .plane-wing-left {
-      display: none;
+      position: absolute;
+      top: 35%;
+      left: -70px;
+      width: 90px;
+      height: 120px;
+      background: #0077cc;
+      border-radius: 25px 0 0 25px;
+      transform: rotate(-12deg);
     }
 
     .plane-wing-right {
-      display: none;
+      position: absolute;
+      top: 35%;
+      right: -70px;
+      width: 90px;
+      height: 120px;
+      background: #0077cc;
+      border-radius: 0 25px 25px 0;
+      transform: rotate(12deg);
     }
 
-    /* 舱位标签(不遮挡座位,不偏移) */
+    /* 舱位区域标签 */
     .cabin-section {
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      padding: 4px 18px;
+      padding: 5px 16px;
       border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
       background: white;
       color: #005599;
       border: 2px solid #c8e1f5;
@@ -1073,7 +1189,6 @@
     }
 
     .cabin-front {
-      top: 8%;
       top: 8%;
     }
 
@@ -1085,16 +1200,7 @@
       top: 60%;
     }
 
-    /* 座位容器 - 优化垂直范围 */
-    #planeSeatsContainer {
-      position: absolute;
-      top: 9%;
-      left: 5%;
-      width: 90%;
-      height: 82%;
-      z-index: 15;
-    }
-
+    /* 座位点位 */
     .seat-dot {
       position: absolute;
       width: 24px;
@@ -1108,10 +1214,12 @@
       font-size: 11px;
       color: #fff;
       font-weight: bold;
-      color: white;
-      cursor: pointer;
-      transition: 0.1s;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .seat-dot:hover {
+      transform: scale(1.3);
+      z-index: 10;
     }
 
     .seat-dot.available {
@@ -1129,7 +1237,7 @@
     }
 
     .seat-dot.cheap {
-      background: #2196f3;
+      background: #2196F3;
     }
 
     .seat-dot.exit {
@@ -1142,35 +1250,41 @@
       cursor: default;
     }
 
-    .seat-dot.selected {
-      background: #e53935;
-      transform: scale(1.2);
-      border: 2px solid white;
-      z-index: 20;
+    .seat-dot.disabled {
+      background: #ddd;
+      cursor: default;
+      opacity: 0.5;
     }
 
+    /* 图例 */
     .seat-legend {
+      margin-top: 20px;
       background: white;
-      border-radius: 20px;
-      padding: 12px 20px;
-      width: 100%;
-      max-width: 380px;
+      border-radius: 14px;
+      padding: 18px;
       border: 1px solid #c8e1f5;
-      margin-top: 8px;
+    }
+
+    .legend-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #005599;
+      margin-bottom: 14px;
+      text-align: center;
     }
 
     .legend-grid {
-      display: flex;
-      gap: 16px;
-      justify-content: center;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+      font-size: 14px;
+      color: #666;
     }
 
     .legend-color {
@@ -1179,69 +1293,105 @@
       border-radius: 4px;
     }
 
+    /* ===== 底部操作栏 ===== */
     .seat-bottom-bar {
       background: white;
-      padding: 16px 28px;
+      padding: 20px 30px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      border-top: 2px solid #cde3fc;
+      border-top: 2px solid #e0e8f0;
+    }
+
+    .selected-summary {
+      display: flex;
+      align-items: center;
+      gap: 30px;
     }
 
     .summary-item {
       display: flex;
+      align-items: center;
       gap: 10px;
       color: #666;
-      font-size: 16px;
-      align-items: baseline;
+      font-size: 17px;
     }
 
     .summary-item .value {
-      color: #1565C0;
+      color: #0077cc;
       font-weight: 700;
       font-size: 22px;
     }
 
-    .seat-btn-back,
-    .seat-btn-confirm {
-      padding: 12px 32px;
-      border-radius: 40px;
-      font-weight: 600;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
+    .seat-btn-group {
+      display: flex;
+      gap: 16px;
     }
 
     .seat-btn-back {
-      background: #e3f2fd;
-      color: #0d47a1;
-      border: 2px solid #90CAF9;
+      padding: 16px 36px;
+      background: #f2f9ff;
+      color: #005599;
+      border: 2px solid #c8e1f5;
+      border-radius: 12px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-weight: 500;
+    }
+
+    .seat-btn-back:hover {
+      background: #d6e9ff;
     }
 
     .seat-btn-confirm {
-      background: #1565C0;
+      padding: 16px 44px;
+      background: #0077cc;
       color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 4px 12px rgba(0, 119, 204, 0.3);
+    }
+
+    .seat-btn-confirm:hover {
+      background: #005599;
+      transform: translateY(-2px);
     }
 
     .seat-btn-confirm:disabled {
-      background: #aaa;
+      background: #ccc;
+      box-shadow: none;
       cursor: not-allowed;
+      transform: none;
     }
 
+    /* 选中提示 */
     .selected-seat-toast {
       position: fixed;
-      bottom: 100px;
+      bottom: 120px;
       left: 50%;
-      transform: translateX(-50%);
-      background: #0d47a1;
+      transform: translateX(-50%) translateY(100px);
+      background: linear-gradient(135deg, #0077cc 0%, #005599 100%);
       color: white;
-      padding: 12px 30px;
-      border-radius: 60px;
+      padding: 16px 32px;
+      border-radius: 30px;
+      font-size: 18px;
+      font-weight: 500;
+      box-shadow: 0 8px 30px rgba(0, 119, 204, 0.4);
       opacity: 0;
-      transition: 0.2s;
-      z-index: 100001;
+      transition: all 0.4s ease;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .selected-seat-toast.show {
+      transform: translateX(-50%) translateY(0);
       opacity: 1;
     }
 
@@ -1617,66 +1767,99 @@
 
   <!-- 安全须知弹窗 -->
   <div class="modal" id="safetyModal">
-    <div class="modal-content"><span class="modal-close"
-        style="position:absolute;right:24px;top:18px;font-size:36px;color:white;cursor:pointer;z-index:100;"
-        id="safetyClose">✕</span>
-      <div class="safety-header"><span style="font-size:32px;">✈️</span>
+    <div class="modal-content">
+      <span class="modal-close" id="safetyClose">✕</span>
+      <div class="safety-header">
+        <span style="font-size: 30px;">✈️</span>
         <h2>航班安全须知</h2>
       </div>
-      <div class="safety-tip">请仔细阅读,<span id="countdown">5</span>秒后可进入选座</div>
+      <div class="safety-tip">
+        请仔细阅读安全须知，<span id="countdown">5</span> 秒后可进入选座
+      </div>
       <div class="safety-content">
         <h3>⚠️ 1. 紧急出口位置</h3>
-        <p>位于12-13排,请勿堆放行李。</p>
-        <h3>🫁 2. 氧气面罩</h3>
-        <p>先戴好自己的面罩再帮助他人。</p>
-        <h3>🔒 3. 全程系好安全带</h3>
-        <p>遇颠簸立即坐好。</p>
-        <h3>🦺 4. 救生衣</h3>
-        <p>离开飞机后再充气。</p>
+        <p>本次航班紧急出口位于第12-13排。请确认您座位附近最近的紧急出口，紧急时请听从机组人员指挥。</p>
+
+        <h3>🫁 2. 氧气面罩使用</h3>
+        <p>机舱失压时氧气面罩会自动脱落，先戴好自己的面罩（拉紧绑带），确认有氧气后再协助他人。</p>
+
+        <h3>🔒 3. 安全带使用</h3>
+        <p>请全程系好安全带，遇气流颠簸时请立即坐好并系紧安全带。解开时请按住安全带扣再拔出。</p>
+
+        <h3>🦺 4. 救生衣使用</h3>
+        <p>救生衣位于座位下方，取出后套头穿戴，拉紧绑带，在离开飞机后再充气（切勿在机舱内充气）。</p>
+
         <h3>🚭 5. 禁止吸烟</h3>
-        <p>机舱全段禁烟。</p>
+        <p>机舱内及洗手间全程禁烟，电子香烟同样禁止使用。违者将依法受到处理。</p>
+
+        <h3>📱 6. 电子设备使用</h3>
+        <p>起飞和降落阶段请关闭所有电子设备。巡航阶段可使用飞行模式。请遵守机组人员的指示。</p>
+
+        <h3>🧘 7. 紧急着陆姿势</h3>
+        <p>紧急着陆时，双手抓住小腿，头部贴近膝盖，弯腰直到飞机完全停稳。</p>
+
+        <h3>👶 8. 特殊旅客服务</h3>
+        <p>老人、孕妇、无人陪伴儿童等特殊旅客可向乘务员申请协助服务。</p>
       </div>
-      <div class="safety-btn-group"><button class="safety-btn safety-btn-back" id="safetyBack">返回主页</button><button
-          class="safety-btn safety-btn-next" id="safetyNext" disabled>已阅读,选座</button></div>
+      <div class="safety-btn-group">
+        <button class="safety-btn safety-btn-back" id="safetyBack">返回主页</button>
+        <button class="safety-btn safety-btn-next" id="safetyNext" disabled>已阅读，前往选座</button>
+      </div>
     </div>
   </div>
 
-  <!-- 选座弹窗(布局已修正) -->
+  <!-- 选座弹窗 -->
   <div class="modal" id="seatModal">
-    <div class="modal-content">
-      <div class="seat-modal-content">
-        <div class="seat-nav">
-          <div class="seat-nav-title"><span style="font-size:32px;">💺</span>
-            <h2>选择座位</h2>
-          </div>
-          <div class="flight-info"><span>✈️ CA1234</span><span>🛫 北京→上海</span><span>320机型</span><span>经济舱</span></div>
+    <div class="seat-modal-content">
+      <!-- 顶部导航 -->
+      <div class="seat-nav">
+        <div class="seat-nav-title">
+          <span style="font-size: 32px;">💺</span>
+          <h2>选择座位</h2>
         </div>
-        <div class="seat-main-container">
-          <div class="seat-list-area">
-            <div class="seat-filter-bar"><button class="filter-btn active" data-filter="all">全部</button><button
-                class="filter-btn" data-filter="window">靠窗</button><button class="filter-btn"
-                data-filter="aisle">靠过道</button><button class="filter-btn" data-filter="exit">安全出口</button><button
-                class="filter-btn" data-filter="cheap">最优惠</button></div>
-            <div class="seat-cards-container" id="seatCardsContainer"></div>
+        <div class="flight-info">
+          <span>✈️ CA1234</span>
+          <span>🛫 北京 → 上海</span>
+          <span>320-214机型</span>
+          <span>经济舱</span>
+        </div>
+      </div>
+
+      <!-- 主要内容 -->
+      <div class="seat-main-container">
+        <!-- 左侧：座位卡片列表 -->
+        <div class="seat-list-area">
+          <div class="seat-filter-bar">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="window">靠窗</button>
+            <button class="filter-btn" data-filter="aisle">靠过道</button>
+            <button class="filter-btn" data-filter="middle">中间</button>
+            <button class="filter-btn" data-filter="exit">安全出口</button>
+            <button class="filter-btn" data-filter="cheap">最优惠</button>
           </div>
-          <div class="plane-view-area">
+
+          <div class="seat-cards-container" id="seatCardsContainer">
+            <!-- 动态生成 -->
+          </div>
+        </div>
+
+        <!-- 右侧：飞机俯视图 -->
+        <div class="plane-view-area">
+          <div class="plane-view-header">
+            <h3>点击座位直接选择</h3>
+          </div>
+
+          <div class="plane-top-view">
             <div class="plane-body" id="planeBody">
-              <svg class="plane-svg-wrap" viewBox="0 0 340 620" xmlns="http://www.w3.org/2000/svg">
-                <!-- 机翼 -->
-                <polygon points="60,260 10,190 10,280 60,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2" />
-                <polygon points="280,260 330,190 330,280 280,320" fill="#1976d2" stroke="#0d47a1" stroke-width="2" />
-                <!-- 机身 -->
-                <ellipse cx="170" cy="310" rx="72" ry="290" fill="#fef9e8" stroke="#1565C0" stroke-width="4" />
-                <!-- 驾驶舱 -->
-                <ellipse cx="170" cy="35" rx="38" ry="22" fill="#64b5f6" stroke="#1565C0" stroke-width="2" />
-                <!-- 尾翼 -->
-                <polygon points="140,540 110,490 155,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1" />
-                <polygon points="200,540 230,490 185,510" fill="#0d47a1" stroke="#0d47a1" stroke-width="1" />
-                <polygon points="155,540 185,540 170,560" fill="#0d47a1" />
-              </svg>
+              <div class="plane-nose"></div>
+              <div class="plane-tail"></div>
+              <div class="plane-wing-left"></div>
+              <div class="plane-wing-right"></div>
+
               <div class="cabin-section cabin-front">前舱</div>
               <div class="cabin-section cabin-middle">中舱</div>
               <div class="cabin-section cabin-back">后舱</div>
+
               <div id="planeSeatsContainer"></div>
             </div>
           </div>
@@ -1708,19 +1891,37 @@
             </div>
           </div>
         </div>
-        <div class="seat-bottom-bar">
-          <div class="selected-summary">
-            <div class="summary-item">已选座位:<span class="value" id="summarySeat">--</span></div>
-            <div class="summary-item">位置:<span class="value" id="summaryPos">--</span></div>
-            <div class="summary-item">加价:<span class="value" id="summaryPrice">--</span></div>
+      </div>
+
+      <!-- 底部操作栏 -->
+      <div class="seat-bottom-bar">
+        <div class="selected-summary">
+          <div class="summary-item">
+            <span>已选座位：</span>
+            <span class="value" id="summarySeat">--</span>
           </div>
-          <div class="seat-btn-group"><button class="seat-btn-back" id="seatBack">返回</button><button
-              class="seat-btn-confirm" id="seatConfirm" disabled>确认选座</button></div>
+          <div class="summary-item">
+            <span>位置：</span>
+            <span class="value" id="summaryPos">--</span>
+          </div>
+          <div class="summary-item">
+            <span>加价：</span>
+            <span class="value" id="summaryPrice">--</span>
+          </div>
+        </div>
+        <div class="seat-btn-group">
+          <button class="seat-btn-back" id="seatBack">返回</button>
+          <button class="seat-btn-confirm" id="seatConfirm" disabled>确认选座并打印登机牌</button>
         </div>
       </div>
     </div>
   </div>
-  <div class="selected-seat-toast" id="seatToast"><span>✓</span><span id="toastText"></span></div>
+
+  <!-- 选中提示 -->
+  <div class="selected-seat-toast" id="seatToast">
+    <span>✓</span>
+    <span id="toastText">座位已选中</span>
+  </div>
 
   <script>
     // ============================================================
@@ -1742,16 +1943,493 @@
     // 覆盖：天气/商店餐厅/航班状态/行李规则/航站楼设施/失物招领/特殊旅客/问候自我介绍
     // ============================================================
     const FAQ_ITEMS = [
-      { keywords: ['天气', '气温', '多少度', '温度'], reply: '🌤️ 当前北京首都机场T3航站楼天气：晴，气温约28℃，湿度约40%，东南风3级。如需查询具体城市天气，可尝试对我说"北京天气"哦~', speech: '当前首都机场天气晴朗，气温二十八度，湿度百分之四十，东南风三级。' },
-      { keywords: ['商店', '免税店', '购物', '买什么', '买点'], reply: '🛍️ T3航站楼2层设有免税店专区，主营美妆、烟酒、奢侈品等；另有便利店与纪念品商店，营业时间6:00-22:00。语音说"导航到免税店"可为您带路。', speech: 'T3航站楼二层设有免税店专区，主营美妆、烟酒、奢侈品，营业时间早六点到晚十点。' },
-      { keywords: ['餐厅', '吃饭', '美食', '吃什么', '饿'], reply: '🍽️ T3航站楼2层有中西餐厅、快餐与咖啡厅，营业时间6:00-22:00；另有登机口附近的简餐点。语音说"导航到餐厅"可为您带路。', speech: 'T3航站楼二层有中西餐厅、快餐与咖啡厅，营业时间早六点到晚十点。' },
-      { keywords: ['航班', '航班状态', '延误', '准点', '几点起飞', 'ca1234'], reply: '✈️ 您的航班CA1234（北京→上海）当前状态：准点，计划起飞时间14:30，登机口A12，建议提前30分钟到达登机口。如需查询其他航班，请提供航班号。', speech: '您的航班CA1234当前状态准点，计划起飞时间十四点三十分，登机口A12。' },
-      { keywords: ['行李', '托运', '超重', '登机箱', '携带'], reply: '🧳 行李规则：经济舱免费托运20kg，超重按每公斤收取费用；登机行李尺寸不超过20×40×55cm、重量不超过5kg。充电宝、锂电池必须随身携带，严禁托运。', speech: '经济舱免费托运二十公斤，超重需收费；登机行李不超过五十五厘米长，充电宝必须随身携带。' },
-      { keywords: ['设施', '卫生间', '厕所', '母婴', '充电', 'wifi', '网络', 'atm'], reply: '🏢 航站楼设施：2层设有卫生间（含母婴室）、饮水区、充电桩；全楼覆盖免费WiFi（连接 Airport-Free-WiFi 后按提示认证即可）；2层到达区有ATM机。', speech: '航站楼二层设有卫生间、母婴室、充电桩，全楼覆盖免费无线网络。' },
-      { keywords: ['失物', '丢失', '丢东西', '遗失'], reply: '🔎 失物招领处位于1层服务台旁（电话010-64599567）。您也可在自助终端上选择"失物招领"查看近期失物信息，或向工作人员描述物品特征协助查找。', speech: '失物招领处位于一层服务台旁，电话零一零六四五九九五六七。' },
-      { keywords: ['特殊旅客', '轮椅', '孕妇', '无人陪伴', '儿童', '老人'], reply: '👴 特殊旅客服务：航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务。请前往值机区"特殊旅客服务台"办理，或语音说"导航到特殊旅客"。', speech: '航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务，请到特殊旅客服务台办理。' },
-      { keywords: ['你好', '您好', 'hi', 'hello', '在吗', '哈喽'], reply: '👋 您好！我是首都机场T3智慧服务助手。您可以问我航班信息、导航路线、天气、行李规则等问题，也可以点击屏幕左侧按钮快速导航~', speech: '您好！我是首都机场T3智慧服务助手，很高兴为您服务。' },
-      { keywords: ['你是谁', '自我介绍', '介绍一下', '什么助手'], reply: '🤖 我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等一站式服务，24小时在线~', speech: '我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等服务。' }
+      // ============================================================
+      // 第一部分：原有 FAQ（保留，一条不删）
+      // 覆盖：天气、免税店、餐厅、卫生间、失物、特殊旅客、问候、自我介绍
+      // ============================================================
+      {
+        keywords: ['天气', '气温', '多少度', '温度'],
+        reply: '🌤️ 当前北京首都机场T3航站楼天气：晴，气温约28℃，湿度约40%，东南风3级。如需查询具体城市天气，可尝试对我说"北京天气"哦~',
+        speech: '当前首都机场天气晴朗，气温二十八度，湿度百分之四十，东南风三级。'
+      },
+      {
+        keywords: ['免税店', '商店', '购物', '买什么', '买点'],
+        reply: '🛍️ T3航站楼2层设有免税店专区，主营美妆、烟酒、奢侈品等；另有便利店与纪念品商店，营业时间6:00-22:00。语音说"导航到免税店"可为您带路。',
+        speech: 'T3航站楼二层设有免税店专区，主营美妆、烟酒、奢侈品，营业时间早六点到晚十点。'
+      },
+      {
+        keywords: ['餐厅', '吃饭', '美食', '吃什么', '饿'],
+        reply: '🍽️ T3航站楼2层有中西餐厅、快餐与咖啡厅，营业时间6:00-22:00；另有登机口附近的简餐点。语音说"导航到餐厅"可为您带路。',
+        speech: 'T3航站楼二层有中西餐厅、快餐与咖啡厅，营业时间早六点到晚十点。'
+      },
+      {
+        keywords: ['卫生间', '厕所', '母婴', '充电', 'wifi', '网络', 'atm'],
+        reply: '🏢 航站楼设施：2层设有卫生间（含母婴室）、饮水区、充电桩；全楼覆盖免费WiFi（连接 Airport-Free-WiFi 后按提示认证即可）；2层到达区有ATM机。',
+        speech: '航站楼二层设有卫生间、母婴室、充电桩，全楼覆盖免费无线网络。'
+      },
+      {
+        keywords: ['失物', '丢失', '丢东西', '遗失', '失物招领'],
+        reply: '🔎 失物招领处位于1层服务台旁（电话010-64599567）。您也可在自助终端上选择"失物招领"查看近期失物信息，或向工作人员描述物品特征协助查找。',
+        speech: '失物招领处位于一层服务台旁，电话零一零六四五九九五六七。'
+      },
+      {
+        keywords: ['特殊旅客', '轮椅', '孕妇', '无人陪伴', '儿童', '老人'],
+        reply: '👴 特殊旅客服务：航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务。请前往值机区"特殊旅客服务台"办理，或语音说"导航到特殊旅客"。',
+        speech: '航站楼提供轮椅借用、无人陪伴儿童、孕妇及老年旅客优先通道等服务，请到特殊旅客服务台办理。'
+      },
+      {
+        keywords: ['你好', '您好', 'hi', 'hello', '在吗', '哈喽'],
+        reply: '👋 您好！我是首都机场T3智慧服务助手。您可以问我航班信息、导航路线、天气、行李规则等问题，也可以点击屏幕左侧按钮快速导航~',
+        speech: '您好！我是首都机场T3智慧服务助手，很高兴为您服务。'
+      },
+      {
+        keywords: ['你是谁', '自我介绍', '介绍一下', '什么助手'],
+        reply: '🤖 我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等一站式服务，24小时在线~',
+        speech: '我是首都机场T3智慧服务终端的AI助手，可以为您提供航班查询、航站楼导航、天气播报、行李规则等服务。'
+      },
+
+      // ============================================================
+      // 第二部分：值机基础与购票（新增，来自第一章和第二章）
+      // ============================================================
+      {
+        keywords: ['怎么买机票', '买机票', '购票', '第一次坐飞机', '首次乘机'],
+        reply: '✈️ 您可以通过航空公司官网/APP、携程/飞猪等OTA平台、或线下售票处购买机票。购票时需填写乘机人姓名和证件号码，务必确保与乘机证件完全一致。建议提前预订，越早通常价格越优惠。',
+        speech: '您可以通过航空公司官网、购票平台或线下售票处购买机票，购票时姓名证件需与乘机证件一致。'
+      },
+      {
+        keywords: ['选座位', '选座', '怎么选座', '选什么座位'],
+        reply: '💺 购票后或值机时均可选座。靠窗座位（通常为A座）适合欣赏风景；靠过道座位方便进出；紧急出口座位空间更宽敞，但需满足身体条件要求，且一般需到人工柜台办理。部分航司选座需额外付费。',
+        speech: '购票后或值机时可选择座位，靠窗适合看风景，靠过道方便进出，紧急出口座位需到人工柜台办理。'
+      },
+      {
+        keywords: ['退改签', '改签', '退票', '退改规则'],
+        reply: '🔄 退改签规则因舱位等级和票价类型而异。全价票退改较灵活，折扣票/特价票退改费用较高甚至不可退改。因航司原因导致的退改，不得收取费用。建议购票时仔细阅读退改签条款。',
+        speech: '退改签规则因票价类型而异，全价票灵活，特价票可能不可退改，航司原因导致的退改不收费。'
+      },
+      {
+        keywords: ['超售', '航班超售', '超售怎么办'],
+        reply: '📊 超售是指航司卖出的票数多于实际座位数。若遇超售，航司会优先征集自愿改乘后续航班的旅客并给予补偿；若无人自愿，航司将按规则安排旅客改签或退票，不得损害旅客合法权益。',
+        speech: '超售时航司会征集自愿改签旅客并给予补偿，无人自愿时按规则安排改签或退票。'
+      },
+      {
+        keywords: ['特价机票', '特价票', '便宜机票', '优惠机票'],
+        reply: '💰 特价票通常有以下限制：不可退改或退改费用高、不含免费托运行李额、不可选座或选座受限。购票前务必确认是否包含免费行李额，避免到机场后产生额外费用。',
+        speech: '特价票通常不可退改、不含免费行李额，购票前请确认行李政策。'
+      },
+      {
+        keywords: ['儿童票', '婴儿票', '宝宝机票', '小孩买票'],
+        reply: '👶 婴儿（出生满14天至2周岁）可购买婴儿票，票价为成人全价票的10%，不占座；儿童（2-12周岁）购买儿童票，票价为成人全价票的50%，有独立座位。需提供儿童有效证件（户口本、出生证明或身份证）。',
+        speech: '婴儿票为成人全价票的百分之十，不占座；儿童票为成人全价票的百分之五十，有独立座位。'
+      },
+      {
+        keywords: ['学生票', '学生优惠'],
+        reply: '🎓 部分航空公司针对在校学生推出学生票，通常有额外行李额或票价折扣。需在航司官网或APP完成学生身份认证后购买，具体优惠以各航司实际政策为准。',
+        speech: '部分航司有学生票优惠，需完成身份认证后购买。'
+      },
+      {
+        keywords: ['护照买机票', '护照购票', '用护照'],
+        reply: '📄 可以。根据中国民航局规定，中华人民共和国护照可以作为有效乘机身份证件办理国内航班的购票、值机、安检手续。购票和乘机时应使用同一个有效证件。',
+        speech: '护照可以作为有效乘机证件办理国内航班手续。'
+      },
+      {
+        keywords: ['帮别人买机票', '代购机票', '替别人买'],
+        reply: '🤝 帮他人购票时，需准确填写乘机人的姓名和证件号码，确保与实际乘机证件一致。姓名中有生僻字的，建议提前咨询航司录入规则。',
+        speech: '帮他人购票时需准确填写乘机人姓名和证件号码。'
+      },
+      {
+        keywords: ['机票什么时候买便宜', '便宜机票时间', '买票时机'],
+        reply: '📅 提前1-2个月购买国内航班价格较为合理，节假日建议更早预订。周二、周三出发和购票通常价格较低。可关注航司会员日促销活动。',
+        speech: '提前一到两个月购票价格较合理，周二周三出发购票通常价格较低。'
+      },
+      {
+        keywords: ['联程机票', '中转机票', '联程中转区别'],
+        reply: '🎫 联程机票是一张票包含两个以上航段，行李通常可直挂目的地，中转无需重新值机；中转机票可能是分开购买的两张票，需重新办理值机和行李托运。购买时注意区分，联程票更有保障。',
+        speech: '联程机票行李可直挂目的地，中转无需重新值机；分开购买的中转机票需重新办理手续。'
+      },
+      {
+        keywords: ['带什么证件', '乘机证件', '坐飞机证件'],
+        reply: '📋 国内航班需携带本人有效身份证原件。儿童可携带户口本、出生证明或身份证。国际航班需携带护照及目的地国家签证（免签/落地签国家除外）。',
+        speech: '国内航班需携带身份证，儿童用户口本，国际航班需护照和签证。'
+      },
+      {
+        keywords: ['身份证过期', '过期身份证', '身份证失效'],
+        reply: '❌ 身份证过期属于无效证件，无法通过安检。建议提前到户籍所在地派出所换领新证。',
+        speech: '身份证过期无法通过安检，请提前换领新证。'
+      },
+      {
+        keywords: ['身份证丢失', '忘带身份证', '身份证忘带', '临时乘机证明'],
+        reply: '🆔 可通过以下方式办理临时乘机证明：①线上办理——在微信或支付宝搜索"民航临时乘机证明"小程序，按提示申请；②线下办理——前往机场航站楼机场公安局警务室办理纸质临时乘机证明。',
+        speech: '可通过微信或支付宝的民航临时乘机证明小程序线上办理，也可到机场警务室线下办理。'
+      },
+      {
+        keywords: ['临时证明有效期', '临时乘机证明多久'],
+        reply: '📆 临时乘机证明一般有效期为7天，仅限乘坐国内航班使用，且仅限办理当次乘机手续。',
+        speech: '临时乘机证明有效期七天，仅限国内航班使用。'
+      },
+      {
+        keywords: ['护照有效期', '国际航班护照要求'],
+        reply: '🛂 护照有效期需在行程最后一个航班出发日期之后至少6个月以上。同时需确认目的地国家的签证要求，提前办理相应签证。',
+        speech: '护照有效期需在行程结束后至少六个月以上。'
+      },
+      {
+        keywords: ['提前多久到机场', '提前到机场', '几点到机场', '值机时间'],
+        reply: '⏰ 国内航班建议提前2小时到达机场，节假日或大型机场建议更早；国际航班建议提前3小时。首次乘机或不熟悉机场的旅客建议预留更多时间。',
+        speech: '国内航班建议提前两小时到机场，国际航班建议提前三小时。'
+      },
+      {
+        keywords: ['值机截止时间', '值机关闭', '截止值机', '最晚到机场'],
+        reply: '⏱️ 各机场和航司规定不同，通常为航班起飞前30-45分钟停止办理值机手续。具体请提前向航空公司或机场确认，以免误机。',
+        speech: '值机一般在起飞前三十分钟到四十五分钟停止办理。'
+      },
+      {
+        keywords: ['纸质机票', '打印机票', '电子客票'],
+        reply: '📱 不需要。目前国内航班已全面实行电子客票，凭身份证即可办理值机和安检。部分机场支持电子登机牌直接过安检。',
+        speech: '国内航班已实行电子客票，凭身份证即可办理手续。'
+      },
+      {
+        keywords: ['带小孩乘机', '小孩坐飞机', '婴儿乘机'],
+        reply: '👶 需携带儿童的有效证件（户口本/出生证明/身份证）。无人陪伴儿童（通常5-12周岁）需提前向航司申请无人陪伴服务，由工作人员全程陪同。',
+        speech: '带小孩乘机需携带儿童有效证件，无人陪伴儿童需提前申请服务。'
+      },
+      {
+        keywords: ['出发前准备', '坐飞机前准备', '乘机准备'],
+        reply: '✅ 建议提前确认航班信息（航站楼、起飞时间）、查看天气预报、检查行李是否符合规定、在手机APP上提前值机选座，以节省机场排队时间。',
+        speech: '出发前请确认航班信息、查看天气、检查行李、提前值机选座。'
+      },
+
+      // ============================================================
+      // 第三部分：行李相关（新增，来自第三章）
+      // ============================================================
+      {
+        keywords: ['托运行李重量', '行李限重', '免费托运', '行李额度', '托运尺寸'],
+        reply: '🧳 国内航班免费托运行李额通常为：经济舱20公斤、公务舱30公斤、头等舱40公斤。单件行李三边之和一般不超过158厘米，单件重量不超过32公斤。具体以各航司实际规定为准。',
+        speech: '经济舱免费托运二十公斤，公务舱三十公斤，头等舱四十公斤。'
+      },
+      {
+        keywords: ['随身行李限制', '登机箱尺寸', '手提行李', '带上飞机行李'],
+        reply: '🎒 经济舱和公务舱旅客每人可随身携带一件行李，头等舱可携带两件。每件体积不超过20×40×55厘米，重量不超过5公斤。具体以各航司规定为准。',
+        speech: '随身行李经济舱每人一件，不超过二十乘四十乘五十五厘米，五公斤。'
+      },
+      {
+        keywords: ['禁止携带', '违禁品', '不能带', '禁运物品', '禁带'],
+        reply: '🚫 以下物品禁止随身携带和托运：枪支弹药及仿制品、爆炸物品、管制刀具、打火机/火柴等火种、易燃易爆物品（汽油/酒精/油漆等）、腐蚀性物品、毒害品、放射性物品。',
+        speech: '禁止携带枪支弹药、爆炸物品、管制刀具、打火机、易燃易爆品、腐蚀品、毒害品、放射性物品。'
+      },
+      {
+        keywords: ['液体', '化妆品', '喷雾', '100ml', '护肤品'],
+        reply: '💧 国内航班禁止随身携带液态物品，但航空旅行途中自用的化妆品可随身携带，需同时满足：每种限带一件、盛放在单体容器容积不超过100mL的容器内、接受开瓶检查。大瓶液体需托运。',
+        speech: '化妆品单瓶不得超过一百毫升，需接受开瓶检查，大瓶液体请托运。'
+      },
+      {
+        keywords: ['充电宝', '锂电池', '移动电源', '电池携带'],
+        reply: '🔋 充电宝只能随身携带，严禁托运。额定能量≤100Wh可直接携带；100-160Wh需经航司批准，每人限带2个；超过160Wh禁止携带。飞行过程中不得使用充电宝充电。',
+        speech: '充电宝严禁托运，一百瓦时以下可直接携带，一百到一百六十瓦时需航司批准。'
+      },
+      {
+        keywords: ['刀具', '水果刀', '剪刀', '菜刀'],
+        reply: '🔪 管制刀具禁止携带和托运。菜刀、水果刀、大剪刀、剃刀等生活用刀禁止随身携带，但可以放在托运行李中托运。',
+        speech: '管制刀具禁止携带，生活用刀可以托运。'
+      },
+      {
+        keywords: ['行李超重', '超重收费', '超重费用'],
+        reply: '💰 国内航班逾重行李费率通常为每公斤按经济舱全价票的1.5%计算。建议在购票时确认免费行李额，必要时提前购买额外行李额，通常比机场现场购买更便宜。',
+        speech: '行李超重按经济舱全价票的百分之一点五每公斤计费。'
+      },
+      {
+        keywords: ['行李延误', '行李丢失', '行李损坏', '行李赔偿'],
+        reply: '🧾 到达后发现行李问题，应立即前往行李查询柜台登记报损。航司会协助查找延误行李，对丢失或损坏的行李按规定进行赔偿。建议保留登机牌和行李托运回执，以便索赔。',
+        speech: '行李问题请立即到行李查询柜台登记，航司会按规定赔偿。'
+      },
+      {
+        keywords: ['自热食品', '自热火锅', '自热米饭'],
+        reply: '❌ 自热火锅、自热米饭等自热食品既不能随身携带，也不能托运，因为其加热包属于危险品。',
+        speech: '自热食品不能携带也不能托运。'
+      },
+      {
+        keywords: ['酒类', '带酒', '白酒', '酒精饮料'],
+        reply: '🍷 酒精饮料不可随身携带，但可托运。标识清晰且置于零售包装内，每个容器不超过5L；酒精含量24%以下托运数量不限；24%-70%之间每人托运不超过5L；超过70%禁止托运。',
+        speech: '酒精饮料可托运，超过七十度的禁止托运。'
+      },
+      {
+        keywords: ['婴儿乳制品', '奶粉', '母乳', '婴儿液体'],
+        reply: '🍼 有婴儿随行的旅客，航空旅行途中必需的液态乳制品经安全检查确认后可适量随身携带。购票时也可向航司申请机上免费提供液态乳制品。',
+        speech: '婴儿必需的液态乳制品经安检确认后可适量随身携带。'
+      },
+      {
+        keywords: ['贵重物品随身', '托运贵重物品', '现金托运'],
+        reply: '💎 现金、珠宝、电子设备、重要文件等贵重物品建议随身携带，不要放入托运行李中。托运行李在运输过程中可能出现延误或损坏，航司对贵重物品的赔偿有限额。',
+        speech: '贵重物品请随身携带，不要托运。'
+      },
+
+      // ============================================================
+      // 第四部分：机场流程与登机（新增，来自第四章和第八章）
+      // ============================================================
+      {
+        keywords: ['值机方式', '怎么值机', '如何值机', '办理值机'],
+        reply: '🧾 主要有三种方式：①人工柜台值机——适合首次乘机或有托运需求的旅客；②自助值机——在机场自助设备上刷身份证快速办理；③线上值机——通过航司APP/小程序提前选座值机，获取电子登机牌。有托运行李的旅客仍需到柜台办理托运。',
+        speech: '您可以人工柜台值机、自助值机或线上值机，有行李托运需到柜台办理。'
+      },
+      {
+        keywords: ['安检流程', '过安检', '安检步骤'],
+        reply: '🔍 ①出示身份证和登机牌核验身份；②将随身行李放入X光机扫描，笔记本电脑、充电宝、雨伞等需单独取出放入安检筐；③人身通过安检门，接受手持金属探测器检查；④必要时配合开包复检。',
+        speech: '安检需核验证件、行李过X光机、人身通过安检门，配合开包检查。'
+      },
+      {
+        keywords: ['安检注意事项', '安检注意什么'],
+        reply: '⚠️ 提前取出电脑、充电宝、雨伞等电子设备；将所有液体、凝胶类物品整理好；打火机、火柴等火种需提前丢弃；穿脱方便的外套和鞋子有助于加快检查速度。',
+        speech: '安检时请提前取出电脑、充电宝、雨伞，液体整理好，火种提前丢弃。'
+      },
+      {
+        keywords: ['候机', '候机注意', '候机厅'],
+        reply: '📢 根据登机牌上的登机口号码前往对应候机区，留意航班信息显示屏和广播通知。登机口有可能临时变更，不要远离登机口，保持手机畅通。',
+        speech: '请按登机牌上的登机口候机，留意显示屏和广播通知。'
+      },
+      {
+        keywords: ['误机', '误机了怎么办', '错过航班'],
+        reply: '⏰ 误机后应立即联系航空公司或售票代理，咨询改签或退票政策。因旅客自身原因误机的，按客票使用条件办理自愿变更或退票；因航司原因导致的，航司应免费改签或退票。',
+        speech: '误机后请立即联系航司或售票代理办理改签或退票。'
+      },
+      {
+        keywords: ['漏乘', '漏乘是什么', '漏乘和误机'],
+        reply: '📌 漏乘是指旅客已办理乘机手续但因故未能登上航班。因航司原因漏乘的，航司会免费改签后续航班；因旅客自身原因漏乘的，按误机处理。',
+        speech: '漏乘是指已办手续但未登机，航司原因免费改签，旅客原因按误机处理。'
+      },
+      {
+        keywords: ['错乘', '上错飞机', '上错航班'],
+        reply: '🔄 如发现自己上错了飞机，应立即告知乘务员，工作人员会安排你下机并协助转乘正确航班。切勿隐瞒，以免影响航班正常运行。',
+        speech: '上错飞机请立即告知乘务员，会安排您转乘正确航班。'
+      },
+      {
+        keywords: ['登机口变更', '登机口变了', '登机口换了'],
+        reply: '🔔 机场会通过航班信息显示屏和广播通知登机口变更信息。建议关注机场大屏，也可通过航司APP或机场小程序订阅航班动态提醒。',
+        speech: '登机口变更请关注机场大屏或航司APP通知。'
+      },
+      {
+        keywords: ['特殊旅客服务', '首乘服务', '绿色手环'],
+        reply: '🌟 多数机场提供首乘旅客引导服务（佩戴绿色手环标识）、无人陪伴儿童服务、轮椅服务、老年人优先通道等。有需要可提前向航司申请或到机场问询台咨询。',
+        speech: '机场提供首乘旅客引导、无人陪伴儿童、轮椅、老年人优先通道等服务。'
+      },
+      {
+        keywords: ['中转安检', '中转需要重新安检吗'],
+        reply: '🔄 国内中转通常无需重新安检，但需根据机场指引前往下一航班的登机口。国际中转涉及出入境的，需按规定办理边防和海关手续。建议中转时关注机场指引标识。',
+        speech: '国内中转通常无需重新安检，国际中转需办理边防和海关手续。'
+      },
+
+      // ============================================================
+      // 第五部分：机上体验（新增，来自第五章）
+      // ============================================================
+      {
+        keywords: ['安全带', '系安全带', '什么时候系安全带'],
+        reply: '💺 入座后应立即系好安全带，飞行全程（尤其是起飞、降落和颠簸时）必须保持系好状态。即使安全带指示灯熄灭，也建议全程系好以防突发颠簸。',
+        speech: '入座后立即系好安全带，建议全程保持系好状态。'
+      },
+      {
+        keywords: ['手机关机', '飞行模式', '手机怎么用'],
+        reply: '📱 飞行全程需将手机调至飞行模式或关机，禁止使用蜂窝移动通信功能。部分航司已开放机上Wi-Fi服务，可按提示连接使用。',
+        speech: '飞行全程请将手机调至飞行模式，禁止使用蜂窝通信。'
+      },
+      {
+        keywords: ['蓝牙耳机', '蓝牙设备', '无线耳机'],
+        reply: '🎧 飞行模式开启后，短距离蓝牙设备（如蓝牙耳机）通常可以使用，但需遵守机组人员的具体指示。起飞和降落阶段可能需要关闭所有电子设备。',
+        speech: '蓝牙耳机在飞行模式开启后通常可以使用，请遵守机组指示。'
+      },
+      {
+        keywords: ['飞机餐食', '飞机餐', '有吃的吗'],
+        reply: '🍱 取决于航程长短和航司服务标准。飞行时间超过2小时的航班通常提供免费餐食或点心，短途航班可能仅提供饮料。部分低成本航司餐食需另行购买。',
+        speech: '两小时以上航班通常提供餐食，短途可能仅提供饮料。'
+      },
+      {
+        keywords: ['晕机', '晕机怎么办', '晕机药'],
+        reply: '💊 建议选择机翼附近的座位（颠簸感较小）；起飞前避免过饱或空腹；可提前服用晕机药（建议咨询医生）；飞行中保持视线看向远处固定点，避免低头看手机或阅读。',
+        speech: '晕机建议选择机翼附近座位，起飞前不宜过饱，可提前服用晕机药。'
+      },
+      {
+        keywords: ['耳朵疼', '耳压', '耳朵胀痛', '耳鸣'],
+        reply: '👂 起飞和降落时可通过吞咽、咀嚼口香糖、打哈欠等方式平衡耳压。婴儿可通过喂奶或安抚奶嘴帮助缓解。患有中耳炎等耳部疾病的旅客建议提前咨询医生。',
+        speech: '起飞降落时吞咽、咀嚼可缓解耳压不适。'
+      },
+      {
+        keywords: ['紧急出口座位', '紧急出口要求', '安全出口座位'],
+        reply: '🚪 紧急出口座位空间更宽敞，但乘坐该座位的旅客需满足：年满15周岁、身体健康、能理解机组指令、有能力在紧急情况下协助打开应急出口。老人、儿童、孕妇、残障人士及需要照顾他人同行的旅客不能坐在紧急出口座位。',
+        speech: '紧急出口座位需满足特定身体条件，老人儿童孕妇及残障人士不能坐。'
+      },
+      {
+        keywords: ['飞机上禁止', '机上禁止', '吸烟', '电子烟'],
+        reply: '🚭 禁止吸烟（包括电子烟）、禁止使用明火、禁止酗酒滋事、禁止擅自操作应急设备、禁止在客舱内使用充电宝充电、禁止拍摄机组人员或干扰机组正常工作。违反者可能面临行政处罚甚至刑事责任。',
+        speech: '飞机上禁止吸烟、酗酒、擅自动用应急设备、充电宝充电。'
+      },
+      {
+        keywords: ['机上不适', '飞行中不适', '飞机上不舒服'],
+        reply: '🏥 可按下头顶的服务铃呼叫乘务员，说明身体状况。多数航班配备急救药箱，乘务员受过基本急救培训。如情况严重，机组可联系地面医疗支持并考虑备降。',
+        speech: '机上不适请按服务铃呼叫乘务员，情况严重机组会联系地面医疗支持。'
+      },
+      {
+        keywords: ['小桌板', '座椅靠背', '收起小桌板', '调直座椅'],
+        reply: '💺 起飞和降落阶段必须收起小桌板、调直座椅靠背、打开遮光板、收起脚踏板，以确保紧急情况下通道畅通和旅客安全。',
+        speech: '起飞降落时请收起小桌板、调直座椅靠背、打开遮光板。'
+      },
+
+      // ============================================================
+      // 第六部分：到达流程（新增，来自第六章）
+      // ============================================================
+      {
+        keywords: ['下机', '什么时候下机', '飞机落地后'],
+        reply: '🛬 飞机停稳、安全带指示灯熄灭后方可解开安全带起身。通过廊桥登机的旅客可直接步行进入航站楼；通过摆渡车登机的需乘坐摆渡车到达航站楼。',
+        speech: '飞机停稳指示灯熄灭后方可解开安全带下机。'
+      },
+      {
+        keywords: ['行李提取', '取行李', '行李转盘', '找行李'],
+        reply: '🧳 跟随"行李提取"标识前往行李提取大厅，根据航班号在信息屏上找到对应的行李转盘，等待行李传送。建议核对行李牌号码，避免错拿。',
+        speech: '根据航班号在行李转盘提取行李，核对行李牌避免错拿。'
+      },
+      {
+        keywords: ['行李迟迟不出来', '行李等不到', '行李延误'],
+        reply: '⏳ 如等待超过30分钟仍未见到行李，可前往行李查询柜台登记，提供登机牌和行李托运回执，工作人员会协助查找。',
+        speech: '行李超过三十分钟未到请到行李查询柜台登记。'
+      },
+      {
+        keywords: ['国内到达', '国内航班到达流程'],
+        reply: '🇨🇳 国内航班到达后直接提取行李离开即可，无需经过海关或边防检查。',
+        speech: '国内航班到达后直接提取行李即可离开。'
+      },
+      {
+        keywords: ['国际到达', '国际航班到达流程', '入境流程'],
+        reply: '🌍 国际航班到达后需依次经过：①边防检查（出示护照和签证）→②行李提取→③海关检查（有需申报物品走红色通道）→④离开机场。',
+        speech: '国际到达需经过边防检查、行李提取、海关检查后离开。'
+      },
+      {
+        keywords: ['中转流程', '转机怎么走', '中转指引'],
+        reply: '🔄 国内转国内：通常无需重新值机和安检，按指引前往下一航班登机口即可；国内转国际或国际转国内：需办理出入境手续，可能需要重新安检；国际转国际：视机场和航线而定。建议提前了解中转机场的指引。',
+        speech: '中转请按机场指引前往下一航班登机口，国际中转需办理出入境手续。'
+      },
+      {
+        keywords: ['中转时间不够', '中转赶不上', '转机时间短'],
+        reply: '⏱️ 购买联程机票时，航司通常会保证最短中转时间。如因前序航班延误导致中转时间不足，航司会协助改签后续航班。建议购票时预留充足中转时间（国内中转至少1.5小时，国际中转至少2-3小时）。',
+        speech: '联程机票航司保证最短中转时间，延误时协助改签。'
+      },
+      {
+        keywords: ['离开机场', '机场交通', '机场大巴', '地铁', '出租车'],
+        reply: '🚌 大多数机场提供机场大巴、地铁、出租车、网约车等交通方式。可跟随"地面交通"标识前往相应乘车点，或使用手机地图导航。',
+        speech: '机场提供大巴、地铁、出租车、网约车等交通方式。'
+      },
+      {
+        keywords: ['物品遗落飞机', '东西落在飞机上', '遗落物品'],
+        reply: '🔎 应立即联系航空公司客服或机场失物招领处，提供航班号、座位号等信息，航司会协助查找。',
+        speech: '物品遗落请立即联系航司客服或失物招领处。'
+      },
+      {
+        keywords: ['海关申报', '入境申报', '红绿色通道'],
+        reply: '📋 携带超过规定限额的现金、贵重物品、限制进境物品（如动植物制品、药品等）需主动向海关申报。具体申报标准以海关现行规定为准。',
+        speech: '携带超限物品需主动向海关申报。'
+      },
+
+      // ============================================================
+      // 第七部分：特殊情况与延误（新增，来自第七章）
+      // ============================================================
+      {
+        keywords: ['航班延误权益', '延误补偿', '延误怎么办', '延误赔偿'],
+        reply: '📋 因天气、空中管制等非航司原因导致的延误，航司应协助安排食宿（费用通常由旅客自理）；因航司自身原因（如机械故障、机组调配等）导致的延误，航司应提供免费食宿和相应补偿。具体补偿标准以各航司运输总条件为准。',
+        speech: '航司原因延误提供免费食宿和补偿，非航司原因协助安排但费用自理。'
+      },
+      {
+        keywords: ['航班取消', '取消怎么办', '航班取消了'],
+        reply: '❌ 航司应及时通知旅客，并提供以下选择：①免费改签至后续航班；②签转至其他航司航班；③全额退票。因航司原因取消的，还应给予相应补偿。',
+        speech: '航班取消可免费改签、签转其他航司或全额退票。'
+      },
+      {
+        keywords: ['带婴儿注意事项', '婴儿乘机', '宝宝坐飞机'],
+        reply: '👶 婴儿需出生满14天方可乘机（部分航司要求更严格）。婴儿票不占座，由成人抱坐。可携带婴儿车（通常可免费托运）、奶粉、尿布等必需品。部分机场设有母婴室供旅客使用。',
+        speech: '婴儿出生满十四天方可乘机，婴儿票不占座。'
+      },
+      {
+        keywords: ['老人乘机注意事项', '高龄老人乘机', '老人出行'],
+        reply: '👴 高龄老人（通常指70岁以上）建议有家人陪同。部分航司要求高龄旅客提供健康证明。行动不便的老人可提前申请轮椅服务，航司会安排专人协助全程出行。',
+        speech: '高龄老人建议有家人陪同，可申请轮椅服务。'
+      },
+      {
+        keywords: ['孕妇乘机注意事项', '孕妇坐飞机', '怀孕坐飞机'],
+        reply: '🤰 怀孕32周以内的孕妇一般可正常乘机；32-36周需提供医生开具的适航证明；36周以上或预产期临近的孕妇，多数航司不予承运。建议出行前咨询航司具体规定。',
+        speech: '怀孕三十二周以内可正常乘机，三十二到三十六周需医生证明。'
+      },
+      {
+        keywords: ['残障人士乘机', '轮椅服务', '无障碍服务', '导盲犬'],
+        reply: '♿ 航司和机场应为残障旅客提供无障碍服务，包括轮椅服务、优先登机、专人引导等。建议提前向航司申请特殊服务，说明具体需求。',
+        speech: '机场和航司为残障旅客提供轮椅、优先登机等服务，请提前申请。'
+      },
+      {
+        keywords: ['宠物托运', '宠物乘机', '带宠物', '托运宠物'],
+        reply: '🐾 宠物一般不能进入客舱（导盲犬等工作犬除外），需办理宠物托运。托运前需准备：动物检疫合格证明、狂犬病免疫证明、符合规定的航空箱。建议提前向航司咨询并预约舱位。',
+        speech: '宠物需办理托运，需准备检疫证明、免疫证明、航空箱，提前预约。'
+      },
+      {
+        keywords: ['疾病乘机', '慢性病乘机', '健康证明', '适航证明'],
+        reply: '💊 大多数常见慢性病（如高血压、糖尿病等）在病情稳定时可以乘机，建议随身携带常用药物。患有严重心血管疾病、近期做过手术、严重呼吸系统疾病等的旅客，建议出行前咨询医生并获取适航证明。',
+        speech: '常见慢性病病情稳定可乘机，严重疾病建议咨询医生获取适航证明。'
+      },
+      {
+        keywords: ['飞行途中突发疾病', '飞机上生病', '机上急救'],
+        reply: '🚑 立即告知乘务员，机组会进行初步救助，并通过机上通讯系统联系地面医疗专家获取指导。如情况危急，机长可决定备降最近的机场以便旅客及时就医。',
+        speech: '机上突发疾病请立即告知乘务员，机组会联系地面医疗支援。'
+      },
+      {
+        keywords: ['备降', '航班备降', '备降怎么办'],
+        reply: '🛬 备降是指飞机因天气、机械故障等原因无法在目的地降落，转而在备降机场降落。航司会在条件允许后安排旅客继续飞往目的地，旅客应听从机组和地面工作人员安排。',
+        speech: '备降是因天气或故障在备降机场降落，航司会安排后续行程。'
+      },
+
+      // ============================================================
+      // 第八部分：安全与法规（新增，来自第八章）
+      // ============================================================
+      {
+        keywords: ['飞机上违规', '机上处罚', '飞机上违法', '机上治安'],
+        reply: '⚖️ 以下行为可能面临行政处罚甚至刑事责任：在飞机上吸烟（含电子烟）、擅自打开应急出口、殴打或威胁机组人员及旅客、醉酒滋事、非法干扰飞行安全、使用违禁电子设备等。',
+        speech: '机上吸烟、擅开应急出口、威胁机组等行为将面临行政处罚或刑事责任。'
+      },
+      {
+        keywords: ['机闹', '机闹后果', '霸座', '航班黑名单'],
+        reply: '🚨 机闹是指不遵守规定、扰乱秩序的行为，如霸座、辱骂殴打他人、擅自打开应急设备等。根据法规，机闹可被处以警告、罚款、行政拘留，情节严重的可追究刑事责任，并可能被列入民航限制乘坐名单。',
+        speech: '机闹行为将面临罚款、拘留、刑事责任，并可能被列入乘机黑名单。'
+      },
+      {
+        keywords: ['应急设备使用', '氧气面罩怎么用', '救生衣怎么用'],
+        reply: '🆘 氧气面罩——头顶面板自动脱落时，拉下面罩罩住口鼻，将带子套在头上拉紧，先给自己戴好再帮助他人；救生衣——在座椅下方取出，穿好后在离开机门前充气（切勿在机舱内充气）。登机后请认真观看安全演示。',
+        speech: '氧气面罩先给自己戴好再帮助他人，救生衣离开机门前充气。'
+      },
+      {
+        keywords: ['安全出口使用', '应急出口', '紧急撤离'],
+        reply: '🚪 仅在紧急撤离时使用安全出口。正常情况下严禁触碰应急出口门。紧急撤离时，听从机组指挥，按最近的安全出口方向有序撤离，不要携带行李。',
+        speech: '安全出口仅在紧急撤离时使用，严禁正常情况触碰。'
+      },
+      {
+        keywords: ['旅客维权', '投诉航司', '12326', '民航投诉'],
+        reply: '📞 如对航司服务不满或权益受损，可通过以下途径维权：①向航司客服投诉；②拨打民航局消费者事务中心电话12326投诉；③通过民航局官网在线投诉平台提交诉求；④必要时通过法律途径解决。',
+        speech: '航司投诉可拨打12326或通过民航局官网提交。'
+      },
+      {
+        keywords: ['乘机黑名单', '限制乘坐名单', '黑名单'],
+        reply: '📋 因在航空器上实施严重扰乱秩序、危害安全的行为，旅客可能被列入限制乘坐民用航空器名单，在一定期限内无法购买机票乘坐飞机。',
+        speech: '严重扰乱航空秩序的旅客可能被列入限制乘机名单。'
+      },
+      {
+        keywords: ['飞机上拍照', '机上拍照', '拍摄机组'],
+        reply: '📸 飞行模式开启后可以使用手机拍照，但不得拍摄机组人员工作过程或干扰机组正常工作。部分航司对拍摄有具体规定，请遵守机组指示。',
+        speech: '飞行模式下可拍照，但不得拍摄机组人员工作过程。'
+      },
+      {
+        keywords: ['可疑物品', '可疑人员', '发现异常', '安全报告'],
+        reply: '🔐 应立即告知乘务员或机场工作人员，不要自行触碰或处理可疑物品。机场和航司有专业的安保团队负责处置。',
+        speech: '发现可疑物品或人员请立即告知工作人员。'
+      },
+      {
+        keywords: ['航空保险', '航空意外险', '延误险'],
+        reply: '📄 航空保险属于自愿购买项目，旅客可自行决定。常见的有航空意外险、航班延误险、行李延误险等。建议根据出行需求和个人情况选择。',
+        speech: '航空保险自愿购买，可根据出行需求选择。'
+      },
+      {
+        keywords: ['航空诈骗', '航班取消退款诈骗', '诈骗短信', '机票诈骗'],
+        reply: '⚠️ 切勿点击短信中的链接或拨打短信中的电话。应通过航司官方APP、官网或官方客服电话核实航班信息。正规航司不会要求旅客提供银行卡密码或进行转账操作。',
+        speech: '切勿点击可疑链接，通过航司官方渠道核实航班信息。'
+      }
     ];
     let isAgentReplying = false;  // 防止重复发送
 

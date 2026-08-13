@@ -5,3 +5,7 @@ node_modules/
 backend/node_modules/
 frontend/assets/tmp/
 data/
+.env
+.env.*
+!.env.example
+*.backup.js

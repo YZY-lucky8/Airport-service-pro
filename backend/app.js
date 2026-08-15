@@ -259,7 +259,7 @@ const recordTokenUsage = async (token, userId) => {
   try { await db.pool?.execute('INSERT INTO token_usage (token, user_id) VALUES (?, ?)', [token, userId]); return true; } catch (e) { return false; }
 };
 const isTokenUsed = async (token) => {
-  try { const [rows] = await db.pool?.execute('SELECT id FROM token_usage WHERE token = ? LIMIT 1', [token]); return rows && rows.length > 0; } catch (e) { return false; }
+  try { const [rows] = await db.pool?.query('SELECT id FROM token_usage WHERE token = ? LIMIT 1', [token]); return rows && rows.length > 0; } catch (e) { return false; }
 };
 
 // ── 安全日志 ──
@@ -379,7 +379,14 @@ app.get('/api/weather', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ success: false, error: '请输入用户名和密码' });
+  const ip = req.ip || req.connection?.remoteAddress || '0.0.0.0';
+  // 暴力破解防护：同一IP连续失败5次后锁定10分钟
+  const attempts = attackMonitor.failedAttempts.get(`brute_${ip}`);
+  if (attempts && (Date.now() - attempts.timestamp <= 600000) && attempts.count >= 5) {
+    return res.status(423).json({ success: false, error: '登录已锁定：失败次数过多，请10分钟后再试' });
+  }
   const user = authenticateUser(username, password);
+  attackMonitor.detectBruteForce(ip, !!user);
   if (!user) {
     try { await db.pool?.execute('INSERT INTO system_logs (module, level, message) VALUES (?, ?, ?)', ['auth', 'warn', `登录失败: ${username} from ${req.ip}`]); } catch (e) {}
     return res.status(401).json({ success: false, error: '用户名或密码错误' });

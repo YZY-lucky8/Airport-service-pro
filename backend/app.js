@@ -276,7 +276,7 @@ const recordTokenUsage = async (token, userId) => {
   try { await db.pool?.execute('INSERT INTO token_usage (token, user_id) VALUES (?, ?)', [token, userId]); return true; } catch (e) { return false; }
 };
 const isTokenUsed = async (token) => {
-  try { const [rows] = await db.pool?.execute('SELECT id FROM token_usage WHERE token = ? LIMIT 1', [token]); return rows && rows.length > 0; } catch (e) { return false; }
+  try { const [rows] = await db.pool?.query('SELECT id FROM token_usage WHERE token = ? LIMIT 1', [token]); return rows && rows.length > 0; } catch (e) { return false; }
 };
 
 // ── 安全日志 ──
@@ -397,10 +397,12 @@ app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ success: false, error: '请输入用户名和密码' });
   const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
+  const ip = clientIp;
   if (checkLock(clientIp)) {
     return res.status(429).json({ success: false, error: '登录失败次数过多，账号已锁定，请60秒后重试' });
   }
   const user = authenticateUser(username, password);
+  attackMonitor.detectBruteForce(ip, !!user);
   if (!user) {
     recordFail(clientIp);
     try { await db.pool?.execute('INSERT INTO system_logs (module, level, message) VALUES (?, ?, ?)', ['auth', 'warn', `登录失败: ${username} from ${req.ip}`]); } catch (e) { }

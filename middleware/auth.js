@@ -6,8 +6,7 @@
  * 使用 HMAC-SHA256 签名，Base64Url 编码
  * 支持：管理员登录 → 获取 Token → 受保护 API 鉴权
  *
- * 管理员账号（首次部署后应通过 API 修改密码）：
- *   admin / Airport@2026Admin
+ *   默认管理员账号由环境变量 ADMIN_PASSWORD 配置，部署时注入
  */
 
 const crypto = require('crypto');
@@ -16,7 +15,8 @@ const crypto = require('crypto');
 const JWT_SECRET = process.env.JWT_SECRET || crypto.createHash('sha256').update('Airport-service-pro-jwt-secret-change-me-in-production').digest('hex');
 const JWT_EXPIRY_SECONDS = parseInt(process.env.JWT_EXPIRY) || 300; // 默认 300 秒
 const VALID_ADMIN_USERS = new Map();
-VALID_ADMIN_USERS.set('admin', 'admin'); // 默认管理员，应尽快修改
+VALID_ADMIN_USERS.set('admin', process.env.ADMIN_PASSWORD || 'admin');
+// 默认管理员，应尽快修改
 
 // ── Base64Url 工具 ──
 function base64UrlEncode(str) {

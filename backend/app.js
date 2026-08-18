@@ -107,10 +107,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── 滑动窗口频率检测 ──
+// ── 滑动窗口频率检测（阈值支持动态调整） ──
 const requestCounts = new Map();
 const RATE_LIMIT_WINDOW_MS = 2000;
-const RATE_LIMIT_MAX_REQUESTS = 15;
+let RATE_LIMIT_MAX_REQUESTS = 15;
+
+// 动态调整限流阈值（供 Agent 阈值管理接口调用，生效即时、无需重启；形式化约束 1-100）
+global.setRateLimitMaxRequests = (value) => {
+    const n = parseInt(value, 10);
+    if (!Number.isFinite(n) || n < 1 || n > 100) {
+        console.warn(`[Rate Limit] 非法阈值 ${value}，忽略（有效范围 1-100）`);
+        return false;
+    }
+    if (n !== RATE_LIMIT_MAX_REQUESTS) {
+        console.log(`[Rate Limit] 阈值动态调整: ${RATE_LIMIT_MAX_REQUESTS} -> ${n}`);
+        RATE_LIMIT_MAX_REQUESTS = n;
+    }
+    return true;
+};
 
 app.use((req, res, next) => {
     const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;

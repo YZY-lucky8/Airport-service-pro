@@ -32,6 +32,17 @@ let agent = null;
 function initAgent(pool) {
   agent = new AgentDispatcher(pool);
   console.log('✅ AgentDispatcher 初始化完成');
+  // 启动时把数据库中的限流阈值同步到限流器（避免代码默认值与库内值不一致）
+  Promise.resolve()
+    .then(async () => {
+      const [rows] = await pool.query(
+        "SELECT config_value FROM security_threshold_config WHERE config_key = 'rate_limit_max_requests' LIMIT 1"
+      );
+      if (rows && rows.length > 0 && rows[0].config_value !== undefined && typeof global.setRateLimitMaxRequests === 'function') {
+        global.setRateLimitMaxRequests(rows[0].config_value);
+      }
+    })
+    .catch((e) => console.log('⚠️ 启动时同步限流阈值失败（使用代码默认值）:', e.message));
 }
 
 /**
@@ -524,12 +535,17 @@ router.post('/threshold/adjust', async (req, res) => {
       [threshold_key, old_value, new_value, 'manual', 0, '人工调整', 'applied']
     );
 
-    // 如果 threshold_key 是 rate_limit_max_requests，更新全局限流
-    if (threshold_key === 'rate_limit_max_requests' && global.RATE_LIMIT_MAX_REQUESTS !== undefined) {
-      global.RATE_LIMIT_MAX_REQUESTS = parseInt(new_value);
+    // 如果 threshold_key 是 rate_limit_max_requests，立即生效到限流器（无需重启）
+    if (threshold_key === 'rate_limit_max_requests') {
+      const applied = typeof global.setRateLimitMaxRequests === 'function'
+        ? global.setRateLimitMaxRequests(new_value)
+        : false;
+      if (!applied) {
+        return res.json({ success: true, message: '阈值已写入数据库，但限流器未接受该值（需为 1-100 的整数）', old_value, new_value });
+      }
     }
 
-    res.json({ success: true, message: `阈值 ${threshold_key} 已更新为 ${new_value}`, old_value, new_value });
+    res.json({ success: true, message: `阈值 ${threshold_key} 已更新为 ${new_value}（即时生效）`, old_value, new_value });
   } catch (e) {
     res.json({ success: true, message: '阈值已更新' });
   }
@@ -557,6 +573,10 @@ router.post('/threshold/apply-agent', async (req, res) => {
         'INSERT INTO threshold_history (threshold_key, old_value, new_value, suggested_by, confidence, reason, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [row.config_key, old_value, row.agent_suggested_value, 'agent', row.confidence || 0.8, row.suggestion_reason, 'applied']
       );
+      // 限流阈值同步生效到限流器
+      if (row.config_key === 'rate_limit_max_requests' && typeof global.setRateLimitMaxRequests === 'function') {
+        global.setRateLimitMaxRequests(row.agent_suggested_value);
+      }
       changes.push({ key: row.config_key, old: old_value, new: row.agent_suggested_value });
     }
 

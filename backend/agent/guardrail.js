@@ -170,13 +170,17 @@ class InputGuardrail {
   sanitizeOutput(output) {
     if (!output) return '';
 
-    // 移除可能的内部信息泄露
+
+    // 移除可能的内部信息泄露（6类）
     const leakPatterns = [
       /system\s*(prompt|instruction|message)/gi,
       /内部.*指令/gi,
       /system_code/gi,
       /internal.*config/gi,
+      /(sk-|api[_-]?key|secret|token)[\s=:]{1,3}[A-Za-z0-9_\-]{8,}/gi,
+      /(数据库|database|db)[\s\S]{0,20}(密码|password|host|hostname|连接串|conn)/gi,
     ];
+
 
     let sanitized = output;
     for (const pattern of leakPatterns) {

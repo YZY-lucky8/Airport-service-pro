@@ -348,7 +348,7 @@ CREATE TABLE IF NOT EXISTS `hmac_token_logs` (
 CREATE TABLE IF NOT EXISTS `hmac_config` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `algorithm` VARCHAR(50) DEFAULT 'SHA-256' COMMENT '签名算法',
-  `expire_seconds` INT(11) DEFAULT 300 COMMENT '过期时间(秒)',
+  `expire_seconds` INT(11) DEFAULT 30 COMMENT '过期时间(秒)',
   `anti_replay` TINYINT(1) DEFAULT 1 COMMENT '防重放检查',
   `time_tolerance` INT(11) DEFAULT 5 COMMENT '时间戳容差(秒)',
   `secret_key` VARCHAR(255) NOT NULL COMMENT '签名密钥',

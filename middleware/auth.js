@@ -14,7 +14,7 @@ const crypto = require('crypto');
 
 // ── 配置 ──
 const JWT_SECRET = process.env.JWT_SECRET || crypto.createHash('sha256').update('Airport-service-pro-jwt-secret-change-me-in-production').digest('hex');
-const JWT_EXPIRY_SECONDS = parseInt(process.env.JWT_EXPIRY) || 86400; // 默认 24 小时
+const JWT_EXPIRY_SECONDS = parseInt(process.env.JWT_EXPIRY) || 300; // 默认 300 秒
 const VALID_ADMIN_USERS = new Map();
 VALID_ADMIN_USERS.set('admin', 'admin'); // 默认管理员，应尽快修改
 
@@ -100,6 +100,20 @@ function authenticateUser(username, password) {
   }
   return { username, role: 'admin' };
 }
+// ── 登录失败锁定（5次失败锁60秒） ──
+const failMap = new Map();
+const MAX_FAIL = 5, LOCK_MS = 60000;
+function checkLock(ip) {
+  const r = failMap.get(ip);
+  if (!r) return false;
+  if (Date.now() - r.ts > LOCK_MS) { failMap.delete(ip); return false; }
+  return r.count >= MAX_FAIL;
+}
+function recordFail(ip) {
+  const r = failMap.get(ip) || { count: 0, ts: Date.now() };
+  r.count += 1; r.ts = Date.now(); failMap.set(ip, r);
+}
+function resetFail(ip) { failMap.delete(ip); }
 
 // ── 添加/修改管理员 ──
 function addAdminUser(username, password) {
@@ -184,4 +198,8 @@ module.exports = {
   getAdminList,
   hashPassword,
   JWT_SECRET,
+  checkLock,
+  recordFail,
+  resetFail,
+
 };

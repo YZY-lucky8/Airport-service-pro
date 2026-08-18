@@ -112,6 +112,7 @@ router.post('/chat', async (req, res) => {
 
   try {
     const { text, session_token, passenger_id, flight_no, terminal_id } = req.body;
+    console.log(`[Agent防线] 收到攻击载荷: ${String(req.body?.text || '').slice(0, 60)}`);
 
     if (!text || !text.trim()) {
       return res.status(400).json({
@@ -129,6 +130,7 @@ router.post('/chat', async (req, res) => {
       flightNo: flight_no,
       terminalId: terminal_id,
     });
+    console.log(`[Agent防线] 智能体返回: ${JSON.stringify(result).slice(0, 200)}`);
 
     res.json(result);
 
@@ -390,7 +392,7 @@ router.post('/llm/switch', async (req, res) => {
         req.ip || 'unknown',
         'success',
       ]);
-    } catch (e) {}
+    } catch (e) { }
 
     res.json({ success: true, data: result });
   } catch (error) {
@@ -492,7 +494,7 @@ router.post('/threshold/set-mode', async (req, res) => {
           'INSERT INTO system_logs (module, level, message) VALUES (?, ?, ?)',
           ['threshold', 'info', `阈值管理模式切换为: ${mode}`]
         );
-      } catch (_) {}
+      } catch (_) { }
     }
 
     // 更新 Dispatcher 的全局阈值

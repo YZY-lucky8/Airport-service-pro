@@ -229,6 +229,18 @@ class AgentDispatcher {
       // ─── 安全防线 2：运行时监控 ───
       state.phase = 'RUNTIME_CHECK';
       const action = this._intentToAction(perception.intent);
+      // ─── 安全防线 2 增强：运行时敏感操作检测 ───
+      const RUNTIME_TOOL_PATTERNS = [
+        /(读取|调用|执行|打开|获取).{0,6}(系统|内部|配置|密码|passwd|shadow|\.env|密钥|token|api[\s_-]?key)/i,
+        /(绕过|跳过|关闭|禁用).{0,8}(白名单|防线|防护|检测|限制|拦截)/i,
+        /(工具|函数|命令).{0,4}(白名单|权限)/i,
+      ];
+      for (const pattern of RUNTIME_TOOL_PATTERNS) {
+        if (pattern.test(text)) {
+          return this._errorResponse(state, '权限拒绝', '检测到未授权的敏感操作或工具调用');
+        }
+      }
+
       if (!ALLOWED_ACTIONS.has(action)) {
         return this._errorResponse(state, '权限拒绝', `不允许的动作: ${action}`);
       }

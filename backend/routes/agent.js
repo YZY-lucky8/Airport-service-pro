@@ -314,10 +314,11 @@ router.get('/stats/emotion', async (req, res) => {
       return res.status(503).json({ success: false, error: 'Agent 未初始化' });
     }
 
+    // 注意：agent_interaction_log 无 emotion_intensity 列（历史遗留字段），仅按 emotion 分组计数
     const [rows] = await pool.query(`
-      SELECT emotion, COUNT(*) as count, AVG(emotion_intensity) as avg_intensity
+      SELECT emotion, COUNT(*) as count
       FROM agent_interaction_log
-      WHERE DATE(created_at) = CURDATE() AND emotion != '平静'
+      WHERE DATE(created_at) = CURDATE() AND emotion IS NOT NULL AND emotion != '平静'
       GROUP BY emotion
       ORDER BY count DESC
     `);

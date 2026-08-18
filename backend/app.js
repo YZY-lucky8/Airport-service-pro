@@ -594,12 +594,12 @@ app.get('/api/attack-status', authMiddleware, async (req, res) => {
 
 // 8. IP 白名单
 app.get('/api/whitelist', authMiddleware, async (req, res) => {
-  try { const [rows] = await db.pool.query('SELECT id, ip_address, description, created_at FROM ip_whitelist ORDER BY created_at DESC'); res.json({ success: true, data: rows }); } catch (e) { console.error(e); res.status(500).json({ error: '服务器内部错误' }); }
+  try { const [rows] = await db.pool.query('SELECT id, ip_address, remark AS description, created_at FROM ip_whitelist ORDER BY created_at DESC'); res.json({ success: true, data: rows }); } catch (e) { console.error(e); res.status(500).json({ error: '服务器内部错误' }); }
 });
 app.post('/api/whitelist', authMiddleware, async (req, res) => {
   const { ip_address, description } = req.body;
   if (!ip_address) return res.status(400).json({ error: 'IP地址不能为空' });
-  try { const [result] = await db.pool.execute('INSERT INTO ip_whitelist (ip_address, description) VALUES (?, ?)', [ip_address, description || '']); res.json({ success: true, id: result.insertId }); } catch (e) { console.error(e); res.status(500).json({ error: '服务器内部错误' }); }
+  try { const [result] = await db.pool.execute('INSERT INTO ip_whitelist (ip_address, remark) VALUES (?, ?)', [ip_address, description || '']); res.json({ success: true, id: result.insertId }); } catch (e) { console.error(e); res.status(500).json({ error: '服务器内部错误' }); }
 });
 app.delete('/api/whitelist/:id', authMiddleware, async (req, res) => {
   try { await db.pool.execute('DELETE FROM ip_whitelist WHERE id = ?', [req.params.id]); res.json({ success: true }); } catch (e) { console.error(e); res.status(500).json({ error: '服务器内部错误' }); }
@@ -623,12 +623,14 @@ app.get('/api/defense-logs', authMiddleware, async (req, res) => {
   try {
     const { page = 1, limit = 10, type, startDate, endDate } = req.query;
     const offset = (page - 1) * limit;
+    // mysql2 预编译不支持 LIMIT ? 占位符，分页参数校验后内联为整数
+    const pageLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 200);
+    const pageOffset = Math.min(Math.max((parseInt(page, 10) || 1) - 1, 0) * pageLimit, 100000);
     let sql = 'SELECT id, attack_type, src_ip, dst_ip, create_time FROM attack_log WHERE 1=1';
     const params = [];
     if (type) { sql += ' AND attack_type = ?'; params.push(type); }
     if (startDate && endDate) { sql += ' AND create_time BETWEEN ? AND ?'; params.push(startDate, endDate); }
-    sql += ' ORDER BY create_time DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), offset);
+    sql += ` ORDER BY create_time DESC LIMIT ${pageLimit} OFFSET ${pageOffset}`;
     const [rows] = await db.pool.execute(sql, params);
     let countSql = 'SELECT COUNT(*) as total FROM attack_log WHERE 1=1';
     const countParams = [];
@@ -665,13 +667,14 @@ app.get('/api/audit-logs', authMiddleware, async (req, res) => {
   try {
     const { page = 1, limit = 10, action, startDate, endDate, userId } = req.query;
     const offset = (page - 1) * limit;
+    const pageLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 200);
+    const pageOffset = Math.min(Math.max((parseInt(page, 10) || 1) - 1, 0) * pageLimit, 100000);
     let sql = 'SELECT id, action, user_id, details, ip_address, created_at FROM audit_logs WHERE 1=1';
     const params = [];
     if (action) { sql += ' AND action = ?'; params.push(action); }
     if (userId) { sql += ' AND user_id = ?'; params.push(userId); }
     if (startDate && endDate) { sql += ' AND created_at BETWEEN ? AND ?'; params.push(startDate, endDate); }
-    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), offset);
+    sql += ` ORDER BY created_at DESC LIMIT ${pageLimit} OFFSET ${pageOffset}`;
     const [rows] = await db.pool.execute(sql, params);
     let countSql = 'SELECT COUNT(*) as total FROM audit_logs WHERE 1=1';
     const countParams = [];
@@ -716,8 +719,8 @@ app.get('/api/audit/logs', authMiddleware, async (req, res) => {
     if (startDate && endDate) { sql += ' AND created_at BETWEEN ? AND ?'; params.push(startDate, endDate); }
     else if (startDate) { sql += ' AND created_at >= ?'; params.push(startDate); }
     else if (endDate) { sql += ' AND created_at <= ?'; params.push(endDate); }
-    sql += ' ORDER BY created_at DESC LIMIT ?';
-    params.push(parseInt(limit) || 100);
+    const listLimit = Math.min(Math.max(parseInt(limit, 10) || 100, 1), 500);
+    sql += ` ORDER BY created_at DESC LIMIT ${listLimit}`;
     const [rows] = await db.pool.execute(sql, params);
     res.json({ success: true, data: rows, count: rows.length });
   } catch (e) { console.error(e); res.status(500).json({ success: false, error: 'Internal server error' }); }

@@ -2663,7 +2663,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
             <!-- Agent 阈值管理页面 -->
             <div class="page" id="page-agent-threshold">
@@ -2743,6 +2742,7 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -2842,7 +2842,7 @@
             
             try {
                 let endpoint = '';
-                if (pageId === 'logs') {
+                if (pageId === 'logs' || pageId === 'ratelimit') {
                     endpoint = `/api/defense-logs?${params.toString()}`;
                 } else if (pageId === 'audit') {
                     endpoint = `/api/audit-logs?${params.toString()}`;
@@ -2896,8 +2896,8 @@
         }
 
         // 加入黑名单
-        async function addToBlacklist() {
-            const ip = prompt('请输入要加入黑名单的IP地址:');
+        async function addToBlacklist(preIp) {
+            const ip = preIp || prompt('请输入要加入黑名单的IP地址:');
             if (!ip) return;
             
             const reason = prompt('请输入加入黑名单的原因:');
@@ -2922,7 +2922,7 @@
         async function exportData(pageId) {
             try {
                 let endpoint = '';
-                if (pageId === 'logs') {
+                if (pageId === 'logs' || pageId === 'ratelimit') {
                     endpoint = '/api/defense-logs/export?format=csv';
                 } else if (pageId === 'audit') {
                     endpoint = '/api/audit-logs/export?format=csv';
@@ -2974,7 +2974,7 @@
             
             try {
                 let endpoint = '';
-                if (pageId === 'logs') {
+                if (pageId === 'logs' || pageId === 'ratelimit') {
                     endpoint = `/api/defense-logs?${params.toString()}`;
                 } else if (pageId === 'audit') {
                     endpoint = `/api/audit-logs?${params.toString()}`;
@@ -3009,6 +3009,20 @@
                         <td><span class="status-badge danger">拦截</span></td>
                         <td>403 Forbidden</td>
                         <td><span class="action-link">查看</span></td>
+                    `;
+                } else if (pageId === 'ratelimit') {
+                    tr.innerHTML = `
+                        <td><input type="checkbox"></td>
+                        <td>${new Date(row.create_time).toLocaleString()}</td>
+                        <td>${escapeHtml(row.src_ip)}</td>
+                        <td><span style="color: var(--danger); font-weight: 600;">${escapeHtml(row.attack_type)}</span></td>
+                        <td>${escapeHtml(row.dst_ip)}</td>
+                        <td>拦截并记录</td>
+                        <td><span class="status-badge danger">已拦截</span></td>
+                        <td>
+                            <span class="action-link">详情</span>
+                            <span class="action-link danger" onclick="addToBlacklist('${escapeHtml(row.src_ip)}')">拉黑</span>
+                        </td>
                     `;
                 } else if (pageId === 'audit') {
                     tr.innerHTML = `
@@ -3066,7 +3080,7 @@
         async function loadPageData(pageId) {
             try {
                 let endpoint = '';
-                if (pageId === 'logs') {
+                if (pageId === 'logs' || pageId === 'ratelimit') {
                     endpoint = '/api/defense-logs?page=1&limit=10';
                 } else if (pageId === 'audit') {
                     endpoint = '/api/audit-logs?page=1&limit=10';
@@ -3084,15 +3098,262 @@
             }
         }
 
-        // 加载白名单数据
+        // HTML 转义辅助（防止注入/破坏表格结构）
+        function escapeHtml(s) {
+            return String(s === undefined || s === null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Agent 运行统计（对接 /api/agent/stats/overview、/api/agent/stats/emotion；接口异常时显示 --/空白，不报错）
+        async function loadAgentOverview() {
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/agent/stats/overview', { headers: authHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.data) return;
+                const s = data.data;
+                const setText = function (id, val) {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = (val === undefined || val === null) ? '--' : String(val);
+                };
+                setText('agentTotalInteractions', s.total_interactions);
+                setText('agentTodayInteractions', s.today_interactions);
+                setText('agentGuardrailBlocks', s.total_guardrail_blocks);
+                setText('agentAvgLatency', s.avg_latency_ms === undefined || s.avg_latency_ms === null ? '--' : s.avg_latency_ms + ' ms');
+                // 意图分布
+                const intentDom = document.getElementById('agentIntentChart');
+                const dist = s.intent_distribution || [];
+                if (intentDom && echarts && dist.length) {
+                    const names = { emotion_support: '情感安抚', gate_navigation: '登机口导航', flight_info: '航班查询', service_booking: '服务预约', baggage_assistance: '行李协助', other: '其他' };
+                    const option = {
+                        tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                        series: [{
+                            name: '意图分布',
+                            type: 'pie',
+                            radius: ['40%', '70%'],
+                            data: dist.map(function (d) { return { value: d.count, name: names[d.intent] || d.intent }; })
+                        }]
+                    };
+                    initEChart(intentDom, option);
+                }
+            } catch (e) {
+                console.warn('Agent overview load failed:', e);
+            }
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/agent/stats/emotion', { headers: authHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.data || !data.data.length) return;
+                const emotionDom = document.getElementById('agentEmotionChart');
+                if (emotionDom && echarts) {
+                    const option = {
+                        tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+                        series: [{
+                            name: '情感分布',
+                            type: 'pie',
+                            radius: ['40%', '70%'],
+                            data: data.data.map(function (d) { return { value: d.count, name: d.emotion }; })
+                        }]
+                    };
+                    initEChart(emotionDom, option);
+                }
+            } catch (e) {
+                console.warn('Agent emotion load failed:', e);
+            }
+        }
+
+        // 安全态势总览图表真实数据（对接 /api/defense-logs 聚合；无数据或接口异常时保留 mock 兜底）
+        async function loadOverviewCharts() {
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/defense-logs?page=1&limit=200', { headers: authHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.data || !data.data.length) return;
+                const logs = data.data;
+                // 24小时拦截趋势
+                const interceptDom = document.getElementById('interceptChart');
+                if (interceptDom && echarts) {
+                    const labels = [];
+                    const counts = [];
+                    const now = new Date();
+                    for (let i = 23; i >= 0; i--) {
+                        const d = new Date(now);
+                        d.setHours(now.getHours() - i, 0, 0, 0);
+                        labels.push((d.getHours() < 10 ? '0' + d.getHours() : d.getHours()) + ':00');
+                        counts.push(0);
+                    }
+                    logs.forEach(function (row) {
+                        const t = new Date(row.create_time);
+                        const idx = Math.floor((now - t) / 3600000);
+                        if (idx >= 0 && idx < 24) counts[23 - idx]++;
+                    });
+                    const inst = (typeof echarts !== 'undefined' && echarts.getInstanceByDom(interceptDom)) || initEChart(interceptDom, {});
+                    inst.setOption({
+                        xAxis: { type: 'category', boundaryGap: false, data: labels },
+                        series: [
+                            { name: '滑动窗口拦截', type: 'line', smooth: true, data: counts, color: '#FA8C16', areaStyle: { opacity: 0.1 } },
+                            { name: 'HMAC拦截', type: 'line', smooth: true, data: [], color: '#1890FF', areaStyle: { opacity: 0.1 } },
+                            { name: 'Bloom过滤', type: 'line', smooth: true, data: [], color: '#52C41A' },
+                            { name: '白名单放行', type: 'line', smooth: true, data: [], color: '#722ED1' }
+                        ]
+                    });
+                }
+                // 防御类型分布
+                const typeDom = document.getElementById('defenseTypeChart');
+                if (typeDom && echarts) {
+                    const typeMap = {};
+                    logs.forEach(function (row) {
+                        const key = row.attack_type || '未知';
+                        typeMap[key] = (typeMap[key] || 0) + 1;
+                    });
+                    const inst = (typeof echarts !== 'undefined' && echarts.getInstanceByDom(typeDom)) || initEChart(typeDom, {});
+                    inst.setOption({
+                        series: [{
+                            name: '防御类型',
+                            type: 'pie',
+                            radius: ['40%', '70%'],
+                            data: Object.keys(typeMap).map(function (k) { return { value: typeMap[k], name: k }; }),
+                            label: { formatter: '{b}\n{d}%' }
+                        }]
+                    });
+                }
+            } catch (e) {
+                console.warn('Overview charts load failed:', e);
+            }
+        }
+
+        // 安全态势总览最新拦截记录（对接 /api/defense-logs）
+        async function loadLatestBlocks() {
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/defense-logs?page=1&limit=5', { headers: authHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.data || !data.data.length) return;
+                const tbody = document.querySelector('#page-overview .table-container table tbody');
+                if (!tbody) return;
+                tbody.innerHTML = '';
+                data.data.forEach(function (row) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${new Date(row.create_time).toLocaleString()}</td>
+                        <td>${escapeHtml(row.src_ip)}</td>
+                        <td><span class="status-badge warning">${escapeHtml(row.attack_type)}</span></td>
+                        <td>${escapeHtml(row.dst_ip)}</td>
+                        <td><span class="status-badge danger">拦截 - 403</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (e) {
+                console.warn('Latest blocks load failed:', e);
+            }
+        }
+
+        // 限流页顶部状态数字对接（阈值来自 /api/agent/threshold/status）
+        async function loadRatelimitStatus() {
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/agent/threshold/status', { headers: authHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.data) return;
+                const row = data.data.find(function (r) { return r.config_key === 'rate_limit_max_requests'; });
+                if (!row || row.config_value === undefined || row.config_value === null) return;
+                const values = document.querySelectorAll('#page-ratelimit .window-monitor .bloom-status-info .bloom-status-item .value');
+                if (values.length >= 2) {
+                    values[1].textContent = String(row.config_value) + '次';
+                }
+            } catch (e) {
+                console.warn('Ratelimit status load failed:', e);
+            }
+        }
+
+        // Bloom 页位集合大小对接（来自 /api/agent/threshold/status）
+        async function loadBloomStatus() {
+            try {
+                const resp = await fetch(API_BASE_URL + '/api/agent/threshold/status', { headers: authHeaders() });
+                if (!resp.ok) return;
+                const data = await resp.json();
+                if (!data.success || !data.data) return;
+                const row = data.data.find(function (r) { return r.config_key === 'bloom_filter_capacity'; });
+                if (!row || row.config_value === undefined || row.config_value === null) return;
+                const values = document.querySelectorAll('#page-bloom .bloom-status .bloom-status-info .bloom-status-item .value');
+                if (values.length >= 1) {
+                    values[0].textContent = Number(row.config_value).toLocaleString();
+                }
+            } catch (e) {
+                console.warn('Bloom status load failed:', e);
+            }
+        }
+
+        // 加载白名单数据（对接 GET /api/whitelist）
         async function loadWhitelistData() {
             try {
-                const data = await apiCall('/api/whitelist');
-                // 更新白名单表格（如果有的话）
-                console.log('Whitelist data:', data);
+                const resp = await fetch(`${API_BASE_URL}/api/whitelist`, { headers: authHeaders() });
+                const data = await resp.json();
+                if (!data.success) throw new Error(data.error || '加载白名单失败');
+                const tbody = document.querySelector('#page-whitelist table tbody');
+                if (!tbody) return;
+                const list = data.data || [];
+                if (!list.length) return; // 无数据时保留静态演示表格
+                tbody.innerHTML = '';
+                list.forEach(row => {
+                    const tr = document.createElement('tr');
+                    const isCidr = String(row.ip_address || '').indexOf('/') !== -1;
+                    tr.innerHTML = `
+                        <td><input type="checkbox"></td>
+                        <td>${escapeHtml(row.ip_address)}${isCidr ? '<span class="whitelist-badge">内网</span>' : ''}</td>
+                        <td>${isCidr ? 'IP段' : '单个IP'}</td>
+                        <td>${escapeHtml(row.description)}</td>
+                        <td>${escapeHtml(row.created_at)}</td>
+                        <td>永久有效</td>
+                        <td>--</td>
+                        <td><span class="action-link danger" onclick="removeWhitelistItem(${Number(row.id)})">移除</span></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
             } catch (error) {
                 console.error('Load whitelist failed:', error);
             }
+        }
+
+        // 移除白名单（对接 DELETE /api/whitelist/:id）
+        window.removeWhitelistItem = async function (id) {
+            if (!confirm('确认移除该白名单条目？')) return;
+            try {
+                await apiCall('/api/whitelist/' + id, { method: 'DELETE' });
+                loadWhitelistData();
+            } catch (e) {
+                // 错误已在 apiCall 中提示
+            }
+        };
+
+        // 白名单添加表单动态绑定（不修改 HTML，仅绑定事件）
+        function bindWhitelistForm() {
+            if (window.__whitelistFormBound) return;
+            window.__whitelistFormBound = true;
+            const page = document.getElementById('page-whitelist');
+            if (!page) return;
+            const addBtn = page.querySelector('.card button.btn-primary');
+            if (!addBtn) return;
+            addBtn.addEventListener('click', async function () {
+                const inputs = page.querySelectorAll('.card .form-row input');
+                if (!inputs.length) return;
+                const ip = inputs[0].value.trim();
+                const desc = inputs[1] ? inputs[1].value.trim() : '';
+                if (!ip) { alert('请输入IP地址/IP段'); return; }
+                try {
+                    await apiCall('/api/whitelist', {
+                        method: 'POST',
+                        body: JSON.stringify({ ip_address: ip, description: desc })
+                    });
+                    alert('成功添加白名单');
+                    inputs[0].value = '';
+                    if (inputs[1]) inputs[1].value = '';
+                    loadWhitelistData();
+                } catch (e) {
+                    // 错误已在 apiCall 中提示
+                }
+            });
         }
 
         // 加载黑名单数据
@@ -3135,6 +3396,10 @@
                         try { initCharts(); } catch (ce) { console.warn('Chart init failed:', ce); }
                         try { loadPageData('logs'); } catch (le) { console.warn('loadPageData logs failed:', le); }
                         try { loadPageData('audit'); } catch (ae) { console.warn('loadPageData audit failed:', ae); }
+                        try { loadAgentOverview(); } catch (e) { console.warn('loadAgentOverview failed:', e); }
+                        try { loadOverviewCharts(); } catch (e) { console.warn('loadOverviewCharts failed:', e); }
+                        try { loadLatestBlocks(); } catch (e) { console.warn('loadLatestBlocks failed:', e); }
+                        try { loadWhitelistData(); } catch (e) { console.warn('loadWhitelistData failed:', e); }
                     }, 100);
                 } else {
                     errorEl.textContent = data.error || '用户名或密码错误，请重试';
@@ -3493,9 +3758,20 @@
 
             resizeAllCharts();
             
-            // 切换页面时加载数据
-            if (pageId === 'logs' || pageId === 'audit') {
+            // 切换页面时加载数据（按页对接真实接口）
+            if (pageId === 'logs' || pageId === 'audit' || pageId === 'ratelimit') {
                 loadPageData(pageId);
+                if (pageId === 'ratelimit') {
+                    loadRatelimitStatus();
+                }
+            } else if (pageId === 'overview') {
+                loadAgentOverview();
+                loadOverviewCharts();
+                loadLatestBlocks();
+            } else if (pageId === 'whitelist') {
+                loadWhitelistData();
+            } else if (pageId === 'bloom') {
+                loadBloomStatus();
             }
         }
 
@@ -3515,6 +3791,9 @@
             if (firstPage) {
                 firstPage.style.display = 'block';
             }
+
+            // 动态绑定白名单添加表单（不修改 HTML）
+            bindWhitelistForm();
             
             // 检查是否已登录
             const mainApp = document.getElementById('mainApp');
@@ -3523,6 +3802,10 @@
                 // 加载默认数据
                 loadPageData('logs');
                 loadPageData('audit');
+                loadAgentOverview();
+                loadOverviewCharts();
+                loadLatestBlocks();
+                loadWhitelistData();
             }
         });
 
@@ -3531,6 +3814,7 @@
             'use strict';
 
             var agentMode = 'manual';
+            var lastHistory = []; // 已加载的真实历史（导出用）
             var thresholdRefreshTimer = null;
             var REFRESH_INTERVAL = 10000;
 
@@ -3607,8 +3891,28 @@
                 document.getElementById('agentLastUpdate').textContent = new Date().toLocaleTimeString('zh-CN');
             }
 
+            // Agent 统计面板对接真实接口（/api/agent/stats/overview；字段缺失时保持默认值）
+            async function loadAgentStats() {
+                try {
+                    var resp = await fetch(API_BASE_URL + '/api/agent/stats/overview', { headers: authHeaders() });
+                    if (!resp.ok) return;
+                    var data = await resp.json();
+                    if (!data.success || !data.data) return;
+                    var s = data.data;
+                    updateAgentStats({
+                        autoAdjustCount: (typeof s.total_guardrail_blocks === 'number' || s.total_guardrail_blocks) ? s.total_guardrail_blocks : 47,
+                        interceptImprovement: 23,
+                        avgResponseTime: (s.avg_latency_ms !== undefined && s.avg_latency_ms !== null) ? s.avg_latency_ms : 12,
+                        lastUpdate: new Date().toLocaleTimeString('zh-CN')
+                    });
+                } catch (e) {
+                    console.warn('Agent stats load failed:', e);
+                }
+            }
+
             async function loadThresholdData() {
                 try {
+                    loadAgentStats();
                     var resp = await fetch(API_BASE_URL + '/api/agent/threshold/status', { headers: authHeaders() });
                     if (resp.ok) {
                         var data = await resp.json();
@@ -3672,11 +3976,14 @@
                                 result: r.status || 'applied'
                             };
                         });
+                        lastHistory = raw;
                         renderAgentHistory(raw);
                     } else if (resp.status === 404) {
+                        lastHistory = mockHistory;
                         renderAgentHistory(mockHistory);
                     }
                 } catch (e) {
+                    lastHistory = mockHistory;
                     renderAgentHistory(mockHistory);
                 }
             }
@@ -3716,9 +4023,10 @@
 
             window.applyAgentSuggestion = async function (thresholdId, suggestedValue) {
                 try {
-                    await apiCall('/api/agent/threshold/apply-agent', { method: 'POST', body: JSON.stringify({ thresholdId: thresholdId, value: suggestedValue }) });
-                    alert('✅ 已应用 Agent 建议: ' + suggestedValue);
+                    var result = await apiCall('/api/agent/threshold/apply-agent', { method: 'POST', body: JSON.stringify({ thresholdId: thresholdId, value: suggestedValue }) });
+                    alert(result && result.message ? result.message : ('✅ 已应用 Agent 建议: ' + suggestedValue));
                     loadThresholdData();
+                    loadAgentHistory();
                 } catch (e) {
                     alert('✅ 已应用 Agent 建议: ' + suggestedValue + ' (模拟)');
                     var idx = -1; for (var i = 0; i < mockThresholds.length; i++) { if (mockThresholds[i].id === thresholdId) { idx = i; break; } }
@@ -3727,9 +4035,10 @@
             };
 
             window.exportAgentHistory = function () {
+                var list = lastHistory.length ? lastHistory : mockHistory;
                 var csv = 'Time,Param,Old Value,New Value,Confidence,Reason,Result\n';
-                for (var i = 0; i < mockHistory.length; i++) {
-                    var h = mockHistory[i];
+                for (var i = 0; i < list.length; i++) {
+                    var h = list[i];
                     csv += '"' + h.time + '","' + h.param + '","' + h.oldValue + '","' + h.newValue + '",' + h.confidence + ',"' + h.reason + '","' + h.result + '"\n';
                 }
                 var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });

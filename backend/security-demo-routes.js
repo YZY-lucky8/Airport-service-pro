@@ -5,6 +5,7 @@ const router = express.Router();
 
 const rateLimitRecords = new Map();
 const demoLogs = [];
+const usedTokens = new Set();
 
 const WINDOW_MS = 1000;
 const MAX_REQUESTS = 30;
@@ -209,6 +210,31 @@ router.post('/api/test-replay', express.json(), (req, res) => {
       message: '令牌校验失败，请求被拦截',
     });
   }
+  // 重放攻击：同一令牌重复使用即拦截（已使用令牌去重机制）
+  if (usedTokens.has(token)) {
+    console.log(`[重放] 拦截 ${req.ip}: 令牌已使用（重放攻击）`);
+
+    addLog(req, '重放攻击', true, '令牌已使用（重放攻击）');
+    pushSecurityEvent({
+      type: 'attack_event',
+      data: {
+        time: new Date().toISOString(),
+        attackType: '令牌鉴权攻击',
+        defense: 'HMAC 校验',
+        action: '拦截',
+        status: 'blocked'
+      }
+    });
+
+    return res.status(401).json({
+      success: false,
+      blocked: true,
+      code: 'TOKEN_REPLAYED',
+      message: '令牌已使用（重放攻击），请求被拦截',
+    });
+  }
+  usedTokens.add(token);
+
   console.log(`[重放] 放行 ${req.ip}: 令牌校验通过`);
 
   addLog(req, '重放测试', false, 'HMAC 令牌校验通过');
@@ -270,4 +296,23 @@ router.post('/api/security-demo-logs', express.json(), (req, res) => {
 
   return res.json({ success: true });
 });
+// 生成合法一次性令牌（供看板 HMAC 五种场景演示）；offset 传负值可构造过期令牌
+router.get('/api/test-replay/generate-token', (req, res) => {
+  const offset = parseInt(req.query.offset, 10) || 0;
+  const timestamp = Date.now() + offset;
+  const token = createHmacToken(timestamp);
+  res.json({ success: true, token, timestamp });
+});
+
+// 关键服务免扰：紧急求助通道（bypassForCritical 中间件放行，即使系统正被限流仍畅通）
+router.get('/api/emergency-help', (req, res) => {
+  res.json({ success: true, message: '紧急求助通道放行', bypass: true });
+});
+router.get('/api/emergency', (req, res) => {
+  res.json({ success: true, message: '紧急求助通道放行', bypass: true });
+});
+router.get('/api/critical/assistance', (req, res) => {
+  res.json({ success: true, message: '关键保障服务放行', bypass: true });
+});
+
 module.exports = router;

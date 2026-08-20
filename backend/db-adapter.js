@@ -411,7 +411,7 @@ function initSQLiteData(sqlite) {
 
   // 阈值配置初始值
   const thresholdInit = sqlite.prepare('INSERT OR IGNORE INTO security_threshold_config (config_key, config_value, agent_suggested_value, suggestion_reason) VALUES (?, ?, ?, ?)');
-  thresholdInit.run('rate_limit_max_requests', '5', '3', '攻击频率上升，建议降低阈值');
+  thresholdInit.run('rate_limit_max_requests', '15', '3', '攻击频率上升，建议降低阈值');
   thresholdInit.run('bloom_filter_capacity', '10000', '15000', '黑名单IP增长，建议扩容');
   thresholdInit.run('hmac_token_ttl', '300', '180', '检测到重放攻击尝试');
   thresholdInit.run('slow_connection_timeout', '30', '20', 'Slowloris攻击风险增加');

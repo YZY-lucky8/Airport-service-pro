@@ -116,6 +116,95 @@ app.use((req, res, next) => {
 const bypassForCritical = require('../middleware/bypassForCritical');
 app.use(bypassForCritical);
 
+// ── IP 白名单（在全局滑动窗口前标记 req.isWhitelisted，限流对白名单直接放行） ──
+const { ipWhitelistMiddleware } = require('../middleware/ipWhitelist');
+app.use(ipWhitelistMiddleware);
+
+// ── 安全演示转发代理（仅用于安全看板一键演示：模拟不同来源 IP，真实经过完整中间件链） ──
+const DEMO_FORWARD_TARGETS = new Set([
+  '/api/security-demo-logs',
+  '/api/health/db',
+  '/api/test-replay',
+  '/api/auth/login',
+  '/api/emergency-help',
+  '/api/emergency',
+  '/api/critical/assistance',
+  '/api/no-such-route',
+]);
+const DEMO_IP_RE = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$|^::1$/;
+
+function mapDemoEvent(target, status) {
+  if (target === '/api/security-demo-logs') {
+    return status === 403
+      ? { attackType: 'IP 黑名单', defense: '布隆过滤器', action: '拦截', status: 'blocked' }
+      : { attackType: 'IP 黑名单', defense: '布隆过滤器', action: '放行', status: 'allowed' };
+  }
+  if (target === '/api/health/db') {
+    return status === 403
+      ? { attackType: 'HTTP Flood', defense: '滑动窗口限流', action: '拦截', status: 'blocked' }
+      : { attackType: 'HTTP Flood', defense: '滑动窗口限流', action: '放行', status: 'allowed' };
+  }
+  if (target === '/api/test-replay') {
+    return status === 401
+      ? { attackType: '令牌鉴权攻击', defense: 'HMAC 校验', action: '拦截', status: 'blocked' }
+      : { attackType: '令牌鉴权攻击', defense: 'HMAC 校验', action: '放行', status: 'allowed' };
+  }
+  if (target === '/api/auth/login') {
+    return status === 429
+      ? { attackType: '暴力破解', defense: '登录失败锁定', action: '拦截', status: 'blocked' }
+      : null;
+  }
+  if (target === '/api/emergency-help' || target === '/api/emergency' || target === '/api/critical/assistance') {
+    return status === 200
+      ? { attackType: '紧急求助通道', defense: '关键服务免扰', action: '放行', status: 'allowed' }
+      : null;
+  }
+  if (target === '/api/no-such-route') {
+    return { attackType: '未知路由探测', defense: '统一反馈隐藏', action: '拦截', status: 'blocked' };
+  }
+  return null;
+}
+
+app.use('/api/demo/forward', (req, res) => {
+  const target = String(req.query.target || '');
+  const ip = String(req.query.ip || '127.0.0.1');
+  if (!DEMO_FORWARD_TARGETS.has(target) || !DEMO_IP_RE.test(ip)) {
+    return res.status(400).json({ success: false, error: 'invalid demo forward params' });
+  }
+  const fwdPort = Number(process.env.PORT) || 3000;
+  const fwdPath = target + (req.query.q ? (target.includes('?') ? '&' : '?') + encodeURIComponent(String(req.query.q)) : '');
+  const payload = ['POST', 'PUT', 'PATCH'].includes(req.method) ? JSON.stringify(req.body || {}) : '';
+  const headers = {};
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (key === 'host' || key === 'content-length' || key === 'x-forwarded-for') continue;
+    headers[key] = value;
+  }
+  headers.host = `127.0.0.1:${fwdPort}`;
+  headers['x-forwarded-for'] = ip;
+  if (payload) headers['content-length'] = Buffer.byteLength(payload);
+
+  const proxyReq = http.request({
+    hostname: '127.0.0.1', port: fwdPort, path: fwdPath, method: req.method, headers
+  }, (proxyRes) => {
+    let body = '';
+    proxyRes.on('data', (chunk) => { body += chunk; });
+    proxyRes.on('end', () => {
+      const event = mapDemoEvent(target, proxyRes.statusCode);
+      if (event) {
+        wsBridge.pushSecurityEvent({ type: 'attack_event', data: { time: new Date().toISOString(), ...event } });
+      }
+      res.status(proxyRes.statusCode).set({
+        'content-type': proxyRes.headers['content-type'] || 'application/json'
+      }).send(body);
+    });
+  });
+  proxyReq.on('error', () => {
+    res.status(502).json({ success: false, error: 'demo forward failed' });
+  });
+  if (payload) proxyReq.write(payload);
+  proxyReq.end();
+});
+
 // ── 滑动窗口频率检测（阈值支持动态调整） ──
 const requestCounts = new Map();
 const RATE_LIMIT_WINDOW_MS = 2000;
@@ -137,14 +226,15 @@ global.setRateLimitMaxRequests = (value) => {
 
 app.use((req, res, next) => {
   if (req.path === '/api/test-rate-limit' || req.path === '/api/test-replay' ||
-    req.path.startsWith('/api/security-demo-logs') || req.path.startsWith('/api/agent')) {
+    req.path.startsWith('/api/security-demo-logs') || req.path.startsWith('/api/agent') ||
+    req.path.startsWith('/api/demo')) {
     return next();
   }
-  if (req.criticalBypass) return next();
+  if (req.criticalBypass || req.isWhitelisted) return next();
 
 
 
-  const ip = req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
+  const ip = (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',')[0].trim()) || req.ip || req.connection?.remoteAddress || req.socket?.remoteAddress;
   const now = Date.now();
   let timestamps = requestCounts.get(ip);
   if (!timestamps) {
@@ -756,6 +846,12 @@ try {
   console.log('⚠️  智能体路由加载失败（模块未找到）:', e.message);
 }
 app.use(securityDemoRouter);
+// ============================================================
+// 统一 404（统一反馈隐藏：未知路由返回统一短 JSON，不暴露框架细节）
+// ============================================================
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: 'Not Found', code: 'NOT_FOUND' });
+});
 // ============================================================
 // 启动服务器
 // ============================================================

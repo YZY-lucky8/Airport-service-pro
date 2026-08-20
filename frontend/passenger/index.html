@@ -1701,6 +1701,7 @@
         <div class="func-btn" data-cmd="lost"><span class="func-icon">🔎</span><span>失物招领</span></div>
         <div class="func-btn" data-cmd="special"><span class="func-icon">👴</span><span>特殊旅客</span></div>
         <div class="func-btn" data-cmd="transport"><span class="func-icon">🚌</span><span>交通中心</span></div>
+        <div class="func-btn" data-cmd="elder"><span class="func-icon">♿</span><span>适老模式</span></div>
       </div>
 
       <div class="center-panel">
@@ -2982,6 +2983,9 @@
           addChatMessage(`🗺️ 为您导航到${name}，请跟着红色路线走~`);
           speakText(`为您导航到${name}`);
           drawRouteTo(name);
+        } else if (cmd === 'elder') {
+          toggleElderMode(!isElderMode);
+          btn.querySelector('span:last-child').textContent = isElderMode ? '正常模式' : '适老模式';
         }
       });
     });

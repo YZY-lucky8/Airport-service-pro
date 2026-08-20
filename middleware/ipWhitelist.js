@@ -10,7 +10,7 @@ const isWhitelisted = (ip) => {
 };
 
 const ipWhitelistMiddleware = (req, res, next) => {
-    const clientIp = req.ip || req.connection.remoteAddress;
+    const clientIp = (req.headers['x-forwarded-for'] && req.headers['x-forwarded-for'].split(',')[0].trim()) || req.ip || req.connection.remoteAddress;
     req.isWhitelisted = isWhitelisted(clientIp);
     next();
 };

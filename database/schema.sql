@@ -265,17 +265,6 @@ CREATE TABLE IF NOT EXISTS `token_usage` (
   INDEX `idx_used_at` (`used_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 1. 创建令牌使用记录表
-CREATE TABLE IF NOT EXISTS `token_usage` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `token` VARCHAR(255) NOT NULL UNIQUE,
-  `user_id` VARCHAR(100) DEFAULT 'guest',
-  `used_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX `idx_token` (`token`),
-  INDEX `idx_used_at` (`used_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 -- 2. 创建审计日志表
 CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -290,7 +279,6 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
   INDEX `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 补充数据库--YZY
 -- ============================================
 -- 机场DDoS防御系统 - 一键建表SQL脚本
 -- 执行日期：2024-05-05
@@ -360,7 +348,7 @@ CREATE TABLE IF NOT EXISTS `hmac_token_logs` (
 CREATE TABLE IF NOT EXISTS `hmac_config` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `algorithm` VARCHAR(50) DEFAULT 'SHA-256' COMMENT '签名算法',
-  `expire_seconds` INT(11) DEFAULT 300 COMMENT '过期时间(秒)',
+  `expire_seconds` INT(11) DEFAULT 30 COMMENT '过期时间(秒)',
   `anti_replay` TINYINT(1) DEFAULT 1 COMMENT '防重放检查',
   `time_tolerance` INT(11) DEFAULT 5 COMMENT '时间戳容差(秒)',
   `secret_key` VARCHAR(255) NOT NULL COMMENT '签名密钥',

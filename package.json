@@ -1,6 +1,6 @@
 {
   "dependencies": {
     "bloom-filter": "^0.2.0",
-    "mysql2": "^3.22.3"
+    "dotenv": "^17.4.2"
   }
 }

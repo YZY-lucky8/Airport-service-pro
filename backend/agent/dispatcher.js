@@ -43,6 +43,7 @@ const KnowledgeRetriever = require('./knowledge-retriever');
 const ItineraryAdvisor = require('./itinerary-advisor');
 const EmotionModule = require('./emotion-module');
 const SecurityManagementAgent = require('./security-management');
+const PepGuard = require('./pep-guard');
 const { LLMManager } = require('./llm-adapter');
 const { OpenAI } = require('openai');
 
@@ -72,6 +73,8 @@ class AgentDispatcher {
     this.itinerary = new ItineraryAdvisor(pool);
     this.emotion = new EmotionModule();
     this.securityAgent = new SecurityManagementAgent(pool);
+    // PEP 授权执行点（任务一新增：RBAC + 敏感正则 + JIT 令牌）
+    this.pepGuard = new PepGuard({ secret: process.env.PEP_HMAC_SECRET });
     this.deepSeek = process.env.DEEPSEEK_API_KEY
       ? new OpenAI({
         apiKey: process.env.DEEPSEEK_API_KEY,
@@ -178,7 +181,7 @@ class AgentDispatcher {
 
   async processRequest(request) {
     const startTime = Date.now();
-    const { text, userId = 'anonymous', sessionId = null, flightNo = null, terminalId = null } = request;
+    const { text, userId = 'anonymous', sessionId = null, flightNo = null, terminalId = null, role = null } = request;
 
     // 状态机：INIT
     const state = {
@@ -187,10 +190,13 @@ class AgentDispatcher {
       sessionId,
       flightNo,
       terminalId,
+      role: role ? String(role).toLowerCase() : null,
       originalInput: text,
       response: null,
       error: null,
       audit: [],
+      pep: null,
+      jitToken: null,
     };
 
     try {
@@ -226,24 +232,45 @@ class AgentDispatcher {
         timestamp: new Date().toISOString(),
       });
 
-      // ─── 安全防线 2：运行时监控 ───
+      // ─── 安全防线 2：运行时监控（PEP 授权执行点，任务一接入）───
       state.phase = 'RUNTIME_CHECK';
       const action = this._intentToAction(perception.intent);
-      // ─── 安全防线 2 增强：运行时敏感操作检测 ───
-      const RUNTIME_TOOL_PATTERNS = [
-        /(读取|调用|执行|打开|获取).{0,6}(系统|内部|配置|密码|passwd|shadow|\.env|密钥|token|api[\s_-]?key)/i,
-        /(绕过|跳过|关闭|禁用).{0,8}(白名单|防线|防护|检测|限制|拦截)/i,
-        /(工具|函数|命令).{0,4}(白名单|权限)/i,
-      ];
-      for (const pattern of RUNTIME_TOOL_PATTERNS) {
-        if (pattern.test(text)) {
-          return this._errorResponse(state, '权限拒绝', '检测到未授权的敏感操作或工具调用');
-        }
-      }
-
+      // 白名单双保险（与 pep-guard 动作全集一致）
       if (!ALLOWED_ACTIONS.has(action)) {
         return this._errorResponse(state, '权限拒绝', `不允许的动作: ${action}`);
       }
+
+      // PEP 决策：RBAC 角色-动作矩阵 + 敏感操作正则（确定性判定）
+      const role = this._resolveRole(perception, state);
+      const sessionKey = state.sessionId || state.terminalId || userId || 'unknown';
+      const pep = this.pepGuard.evaluate({ role, action, text, sessionId: sessionKey });
+      state.pep = pep;
+
+      state.audit.push({
+        phase: 'pep',
+        role: pep.role,
+        action: pep.action,
+        decision: pep.decision,
+        reason: pep.reason,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (!pep.allowed) {
+        return this._errorResponse(state, '权限拒绝', pep.reason);
+      }
+
+      // JIT 令牌：动作执行前签发（单动作绑定、7s 过期、执行后作废）
+      const jit = this.pepGuard.issueToken({ action, sessionId: sessionKey, role: pep.role });
+      state.jitToken = jit ? jit.token : null;
+
+      state.audit.push({
+        phase: 'pep-jit',
+        action,
+        role: pep.role,
+        tokenIssued: !!state.jitToken,
+        tokenTtlMs: this.pepGuard.ttlMs,
+        timestamp: new Date().toISOString(),
+      });
 
       // ─── 规划与执行：路由到对应处理模块 ───
       state.phase = 'ACTION_ROUTE';
@@ -252,6 +279,7 @@ class AgentDispatcher {
       try {
         responseText = await this._routeAndExecute(action, perception, state);
       } catch (execError) {
+        this._revokeJit(state);
         return this._errorResponse(state, '执行错误', `处理请求时出错: ${execError.message}`);
       }
 
@@ -276,7 +304,10 @@ class AgentDispatcher {
       state.response = responseText;
       state.latency = Date.now() - startTime;
 
-      // 异步记录交互日志（不阻塞响应）
+      // JIT 令牌用毕作废（一次性、防重用）
+      const jitRevoked = this._revokeJit(state);
+
+      // 异步记录交互日志与 PEP 决策（不阻塞响应）
       this._logInteraction(state, perception, responseText).catch(console.error);
 
       return {
@@ -286,12 +317,48 @@ class AgentDispatcher {
         emotion: perception.emotion,
         entities: perception.entities,
         latency: state.latency,
+        trust: {
+          role: state.pep ? state.pep.role : 'passenger',
+          decision: state.pep ? state.pep.decision : 'allow',
+          jitTokenIssued: state.jitToken === null && state.pep ? true : false,
+          jitRevoked,
+        },
       };
 
     } catch (error) {
       state.phase = 'ERROR';
       state.error = error.message;
+      // 异常兜底：确保 JIT 令牌被作废
+      this._revokeJit(state);
       return this._errorResponse(state, '系统错误', error.message);
+    }
+  }
+
+  /**
+   * 解析请求主体角色（任务一：RBAC）
+   * - 显式传入 admin/operator 时按对应角色（仅供内部/管理调用）
+   * - 安全管理动作 security_analyze 强制 admin
+   * - 自助终端旅客请求默认 passenger（最小权限）
+   */
+  _resolveRole(perception, state) {
+    const extRole = state.role || '';
+    if (extRole === 'admin' || extRole === 'operator') {
+      return extRole;
+    }
+    // 管理类意图强制按 admin 判定（不满足会走 RBAC 拒绝）
+    if (perception.intent === 'security_analyze') {
+      return 'admin';
+    }
+    return 'passenger';
+  }
+
+  /**
+   * 撤销当前请求的 JIT 令牌（幂等，执行结束/异常兜底时调用）
+   */
+  _revokeJit(state) {
+    if (state.jitToken) {
+      this.pepGuard.revokeToken(state.jitToken);
+      state.jitToken = null;
     }
   }
 
@@ -721,6 +788,26 @@ class AgentDispatcher {
       ]);
     } catch (e) {
       console.error('记录交互日志失败:', e);
+    }
+
+    // ── 追加 PEP 决策审计（任务一）：写入独立决策日志表，缺表/缺列时静默跳过 ──
+    try {
+      const pep = state.pep || null;
+      await this.pool.execute(`
+        INSERT INTO pep_decision_log (
+          session_token, action, role, allowed, reason, jit_token, terminal_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, [
+        state.sessionId || 'anonymous',
+        (pep && pep.action) || this._intentToAction(perception.intent),
+        (pep && pep.role) || 'passenger',
+        (pep && pep.allowed) ? 1 : 0,
+        (pep && pep.reason) || null,
+        state.jitToken || null,
+        state.terminalId || null,
+      ]);
+    } catch (e) {
+      console.error('记录 PEP 决策日志失败（表未迁移则忽略）:', e.message);
     }
   }
 }

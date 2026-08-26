@@ -16,12 +16,21 @@
  *   GET  /api/agent/stats/overview          - 智能体运行统计
  *   GET  /api/agent/stats/emotion           - 情感分析统计
  *   GET  /api/agent/knowledge/stats         - 知识库统计
+ *
+ * 信任免疫接口（任务一，只读，需登录）：
+ *   GET  /api/agent/trust/status            - 信任引擎状态总览
+ *   GET  /api/agent/trust/sources           - 信任来源清单（RBAC + 敏感正则 + JIT）
+ *   GET  /api/agent/trust/trace             - PEP 决策审计跟踪
  */
 
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const AgentDispatcher = require('../agent/dispatcher');
+// 任务一新增：管理端鉴权中间件（信任只读接口需登录）+ PEP 信任引擎元信息
+const { authMiddleware } = require('../../middleware/auth');
+const pepMeta = require('../agent/pep-guard');
+const { SENSITIVE_PATTERNS, ROLE_ACTIONS } = pepMeta;
 
 // 全局 agent 实例（由 app.js 初始化时注入）
 let agent = null;
@@ -608,5 +617,114 @@ function mockThresholdHistory() {
     { threshold_key: 'rate_limit_max_requests', old_value: '10', new_value: '8', suggested_by: 'manual', confidence: 0.0, reason: '人工调整', applied_at: '2026-06-19 18:00:00', status: 'applied' },
   ];
 }
+
+/**
+ * ============================================================
+ * 信任免疫接口（任务一·只读，需登录）
+ * ============================================================
+ * 信任来源 = RBAC 角色-动作矩阵 + 敏感操作正则 + JIT 一次性令牌
+ * 决策过程：evaluate() 确定性判定 → issueToken() / verifyToken() / revokeToken()
+ */
+
+// GET /api/agent/trust/status - 信任引擎状态总览
+router.get('/trust/status', authMiddleware, async (req, res) => {
+  try {
+    const guard = agent && agent.pepGuard ? agent.pepGuard : null;
+    const issued = guard ? (Number.isFinite(guard.issuedCount) ? guard.issuedCount : 0) : 0;
+    const ttlSeconds = guard && guard.ttlMs ? guard.ttlMs / 1000 : 0;
+
+    // 决策统计（库表可用则读取，否则为 null）
+    let decisionStats = null;
+    if (agent && agent.pool) {
+      try {
+        const [rows] = await agent.pool.query(
+          'SELECT allowed, COUNT(*) AS cnt FROM pep_decision_log GROUP BY allowed'
+        );
+        decisionStats = { allow: 0, deny: 0, total: 0 };
+        for (const r of rows || []) {
+          if (r.allowed == 1) decisionStats.allow = Number(r.cnt || 0);
+          else decisionStats.deny = Number(r.cnt || 0);
+        }
+        decisionStats.total = decisionStats.allow + decisionStats.deny;
+      } catch (e) {
+        decisionStats = null;
+      }
+    }
+
+    res.json({
+      success: true,
+      data: {
+        engine: 'PepGuardV1',
+        mode: 'deterministic',
+        rbacRoles: Object.keys(ROLE_ACTIONS),
+        sensitiveRuleCount: SENSITIVE_PATTERNS.length,
+        jit: { ttlSeconds, issuedTokens: issued },
+        decisionStats,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
+  }
+});
+
+// GET /api/agent/trust/sources - 信任来源清单
+router.get('/trust/sources', authMiddleware, async (req, res) => {
+  const guard = agent && agent.pepGuard ? agent.pepGuard : null;
+  const sources = [
+    {
+      id: 'rbac_matrix',
+      name: '角色-动作授权矩阵',
+      type: 'RBAC',
+      detail: ROLE_ACTIONS,
+    },
+    {
+      id: 'sensitive_rules',
+      name: '敏感操作正则规则',
+      type: 'REGEX',
+      detail: SENSITIVE_PATTERNS.map((r) => ({ id: r.id, desc: r.desc, requiredRole: r.requiredRole })),
+    },
+    {
+      id: 'jit_token',
+      name: 'JIT 一次性令牌',
+      type: 'HMAC',
+      detail: { ttlSeconds: guard && guard.ttlMs ? guard.ttlMs / 1000 : 0, bind: ['action', 'sessionId'], revoke: '执行后作废' },
+    },
+  ];
+  res.json({ success: true, data: sources });
+});
+
+// GET /api/agent/trust/trace - PEP 决策审计跟踪（分页）
+//   过滤参数：session / action / allowed(0|1)；分页：limit(默认50, 上限200)、offset(默认0)
+router.get('/trust/trace', authMiddleware, async (req, res) => {
+  try {
+    const { session, action, allowed } = req.query;
+    const lim = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const off = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+    if (!agent || !agent.pool) {
+      return res.json({ success: false, message: '数据库不可用', data: [], total: 0 });
+    }
+
+    const where = [];
+    const params = [];
+    if (session) { where.push('session_token = ?'); params.push(session); }
+    if (action) { where.push('action = ?'); params.push(action); }
+    if (allowed === '0' || allowed === '1') { where.push('allowed = ?'); params.push(Number(allowed)); }
+    const whereSql = where.length ? ' WHERE ' + where.join(' AND ') : '';
+
+    const [rows] = await agent.pool.query(
+      `SELECT id, session_token, action, role, allowed, reason, jit_token, terminal_id, created_at
+       FROM pep_decision_log${whereSql} ORDER BY id DESC LIMIT ? OFFSET ?`,
+      [...params, lim, off]
+    );
+    const [[{ cnt }]] = await agent.pool.query(
+      `SELECT COUNT(*) AS cnt FROM pep_decision_log${whereSql}`, params
+    );
+
+    res.json({ success: true, data: rows || [], total: Number(cnt) || 0, limit: lim, offset: off });
+  } catch (e) {
+    res.json({ success: false, message: '查询审计失败: ' + e.message, data: [], total: 0 });
+  }
+});
 
 module.exports = { router, initAgent };

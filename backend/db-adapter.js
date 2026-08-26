@@ -268,6 +268,18 @@ function initSQLiteSchema(sqlite) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS pep_decision_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_token TEXT,
+      action TEXT,
+      role TEXT DEFAULT 'passenger',
+      allowed INTEGER DEFAULT 0,
+      reason TEXT,
+      jit_token TEXT,
+      terminal_id TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS knowledge_base (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL, content TEXT NOT NULL,

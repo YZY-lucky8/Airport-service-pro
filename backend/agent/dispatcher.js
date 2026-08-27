@@ -38,6 +38,7 @@
  */
 
 const InputGuardrail = require('./guardrail');
+const { TrustEngine, TrustLevel } = require('./trust-engine');
 const IntentClassifier = require('./intent-classifier');
 const KnowledgeRetriever = require('./knowledge-retriever');
 const ItineraryAdvisor = require('./itinerary-advisor');
@@ -85,6 +86,8 @@ class AgentDispatcher {
       : null;
 
     this.llm = new LLMManager();
+    // 动态信任引擎（三维信任 + Beta 贝叶斯更新 + 降权/锁定）
+    this.trustEngine = new TrustEngine();
     if (llmConfig.provider) {
       this.llm.register(llmConfig.provider, llmConfig);
       this.llm.switchProvider(llmConfig.provider);
@@ -200,18 +203,29 @@ class AgentDispatcher {
     };
 
     try {
-      // ─── 安全防线 1：输入过滤 ───
+      // ─── 安全防线 1：输入过滤（启用信任标签与输入域隔离） ───
       state.phase = 'GUARDRAIL_CHECK';
-      const guardResult = this.guardrail.check(text);
+      // 信任主体：终端ID > 用户ID > anonymous
+      const trustSubject = `${terminalId || userId || 'anonymous'}`;
+      state.trustSubject = trustSubject;
+
+      // taggedCheck = check() + 输入域隔离 + tagTrustLevel（启用间接注入检测）
+      const guardResult = this.guardrail.taggedCheck(text, 'user');
 
       state.audit.push({
         phase: 'guardrail',
         flag: guardResult.flag,
         reason: guardResult.reason,
+        domain: guardResult.domain,
+        domainLevel: guardResult.domainLevel,
         timestamp: new Date().toISOString(),
       });
 
       if (!guardResult.isSafe) {
+        // 注入/拦截 → 负面证据（Beta 贝叶斯更新）：行为大权重 + 会话中等权重
+        // 恶意输入既破坏行为可信度，也表明会话质量差，两维联动使信任"降得快"
+        this.trustEngine.recordBehavior(trustSubject, false, 2.0);
+        this.trustEngine.recordContext(trustSubject, false, 1.0);
         return this._errorResponse(state, '安全拦截', `检测到潜在安全风险: ${guardResult.reason}`);
       }
 
@@ -272,6 +286,37 @@ class AgentDispatcher {
         timestamp: new Date().toISOString(),
       });
 
+      // ─── 安全防线 2.5：三维动态信任引擎仲裁 ───
+      const trustStatus = this.trustEngine.getStatus(trustSubject);
+      const trustVerdict = this.trustEngine.evaluate(trustSubject, action);
+
+      state.trust = {
+        subject: trustSubject,
+        score: trustStatus.score,
+        level: trustStatus.level,
+        behaviorScore: trustStatus.behaviorScore,
+        contextScore: trustStatus.contextScore,
+        terminalScore: trustStatus.terminalScore,
+        verdict: trustVerdict.allow ? 'allow' : 'deny',
+      };
+      state.audit.push({
+        phase: 'trust',
+        subject: trustSubject,
+        score: trustStatus.score,
+        level: trustStatus.level,
+        verdict: trustVerdict.allow ? 'allow' : 'deny',
+        restricted: trustVerdict.restricted || false,
+        reason: trustVerdict.reason,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (!trustVerdict.allow) {
+        // 请求被拒 → 负面证据：行为 + 会话
+        this.trustEngine.recordBehavior(trustSubject, false, 1.0);
+        this.trustEngine.recordContext(trustSubject, false, 0.5);
+        return this._errorResponse(state, '信任受限', trustVerdict.reason);
+      }
+
       // ─── 规划与执行：路由到对应处理模块 ───
       state.phase = 'ACTION_ROUTE';
       let responseText;
@@ -306,6 +351,14 @@ class AgentDispatcher {
 
       // JIT 令牌用毕作废（一次性、防重用）
       const jitRevoked = this._revokeJit(state);
+
+      // 成功完成交互 → 正面证据（Beta 贝叶斯更新）
+      // 行为 0.2 / 会话 0.3 / 终端 0.1：正向证据增量远小于负面拦截(1.0)，保证"降得快、升得慢"
+      if (state.trustSubject) {
+        this.trustEngine.recordBehavior(state.trustSubject, true, 0.2);
+        this.trustEngine.recordContext(state.trustSubject, true, 0.3);
+        this.trustEngine.recordTerminal(state.trustSubject, true, 0.1);
+      }
 
       // 异步记录交互日志与 PEP 决策（不阻塞响应）
       this._logInteraction(state, perception, responseText).catch(console.error);
@@ -744,6 +797,22 @@ class AgentDispatcher {
     const timeWindow = params.timeWindow || 30;
     const report = await this.securityAgent.analyze(timeWindow);
     return report;
+  }
+
+  /**
+   * 管理端：信任引擎全景快照（主体 / 分数 / 等级 / 三维参数）
+   */
+  getTrustSnapshot() {
+    return {
+      config: {
+        behaveWeight: this.trustEngine.behaviorWeight,
+        contextWeight: this.trustEngine.contextWeight,
+        terminalWeight: this.trustEngine.terminalWeight,
+        downgradeThreshold: this.trustEngine.downgradeThreshold,
+        lockThreshold: this.trustEngine.lockThreshold,
+      },
+      subjects: this.trustEngine.snapshot(),
+    };
   }
 
   /**

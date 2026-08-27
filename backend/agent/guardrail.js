@@ -32,6 +32,8 @@ class InputGuardrail {
       /\b(jailbreak|bypass|exploit|hack)/i,
       // 中文注入模式
       /忽略.*之前.*的.*指令/i,
+      /忽略.*之前.*(所有|全部|任何|以上|上文|先前).*指令/i,
+      /(忽略|无视).*(以上|上面|上文).*(内容|指令|对话|消息|规则|限制)/i,
       /忘记.*之前.*的/i,
       /你(现在|应该)是.*一个/i,
       /系统提示词/i,
@@ -82,6 +84,24 @@ class InputGuardrail {
       /window\.(location|eval)/i,
     ];
 
+    // ── 间接注入检测 (Indirect Prompt Injection) ──
+    // 场景：攻击者把指令"藏"在外部内容（网页/邮件/文档/贴文）里，诱导 Agent
+    // 在引用、总结那段内容时顺带执行隐藏指令（参考 ICLR 2025 Prompt Infection）。
+    // 特征 = 外部来源声明 / 引用运算符 + 指令性动词 的组合。
+    this.indirectInjectionPatterns = [
+      // 英文：来自下方/附上的内容 + 指令
+      /\b(from|below|following|attached|previous)\b.{0,30}\b(content|text|message|email|webpage|article|instructions)\b/i,
+      /\b(ignore|override|forget|disregard)\b.{0,80}\b(conversation|dialogue|chat|context|above)\b/i,
+      /\b(simulate|pretend|act as)\b.{0,60}\b(ai|assistant|model|system|admin)\b/i,
+      /\b(print|reveal|output|show me|leak)\b.{0,40}\b(system|prompt|instructions?|password|secret|token|api[_-]?key)\b/i,
+      /<[^>]{1,80}>\s*(run|execute|call|please)\b/i,
+      // 中文：引用外部内容 + 指令
+      /(以下|下面|上面的|下面是|上面是|从|在).{0,25}(内容|文本|文字|网页|邮件|帖子|文章|文档|评论|通告).{0,30}(忽略|无视|遵守|执行|照做|按|照办)/,
+      /(假装|扮演|模拟|伪装).{0,25}(系统|管理员|ai|模型|助手)/,
+      /(粘贴|复制|引用|读取).{0,25}(内容|文本|文字).{0,35}(然后|接着|并且|再).{0,20}(请|帮|执行|回复)/,
+      /(从|在).{0,12}(网页|文档|邮件|帖子|评论|通告).{0,20}(读取|提取|复制).{0,15}(并|然后)/,
+    ];
+
     // PII 检测（只标记，不阻止）
     this.piiPatterns = {
       id_card: /(\d{6})(\d{4})(\d{4})(\d{3}[Xx\d])/,
@@ -113,6 +133,18 @@ class InputGuardrail {
     for (const pattern of this.injectionPatterns) {
       if (pattern.test(cleaned)) {
         return { isSafe: false, flag: 'prompt_injection', reason: '检测到可能的提示词注入攻击', sanitized: '' };
+      }
+    }
+
+    // 3.5 间接注入检测（夹带在外部内容里的隐藏指令）
+    for (const pattern of this.indirectInjectionPatterns) {
+      if (pattern.test(cleaned)) {
+        return {
+          isSafe: false,
+          flag: 'indirect_prompt_injection',
+          reason: '检测到间接注入特征：外部内容中夹带指令性语言',
+          sanitized: '',
+        };
       }
     }
 
@@ -200,6 +232,91 @@ class InputGuardrail {
       _timestamp: Date.now(),
       content,
     };
+  }
+
+  /**
+   * 输入域隔离 (Input Domain Isolation)
+   * 判断输入属于哪个"域"，防止域穿越：
+   *   - user               用户自然语言（信任边界内）
+   *   - suspicious_system  试图伪装成系统/模型指令
+   *   - untrusted_external 外部内容引用（网页/邮件/文档/贴文）→ 按最低信任隔离
+   * @param {string} input
+   * @returns {{domain:string, level:string, reason:string}}
+   */
+  classifyDomain(input) {
+    if (!input || typeof input !== 'string') {
+      return { domain: 'invalid', level: 'untrusted', reason: '无效输入' };
+    }
+    const cleaned = input.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+    if (!cleaned) {
+      return { domain: 'invalid', level: 'untrusted', reason: '空输入' };
+    }
+
+    // 间接注入特征 → 外部不可信域
+    for (const pattern of this.indirectInjectionPatterns) {
+      if (pattern.test(cleaned)) {
+        return { domain: 'untrusted_external', level: 'untrusted', reason: '检测到间接注入特征，判为外部不可信域' };
+      }
+    }
+
+    // 显式外部来源声明（引用网页/邮件/文档等）→ 外部不可信域
+    if (/(以下|以下是|下面|上述|above|below|following|webpage?|email|document|帖子|网页|邮件|文档|评论)/i.test(cleaned) &&
+        /(内容|text|content)/i.test(cleaned)) {
+      return { domain: 'untrusted_external', level: 'untrusted', reason: '引用外部内容，按不可信域隔离' };
+    }
+
+    // 试图伪装系统/模型域
+    if (/^\s*(system|assistant|model)\s*[:=]/i.test(cleaned) ||
+        /<\s*system\s*>|\[SYSTEM\]|你是\s*系统/i.test(cleaned)) {
+      return { domain: 'suspicious_system', level: 'verified', reason: '疑似伪装系统域输入' };
+    }
+
+    return { domain: 'user', level: 'user_sanitized', reason: '用户域输入' };
+  }
+
+  /**
+   * 输入域隔离：对输入打域标签，返回带信任标签的结构化结果
+   * @param {string} input
+   * @returns {{domain, level, reason, trust, sanitized}}
+   */
+  isolateInput(input) {
+    const domain = this.classifyDomain(input);
+    const result = this.check(input);
+    return {
+      ...domain,
+      trust: this.tagTrustLevel({ flag: result.flag, sanitized: result.sanitized }, domain.level),
+      sanitized: result.sanitized,
+      flag: result.flag,
+    };
+  }
+
+  /**
+   * 带信任标签的完整检测（= 启用 tagTrustLevel 的统一入口）
+   * 在 check() 结果之上叠加输入域信任标签，供下游（dispatcher/记忆层）消费
+   * @param {string} input 用户输入
+   * @param {string} source 来源标识（默认 'user'）
+   */
+  taggedCheck(input, source = 'user') {
+    const result = this.check(input);
+    let domain = this.classifyDomain(input);
+
+    // 已被安全检测拦截的内容 → 无论原始来源域，一律按不可信处理
+    if (!result.isSafe) {
+      domain = { domain: 'blocked_input', level: 'untrusted', reason: `已被拦截: ${result.reason}` };
+    }
+
+    // 启用信任标签：无论拦截与否，都携带可审计的来源域信息
+    const taggedContent = {
+      flag: result.flag,
+      reason: result.reason,
+      sanitized: result.sanitized,
+      piiTypes: result.piiTypes || [],
+      source,
+    };
+    result.trust = this.tagTrustLevel(taggedContent, domain.level);
+    result.domain = domain.domain;
+    result.domainLevel = domain.level;
+    return result;
   }
 }
 

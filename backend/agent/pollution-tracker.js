@@ -22,6 +22,7 @@
  */
 
 const crypto = require('crypto');
+const { simhash, hamming, toHex, SIMHASH_THRESHOLD } = require('./simhash');
 
 /** 攻击来源类型固定枚举（与 overview/attack-distribution 一致） */
 const SOURCE_TYPES = Object.freeze({
@@ -35,6 +36,7 @@ const SOURCE_TYPES = Object.freeze({
 class PollutionTracker {
   constructor() {
     this._fps = new Map(); // fingerprint -> entry
+    this._simValues = new Map(); // fingerprint -> simhash 数值（供近似归并比对）
     this._seq = 0;
   }
 
@@ -47,16 +49,34 @@ class PollutionTracker {
   /**
    * 登记一条污染指纹（命中防御动作时调用）
    * @param {Object} opts
-   *   @param {string} opts.fingerprint  指纹值（不传则对 content 自动计算）
-   *   @param {string} opts.fingerprintType sm3 | simhash（默认 sm3）
+   *   @param {string} opts.fingerprint  指纹值（不传则按 fingerprintType 自动计算）
+   *   @param {string} opts.fingerprintType sm3（精确摘要）| simhash（近似指纹，默认 sm3）
    *   @param {string} opts.sourceType   攻击来源类型（SOURCE_TYPES 之一）
    *   @param {string} opts.content      原始内容（生成指纹用）
    *   @param {string} opts.session      会话/主体标识（用于跨会话去重）
    *   @param {string} opts.reason       拦截原因（写入 lastReason）
+   *   @param {bigint} [opts.simValue]   显式传入的 simhash 数值（指纹类型为 simhash 时优先使用）
    * @returns {Object} 当前指纹条目（外部可读）
    */
-  register({ fingerprint, fingerprintType = 'sm3', sourceType, content = '', session = 'unknown', reason = '' }) {
-    const fp = fingerprint || PollutionTracker.hash(content + '|' + sourceType);
+  register({ fingerprint, fingerprintType = 'sm3', sourceType, content = '', session = 'unknown', reason = '', simValue }) {
+    let fp = fingerprint;
+    let approxMerged = false;
+
+    // SimHash 近似指纹：未显式给 fingerprint 时，与已登记指纹做海明距离归并，
+    // 使"变体攻击"归并到同一家族指纹，抗混淆。
+    if (!fp && fingerprintType === 'simhash') {
+      const value = simValue !== undefined ? simValue : simhash(content);
+      for (const [existingFp, v] of this._simValues) {
+        if (hamming(value, v) <= SIMHASH_THRESHOLD) {
+          fp = existingFp;
+          approxMerged = true;
+          break;
+        }
+      }
+      if (!approxMerged) fp = toHex(value);
+    }
+
+    fp = fp || PollutionTracker.hash(content + '|' + sourceType);
     const now = new Date().toISOString();
 
     if (this._fps.has(fp)) {
@@ -69,6 +89,8 @@ class PollutionTracker {
         entry.sessions.add(String(session));
       }
       entry.crossSessionHits = entry.sessions.size;
+      // 近似归并命中数（变体攻击合并统计）
+      if (approxMerged) entry.mergedCount = (entry.mergedCount || 0) + 1;
       return entry;
     }
 
@@ -86,6 +108,10 @@ class PollutionTracker {
       lastReason: reason || '',
     };
     this._fps.set(fp, entry);
+    // 记录 simhash 数值供后续近似归并比对
+    if (fingerprintType === 'simhash') {
+      this._simValues.set(fp, simValue !== undefined ? simValue : simhash(content));
+    }
     return entry;
   }
 
@@ -102,6 +128,7 @@ class PollutionTracker {
         lastSeen: e.lastSeen,
         hitCount: e.hitCount,
         crossSessionHits: e.crossSessionHits,
+        mergedCount: e.mergedCount || 0,
         immune: e.immune,
         reason: e.lastReason,
         // 命中过的会话标识（供溯源血缘链构建）

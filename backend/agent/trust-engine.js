@@ -70,6 +70,50 @@ class TrustEngine {
 
     // 内部状态：subjectId -> { behavior:{alpha,beta}, context:{alpha,beta}, terminal:{alpha,beta}, updatedAt }
     this._state = new Map();
+
+    // 分数历史（信任曲线）：subjectId -> [{ timestamp, score }]，供 trust/history 展示
+    this._history = new Map();
+    // 会话元信息：subjectId -> { role?, reason? }（由 dispatcher 在评估时登记）
+    this._meta = new Map();
+  }
+
+  // ───────────────────────── 信任曲线历史 ─────────────────────────
+
+  /** 记录一个信任分数快照点（相同分数 5s 内合并，避免抖动刷屏） */
+  _pushHistory(subject, score) {
+    let arr = this._history.get(subject);
+    if (!arr) {
+      arr = [];
+      this._history.set(subject, arr);
+    }
+    const now = Date.now();
+    const last = arr[arr.length - 1];
+    if (last && last.score === score && now - last.timestamp < 5000) {
+      last.timestamp = now;
+      return;
+    }
+    arr.push({ timestamp: now, score });
+  }
+
+  /** 获取某会话的信任分数历史（按时间升序） */
+  getHistory(subject) {
+    const arr = this._history.get(String(subject)) || [];
+    return arr
+      .map((p) => ({ timestamp: p.timestamp, score: p.score }))
+      .sort((a, b) => a.timestamp - b.timestamp);
+  }
+
+  // ───────────────────────── 会话元信息 ─────────────────────────
+
+  /** 登记/合并会话元信息（role、reason 等） */
+  setMeta(subject, meta = {}) {
+    const cur = this._meta.get(String(subject)) || {};
+    this._meta.set(String(subject), Object.assign({}, cur, meta));
+  }
+
+  /** 读取会话元信息 */
+  getMeta(subject) {
+    return this._meta.get(String(subject)) || {};
   }
 
   // ───────────────────────── 内部工具 ─────────────────────────
@@ -127,6 +171,7 @@ class TrustEngine {
    * @param {number} weight 证据强度权重（默认 1）
    */
   record(subject, dim, positive, weight = 1) {
+    const existed = this._state.has(subject);
     const entry = this._getEntry(subject);
     const vars = entry[dim] || (entry[dim] = this._newVars());
     if (positive) {
@@ -135,6 +180,11 @@ class TrustEngine {
       vars.beta += weight;
     }
     entry.updatedAt = Date.now();
+    // 首次建档记录初始分数点（先验 70），随后每次证据更新记录一个快照点
+    if (!existed) {
+      this._pushHistory(subject, Math.round(this._betaScore(this._newVars()) * 100));
+    }
+    this._pushHistory(subject, this._aggregate(entry).score);
     return this._betaScore(vars);
   }
 

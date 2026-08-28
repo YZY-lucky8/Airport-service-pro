@@ -28,12 +28,32 @@ const router = express.Router();
 const crypto = require('crypto');
 const AgentDispatcher = require('../agent/dispatcher');
 // 任务一新增：管理端鉴权中间件（信任只读接口需登录）+ PEP 信任引擎元信息
-const { authMiddleware } = require('../../middleware/auth');
+const { authMiddleware, optionalAuth } = require('../../middleware/auth');
 const pepMeta = require('../agent/pep-guard');
 const { SENSITIVE_PATTERNS, ROLE_ACTIONS } = pepMeta;
+// 任务：污染指纹来源类型枚举（overview/attack-distribution 使用）
+const { SOURCE_TYPES } = require('../agent/pollution-tracker');
 
 // 全局 agent 实例（由 app.js 初始化时注入）
 let agent = null;
+
+/** 按信任等级给出默认原因（无历史裁决原因时的兜底文案） */
+function _defaultTrustReason(level) {
+  switch (level) {
+    case 'locked':
+      return '信任锁定：综合信任分低于锁定阈值，操作受限';
+    case 'downgraded':
+    case 'degraded':
+      return '信任降权：综合信任分低于降权阈值，敏感动作受限';
+    default:
+      return '信任正常：综合信任分处于正常区间，全量放行';
+  }
+}
+
+// 对外统一信任等级枚举（normal / degraded / locked），兼容引擎内部 downgraded
+function _normLevel(level) {
+  return level === 'downgraded' ? 'degraded' : (level || 'normal');
+}
 
 /**
  * 初始化 agent（由 app.js 调用）
@@ -256,6 +276,15 @@ router.get('/stats/overview', async (req, res) => {
   try {
     const pool = agent.pool;
 
+    // 当日区间（兼容 MySQL 与 SQLite：JS 计算零点，参数化查询替代 CURDATE 避免 500）
+    const _now = new Date();
+    const _dayStart = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate());
+    const _dayEnd = new Date(_dayStart.getTime() + 86400000);
+    const _pad2 = (n) => String(n).padStart(2, '0');
+    const _fmt = (d) => `${d.getFullYear()}-${_pad2(d.getMonth() + 1)}-${_pad2(d.getDate())} 00:00:00`;
+    const dayStartStr = _fmt(_dayStart);
+    const dayEndStr = _fmt(_dayEnd);
+
     // 总交互数
     const [totalRows] = await pool.query(`
       SELECT COUNT(*) as total FROM agent_interaction_log
@@ -264,17 +293,17 @@ router.get('/stats/overview', async (req, res) => {
     // 今日交互数
     const [todayRows] = await pool.query(`
       SELECT COUNT(*) as total FROM agent_interaction_log
-      WHERE DATE(created_at) = CURDATE()
-    `);
+      WHERE created_at >= ? AND created_at < ?
+    `, [dayStartStr, dayEndStr]);
 
     // 意图分布
     const [intentRows] = await pool.query(`
       SELECT intent, COUNT(*) as count
       FROM agent_interaction_log
-      WHERE DATE(created_at) = CURDATE()
+      WHERE created_at >= ? AND created_at < ?
       GROUP BY intent
       ORDER BY count DESC
-    `);
+    `, [dayStartStr, dayEndStr]);
 
     // 拦截数
     const [blockRows] = await pool.query(`
@@ -285,8 +314,8 @@ router.get('/stats/overview', async (req, res) => {
     // 平均延迟
     const [latencyRows] = await pool.query(`
       SELECT AVG(latency_ms) as avg_latency FROM agent_interaction_log
-      WHERE DATE(created_at) = CURDATE() AND latency_ms IS NOT NULL
-    `);
+      WHERE created_at >= ? AND created_at < ? AND latency_ms IS NOT NULL
+    `, [dayStartStr, dayEndStr]);
 
     // 置信度分布
     const [confRows] = await pool.query(`
@@ -295,8 +324,8 @@ router.get('/stats/overview', async (req, res) => {
         SUM(CASE WHEN confidence >= 0.5 AND confidence < 0.8 THEN 1 ELSE 0 END) as medium,
         SUM(CASE WHEN confidence < 0.5 THEN 1 ELSE 0 END) as low
       FROM agent_interaction_log
-      WHERE DATE(created_at) = CURDATE()
-    `);
+      WHERE created_at >= ? AND created_at < ?
+    `, [dayStartStr, dayEndStr]);
 
     res.json({
       success: true,
@@ -326,13 +355,19 @@ router.get('/stats/emotion', async (req, res) => {
     }
 
     // 注意：agent_interaction_log 无 emotion_intensity 列（历史遗留字段），仅按 emotion 分组计数
+    // 当日区间（兼容 MySQL 与 SQLite，替代 CURDATE）
+    const _now = new Date();
+    const _dayStart = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate());
+    const _dayEnd = new Date(_dayStart.getTime() + 86400000);
+    const _pad2 = (n) => String(n).padStart(2, '0');
+    const _fmt = (d) => `${d.getFullYear()}-${_pad2(d.getMonth() + 1)}-${_pad2(d.getDate())} 00:00:00`;
     const [rows] = await pool.query(`
       SELECT emotion, COUNT(*) as count
       FROM agent_interaction_log
-      WHERE DATE(created_at) = CURDATE() AND emotion IS NOT NULL AND emotion != '平静'
+      WHERE created_at >= ? AND created_at < ? AND emotion IS NOT NULL AND emotion != '平静'
       GROUP BY emotion
       ORDER BY count DESC
-    `);
+    `, [_fmt(_dayStart), _fmt(_dayEnd)]);
 
     res.json({ success: true, data: rows });
   } catch (error) {
@@ -626,42 +661,90 @@ function mockThresholdHistory() {
  * 决策过程：evaluate() 确定性判定 → issueToken() / verifyToken() / revokeToken()
  */
 
-// GET /api/agent/trust/status - 信任引擎状态总览
-router.get('/trust/status', authMiddleware, async (req, res) => {
+// GET /api/agent/trust/status - 会话信任状态列表
+//   两种模式：
+//   1) 旅客端：?sessionToken=xxx 时无需 Bearer token，返回该单个会话信任状态
+//      （未评估会话不报错，按默认信任 normal/70 返回）
+//   2) 管理端：携带有效 Bearer token 时返回全量会话信任状态列表
+router.get('/trust/status', optionalAuth, async (req, res) => {
   try {
-    const guard = agent && agent.pepGuard ? agent.pepGuard : null;
-    const issued = guard ? (Number.isFinite(guard.issuedCount) ? guard.issuedCount : 0) : 0;
-    const ttlSeconds = guard && guard.ttlMs ? guard.ttlMs / 1000 : 0;
+    const te = agent && agent.trustEngine ? agent.trustEngine : null;
+    const { sessionToken } = req.query;
 
-    // 决策统计（库表可用则读取，否则为 null）
-    let decisionStats = null;
-    if (agent && agent.pool) {
-      try {
-        const [rows] = await agent.pool.query(
-          'SELECT allowed, COUNT(*) AS cnt FROM pep_decision_log GROUP BY allowed'
-        );
-        decisionStats = { allow: 0, deny: 0, total: 0 };
-        for (const r of rows || []) {
-          if (r.allowed == 1) decisionStats.allow = Number(r.cnt || 0);
-          else decisionStats.deny = Number(r.cnt || 0);
-        }
-        decisionStats.total = decisionStats.allow + decisionStats.deny;
-      } catch (e) {
-        decisionStats = null;
+    // ── 模式 1：按 sessionToken 查询单个会话（旅客端无鉴权场景）──
+    if (sessionToken) {
+      const subject = String(sessionToken);
+      if (!te) {
+        return res.json({
+          success: true,
+          data: {
+            sessionId: subject,
+            role: 'passenger',
+            trustScore: 70,
+            level: 'normal',
+            reason: '信任引擎未初始化，按默认信任处理',
+            updatedAt: Date.now(),
+          },
+        });
       }
+      const status = te.getStatus(subject);
+      const meta = te.getMeta(subject);
+      const level = _normLevel(status.level);
+      return res.json({
+        success: true,
+        data: {
+          sessionId: subject,
+          role: meta.role || 'passenger',
+          trustScore: status.score,
+          level,
+          reason: meta.reason || _defaultTrustReason(level),
+          updatedAt: status.updatedAt,
+        },
+      });
     }
 
-    res.json({
-      success: true,
-      data: {
-        engine: 'PepGuardV1',
-        mode: 'deterministic',
-        rbacRoles: Object.keys(ROLE_ACTIONS),
-        sensitiveRuleCount: SENSITIVE_PATTERNS.length,
-        jit: { ttlSeconds, issuedTokens: issued },
-        decisionStats,
-      },
-    });
+    // ── 模式 2：管理端全量列表（需有效 Bearer token）──
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ success: false, error: 'UNAUTHORIZED', message: '需要管理员登录或提供 sessionToken 参数' });
+    }
+    const list = [];
+    if (te) {
+      for (const s of te.snapshot()) {
+        const meta = te.getMeta(s.subject);
+        list.push({
+          sessionId: s.subject,
+          role: meta.role || 'passenger',
+          trustScore: s.score,
+          level: _normLevel(s.level),
+          reason: meta.reason || _defaultTrustReason(s.level),
+          updatedAt: s.updatedAt,
+        });
+      }
+    }
+    // 风险优先排序：低分在前
+    list.sort((a, b) => a.trustScore - b.trustScore);
+    return res.json({ success: true, data: list });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
+  }
+});
+
+// GET /api/agent/trust/history?sessionId=xxx - 会话信任曲线（分数历史，时间升序）
+router.get('/trust/history', authMiddleware, async (req, res) => {
+  try {
+    const { sessionId } = req.query;
+    if (!sessionId) {
+      return res.status(400).json({ success: false, error: '缺少 sessionId 参数' });
+    }
+    const te = agent && agent.trustEngine ? agent.trustEngine : null;
+    if (!te) {
+      return res.status(503).json({ success: false, error: '信任引擎未初始化' });
+    }
+    const hist = te.getHistory(String(sessionId));
+    const data = hist.map((p) => ({ timestamp: new Date(p.timestamp).toISOString(), score: p.score }));
+    return res.json({ success: true, data });
   } catch (e) {
     res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
   }
@@ -724,6 +807,196 @@ router.get('/trust/trace', authMiddleware, async (req, res) => {
     res.json({ success: true, data: rows || [], total: Number(cnt) || 0, limit: lim, offset: off });
   } catch (e) {
     res.json({ success: false, message: '查询审计失败: ' + e.message, data: [], total: 0 });
+  }
+});
+
+// GET /api/agent/pollution/list - 污染指纹列表
+router.get('/pollution/list', authMiddleware, async (req, res) => {
+  try {
+    const tracker = agent && agent.pollutionTracker ? agent.pollutionTracker : null;
+    if (!tracker) {
+      return res.status(503).json({ success: false, error: '污染指纹注册表未初始化' });
+    }
+    return res.json({ success: true, data: tracker.list() });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
+  }
+});
+
+// 攻击类型固定枚举（5 类，count=0 也全部返回）
+const ATTACK_TYPES = [
+  { type: 'direct-injection', name: '直接注入' },
+  { type: 'indirect-injection', name: '间接注入' },
+  { type: 'confusion-bypass', name: '混淆绕过' },
+  { type: 'privilege-escalation', name: '越权提权' },
+  { type: 'replay-attack', name: '重放攻击' },
+];
+
+// GET /api/agent/overview/attack-distribution - 攻击类型分布
+router.get('/overview/attack-distribution', authMiddleware, async (req, res) => {
+  try {
+    const tracker = agent && agent.pollutionTracker ? agent.pollutionTracker : null;
+    const counts = tracker ? tracker.countsBySource() : {};
+    const data = ATTACK_TYPES.map((t) => ({ type: t.type, name: t.name, count: counts[t.type] || 0 }));
+    return res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
+  }
+});
+
+// GET /api/agent/overview/summary - 安全运营 KPI 总览
+//   totalBlocked 来自 pep_decision_log(allowed=0) / activeSessions·degraded·locked 来自信任快照
+router.get('/overview/summary', authMiddleware, async (req, res) => {
+  try {
+    const pool = agent && agent.pool ? agent.pool : null;
+    const te = agent && agent.trustEngine ? agent.trustEngine : null;
+
+    // 决策统计（pep_decision_log）
+    let totalDecisions = 0;
+    let totalBlocked = 0;
+    if (pool) {
+      try {
+        const [rows] = await pool.query('SELECT allowed, COUNT(*) AS cnt FROM pep_decision_log GROUP BY allowed');
+        for (const r of rows || []) {
+          const n = Number(r.cnt || 0);
+          totalDecisions += n;
+          if (Number(r.allowed) === 0) totalBlocked += n;
+        }
+      } catch (e) {
+        // 表不可用 → 保留 0
+      }
+    }
+
+    // 信任快照各 level 会话数
+    const snapshot = te ? te.snapshot() : [];
+    let degradedSessions = 0;
+    let lockedSessions = 0;
+    for (const s of snapshot) {
+      const lv = _normLevel(s.level);
+      if (lv === 'degraded') degradedSessions += 1;
+      else if (lv === 'locked') lockedSessions += 1;
+    }
+    const activeSessions = snapshot.length;
+    const blockRate = totalDecisions > 0 ? Number((totalBlocked / totalDecisions).toFixed(4)) : 0;
+
+    return res.json({
+      success: true,
+      data: {
+        totalBlocked,
+        activeSessions,
+        degradedSessions,
+        lockedSessions,
+        blockRate,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
+  }
+});
+
+// GET /api/agent/overview/trend - 拦截趋势（按天分桶，兼容 MySQL/SQLite）
+router.get('/overview/trend', authMiddleware, async (req, res) => {
+  try {
+    const pool = agent && agent.pool ? agent.pool : null;
+    if (!pool) {
+      return res.status(503).json({ success: false, error: '数据库不可用' });
+    }
+    let rows = [];
+    try {
+      [rows] = await pool.query(`
+        SELECT substr(created_at, 1, 10) AS day,
+               COUNT(*) AS total,
+               SUM(CASE WHEN allowed = 0 THEN 1 ELSE 0 END) AS blocked
+        FROM pep_decision_log
+        GROUP BY substr(created_at, 1, 10)
+        ORDER BY day ASC
+      `);
+    } catch (e) {
+      // 表不存在/查询失败 → 返回空数组（success:true）
+      rows = [];
+    }
+    const data = (rows || []).map((r) => ({
+      timestamp: `${r.day || ''} 00:00:00`,
+      blocked: Number(r.blocked) || 0,
+      total: Number(r.total) || 0,
+    }));
+    return res.json({ success: true, data });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
+  }
+});
+
+// GET /api/agent/trace/chain - 溯源血缘链（攻击来源 → 会话 → 调用 → 结果）
+//   category：source / session / call / result；无数据时返回空 nodes/links
+router.get('/trace/chain', authMiddleware, async (req, res) => {
+  try {
+    const tracker = agent && agent.pollutionTracker ? agent.pollutionTracker : null;
+    const fps = tracker ? tracker.list() : [];
+    const nodes = [];
+    const links = [];
+    const sessionNodes = new Map();
+    let seq = 0;
+    const nid = () => `n${++seq}`;
+
+    for (const f of fps) {
+      // 来源节点（攻击指纹）
+      const sourceId = nid();
+      nodes.push({
+        id: sourceId,
+        name: `攻击指纹 ${String(f.fingerprint).slice(0, 6)}`,
+        category: 'source',
+        desc: `来源类型 ${f.sourceType}（${f.fingerprintType}），命中 ${f.hitCount} 次`,
+      });
+
+      const sessions = f.sessions || [];
+      if (sessions.length === 0) {
+        // 无会话信息的独立指纹：来源 → 结果
+        const resultId = nid();
+        nodes.push({ id: resultId, name: '已拦截', category: 'result', desc: f.reason || '防御动作命中' });
+        links.push({ source: sourceId, target: resultId });
+        continue;
+      }
+
+      for (const s of sessions) {
+        // 会话节点（去重复用）
+        let sessId = sessionNodes.get(s);
+        if (!sessId) {
+          sessId = nid();
+          sessionNodes.set(s, sessId);
+          nodes.push({
+            id: sessId,
+            name: `会话 ${String(s).slice(0, 12)}`,
+            category: 'session',
+            desc: `会话标识 ${s}`,
+          });
+        }
+        links.push({ source: sourceId, target: sessId });
+
+        // 调用/决策节点
+        const callId = nid();
+        nodes.push({
+          id: callId,
+          name: `拦截调用 ${f.fingerprintType}`,
+          category: 'call',
+          desc: f.reason || '防御动作命中',
+        });
+        links.push({ source: sessId, target: callId });
+
+        // 结果节点
+        const resultId = nid();
+        nodes.push({
+          id: resultId,
+          name: '拦截',
+          category: 'result',
+          desc: `已阻止（${f.sourceType}）`,
+        });
+        links.push({ source: callId, target: resultId });
+      }
+    }
+
+    return res.json({ success: true, data: { nodes, links } });
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'INTERNAL', message: e.message });
   }
 });
 

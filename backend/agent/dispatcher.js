@@ -39,6 +39,7 @@
 
 const InputGuardrail = require('./guardrail');
 const { TrustEngine, TrustLevel } = require('./trust-engine');
+const { PollutionTracker, SOURCE_TYPES } = require('./pollution-tracker');
 const IntentClassifier = require('./intent-classifier');
 const KnowledgeRetriever = require('./knowledge-retriever');
 const ItineraryAdvisor = require('./itinerary-advisor');
@@ -88,6 +89,8 @@ class AgentDispatcher {
     this.llm = new LLMManager();
     // 动态信任引擎（三维信任 + Beta 贝叶斯更新 + 降权/锁定）
     this.trustEngine = new TrustEngine();
+    // 污染指纹注册表（防御命中登记，供安全大屏展示）
+    this.pollutionTracker = new PollutionTracker();
     if (llmConfig.provider) {
       this.llm.register(llmConfig.provider, llmConfig);
       this.llm.switchProvider(llmConfig.provider);
@@ -226,6 +229,14 @@ class AgentDispatcher {
         // 恶意输入既破坏行为可信度，也表明会话质量差，两维联动使信任"降得快"
         this.trustEngine.recordBehavior(trustSubject, false, 2.0);
         this.trustEngine.recordContext(trustSubject, false, 1.0);
+        // 污染指纹登记：仅对注入类攻击登记（输入校验类不视为攻击指纹）
+        this._registerPollution(this.pollutionTracker, {
+          flag: guardResult.flag,
+          sourceType: this._guardFlagToSource(guardResult.flag),
+          content: text,
+          session: trustSubject,
+          reason: guardResult.reason,
+        });
         return this._errorResponse(state, '安全拦截', `检测到潜在安全风险: ${guardResult.reason}`);
       }
 
@@ -270,6 +281,13 @@ class AgentDispatcher {
       });
 
       if (!pep.allowed) {
+        // 污染指纹登记：RBAC 越权 / 敏感操作拒绝 → 越权提权类
+        this._registerPollution(this.pollutionTracker, {
+          sourceType: SOURCE_TYPES.PRIVILEGE_ESCALATION,
+          content: text,
+          session: sessionKey,
+          reason: pep.reason,
+        });
         return this._errorResponse(state, '权限拒绝', pep.reason);
       }
 
@@ -310,10 +328,23 @@ class AgentDispatcher {
         timestamp: new Date().toISOString(),
       });
 
+      // 登记会话元信息（供 trust/status 展示 role 与最近裁决原因）
+      this.trustEngine.setMeta(trustSubject, {
+        role: (pep && pep.role) || 'passenger',
+        reason: trustVerdict.reason,
+      });
+
       if (!trustVerdict.allow) {
         // 请求被拒 → 负面证据：行为 + 会话
         this.trustEngine.recordBehavior(trustSubject, false, 1.0);
         this.trustEngine.recordContext(trustSubject, false, 0.5);
+        // 污染指纹登记：信任锁定/降权拦截 → 混淆绕过类（信任绕过尝试）
+        this._registerPollution(this.pollutionTracker, {
+          sourceType: SOURCE_TYPES.CONFUSION_BYPASS,
+          content: text,
+          session: trustSubject,
+          reason: trustVerdict.reason,
+        });
         return this._errorResponse(state, '信任受限', trustVerdict.reason);
       }
 
@@ -384,6 +415,43 @@ class AgentDispatcher {
       // 异常兜底：确保 JIT 令牌被作废
       this._revokeJit(state);
       return this._errorResponse(state, '系统错误', error.message);
+    }
+  }
+
+  /**
+   * 统一登记污染指纹（异常安全：登记失败不影响主流程）
+   * @param {PollutionTracker} tracker
+   * @param {Object} opts { flag?, sourceType, content, session, reason }
+   */
+  _registerPollution(tracker, opts) {
+    if (!tracker || !opts || !opts.sourceType) return;
+    try {
+      tracker.register({
+        fingerprintType: 'sm3',
+        sourceType: opts.sourceType,
+        content: opts.content || '',
+        session: opts.session || 'unknown',
+        reason: opts.reason || '',
+      });
+    } catch (e) {
+      console.error('登记污染指纹失败:', e);
+    }
+  }
+
+  /**
+   * guardrail flag → 攻击来源类型映射（仅注入类映射，输入校验类返回 null 不登记）
+   */
+  _guardFlagToSource(flag) {
+    switch (flag) {
+      case 'prompt_injection':
+      case 'sql_injection':
+      case 'command_injection':
+      case 'xss_attempt':
+        return SOURCE_TYPES.DIRECT_INJECTION;
+      case 'indirect_prompt_injection':
+        return SOURCE_TYPES.INDIRECT_INJECTION;
+      default:
+        return null;
     }
   }
 

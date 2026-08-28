@@ -230,8 +230,10 @@ class AgentDispatcher {
         this.trustEngine.recordBehavior(trustSubject, false, 2.0);
         this.trustEngine.recordContext(trustSubject, false, 1.0);
         // 污染指纹登记：仅对注入类攻击登记（输入校验类不视为攻击指纹）
+        // 注入类采用 simhash 家族归并，变体攻击归并为同一指纹，抗混淆
         this._registerPollution(this.pollutionTracker, {
           flag: guardResult.flag,
+          fingerprintType: 'simhash',
           sourceType: this._guardFlagToSource(guardResult.flag),
           content: text,
           session: trustSubject,
@@ -427,7 +429,8 @@ class AgentDispatcher {
     if (!tracker || !opts || !opts.sourceType) return;
     try {
       tracker.register({
-        fingerprintType: 'sm3',
+        // 注入类攻击默认走 simhash 家族归并（抗变体），PEP/信任降权走 sm3 精确
+        fingerprintType: opts.fingerprintType || 'sm3',
         sourceType: opts.sourceType,
         content: opts.content || '',
         session: opts.session || 'unknown',

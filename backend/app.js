@@ -845,6 +845,15 @@ try {
 } catch (e) {
   console.log('⚠️  智能体路由加载失败（模块未找到）:', e.message);
 }
+// 信任免疫记忆层 3 接口（段琼馨 D3 交付）
+let initTrustRouter = null;
+try {
+  const trustMod = require('./routes/trust');
+  initTrustRouter = trustMod.initTrustRouter;
+  app.use('/api/trust', trustMod.router);
+} catch (e) {
+  console.log('⚠️  信任免疫路由加载失败:', e.message);
+}
 app.use(securityDemoRouter);
 // ============================================================
 // 统一 404（统一反馈隐藏：未知路由返回统一短 JSON，不暴露框架细节）
@@ -887,6 +896,9 @@ server.listen(port, async () => {
       initAgent(db.pool);
     } catch (e) {
       console.log(' ⚠️  智能体初始化失败:', e.message);
+    }
+    if (initTrustRouter) {
+      try { initTrustRouter(db.pool); } catch (e) { console.log(' ⚠️  信任免疫初始化失败:', e.message); }
     }
   } catch (err) {
     console.error(' ❌ Database connection failed:', err.message);

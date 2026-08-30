@@ -24,7 +24,7 @@ function handleRoute() {
         return;
     }
 
-    document.getElementById('view-login').style.display = route.auth ? 'none' : 'block';
+    document.getElementById('view-login').style.display = route.auth ? 'none' : '';
     document.getElementById('view-main').style.display  = route.auth ? 'block' : 'none';
 
     // 导航高亮

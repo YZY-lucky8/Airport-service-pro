@@ -2583,7 +2583,7 @@
       }
       // 【新增】本地FAQ知识库兜底（Agent 不可用时）
       if (handleFAQ(text)) return;
-      addChatMessage('🤔 我没太明白，您能换种方式说吗？');
+      addChatMessage('🤔 没听清, 试试说"值机"、"安检"、"登机口", 或说"老年模式"切换大字模式');
       speakText('请再说一次');
     }
 
@@ -2644,7 +2644,7 @@
       '交通中心': { lng: 116.611734, lat: 40.077954, type: 'transport', icon: '🚌', desc: 'T3交通中心,机场快轨/大巴/出租' }
     };
     const CMD_MAP = { checkin: '值机柜台', security: '安检区', gate: '登机口A12', restaurant: '餐厅', toilet: '卫生间', shop: '免税店', baggage: '行李提取', lost: '失物招领', special: '特殊旅客', transport: '交通中心' };
-    const KEYWORDS = { checkin: ['值机', '登机牌', '选座'], security: ['安检'], gate: ['登机口', 'A12'], restaurant: ['餐厅', '吃饭'], toilet: ['卫生间', '厕所'], shop: ['免税店'], baggage: ['行李'], lost: ['失物'], special: ['轮椅', '老人服务'], transport: ['交通', '大巴'], elder: ['老人机', '放大字体', '大字'], normal: ['正常模式'] };
+    const KEYWORDS = { checkin: ['值机', '登机牌', '选座'], security: ['安检'], gate: ['登机口', 'A12'], restaurant: ['餐厅', '吃饭'], toilet: ['卫生间', '厕所'], shop: ['免税店'], baggage: ['行李'], lost: ['失物'], special: ['轮椅', '老人服务'], transport: ['交通', '大巴'], elder: ['老人机', '放大字体', '大字', '老年模式', '老人模式'], normal: ['正常模式', '恢复正常'] };
 
     let map = null, routePolyline = null;
     let selectedSeat = null, currentFilter = 'all';
@@ -2819,6 +2819,19 @@
       if (routePolyline) routePolyline.setMap(null);
       routePolyline = new AMap.Polyline({ path: [[from.lng, from.lat], [to.lng, to.lat]], strokeColor: '#f44336', strokeWeight: 6, zIndex: 100 });
       routePolyline.setMap(map);
+    }
+
+    // ===== 老年模式切换 =====
+    function enableElderMode() {
+      document.body.classList.add('elder-mode');
+      addChatMessage('🔔 已切换到 老年模式，字体和按钮已放大');
+      speakText('已切换到老年模式');
+    }
+
+    function disableElderMode() {
+      document.body.classList.remove('elder-mode');
+      addChatMessage('🔔 已退出 老年模式，已恢复普通显示');
+      speakText('已恢复为普通模式');
     }
 
     function initMap() {
@@ -2999,6 +3012,7 @@
       let script = document.createElement('script');
       script.src = 'https://webapi.amap.com/maps?v=2.0&key=37998adb2d5488949647812aebeaf528';
       script.onload = initMap;
+      script.onerror = () => { addChatMessage('⚠️ 地图加载失败，请检查网络或 API Key（可能在本地直接打开文件时会被阻止）'); };
       document.head.appendChild(script);
       initVoice();
       initTextInput();

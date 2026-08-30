@@ -47,8 +47,10 @@ class BloomFilter {
     this.bits = new Uint8Array(Math.ceil(m / 8));
   }
   insert(item) {
-    let h1 = this._hash1(item);
-    let h2 = this._hash2(item);
+    if (item === undefined || item === null) return;
+    const s = typeof item === 'string' ? item : String(item);
+    let h1 = this._hash1(s);
+    let h2 = this._hash2(s);
     for (let i = 0; i < this.hashCount; i++) {
       const pos = (h1 + i * h2) % this.size;
       const byte = Math.floor(pos / 8);
@@ -57,8 +59,10 @@ class BloomFilter {
     }
   }
   has(item) {
-    let h1 = this._hash1(item);
-    let h2 = this._hash2(item);
+    if (item === undefined || item === null) return false;
+    const s = typeof item === 'string' ? item : String(item);
+    let h1 = this._hash1(s);
+    let h2 = this._hash2(s);
     for (let i = 0; i < this.hashCount; i++) {
       const pos = (h1 + i * h2) % this.size;
       const byte = Math.floor(pos / 8);
@@ -68,7 +72,8 @@ class BloomFilter {
     return true;
   }
   _hash1(str) {
-    if (!str) return 0;
+    if (str === undefined || str === null) return 0;
+    if (typeof str !== 'string') str = String(str);
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
@@ -76,7 +81,8 @@ class BloomFilter {
     return Math.abs(hash);
   }
   _hash2(str) {
-    if (!str) return 0;
+    if (str === undefined || str === null) return 0;
+    if (typeof str !== 'string') str = String(str);
     let hash = 5381;
     for (let i = 0; i < str.length; i++) {
       hash = ((hash << 5) + hash + str.charCodeAt(i)) | 0;
@@ -99,7 +105,10 @@ bannedIPs.forEach(ip => ipBlacklistFilter.insert(ip));
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
+// 静态资源：支持根路径（/）以及兼容旧路径 /frontend/*
+const frontendStatic = path.join(__dirname, '../frontend');
+app.use(express.static(frontendStatic));
+app.use('/frontend', express.static(frontendStatic));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── 安全 HTTP 头 ──

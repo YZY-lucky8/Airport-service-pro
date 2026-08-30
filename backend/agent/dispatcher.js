@@ -48,6 +48,7 @@ const SecurityManagementAgent = require('./security-management');
 const PepGuard = require('./pep-guard');
 const { LLMManager } = require('./llm-adapter');
 const { OpenAI } = require('openai');
+const { ArtiiEngine, EpiState } = require('./artii');
 
 // 允许的动作白名单（最小权限原则）
 const ALLOWED_ACTIONS = new Set([
@@ -91,6 +92,18 @@ class AgentDispatcher {
     this.trustEngine = new TrustEngine();
     // 污染指纹注册表（防御命中登记，供安全大屏展示）
     this.pollutionTracker = new PollutionTracker();
+    // ── ARTII 对抗鲁棒信任-感染免疫引擎（新算法，三角耦合）──
+    //   构件1 FTRL+Π_ρ 鲁棒信任更新 / 构件2 信任驱动 SEIR 状态机 /
+    //   构件3 ℓ∞ 认证下界与隔离边界 δ*
+    this.artii = new ArtiiEngine({
+      dims: ['behavior', 'context', 'terminal'],
+      weights: [0.4, 0.35, 0.25],
+      eta: 0.1,
+      rho: 1.5,
+      activeThreshold: 0.3, // 对齐 trust-engine 锁定阈值 30
+      lockThreshold: 0.3,
+      seir: { beta: 0.3, gamma: 0.5, kappa: 1.5, mu: 0.4 },
+    });
     if (llmConfig.provider) {
       this.llm.register(llmConfig.provider, llmConfig);
       this.llm.switchProvider(llmConfig.provider);
@@ -229,6 +242,10 @@ class AgentDispatcher {
         // 恶意输入既破坏行为可信度，也表明会话质量差，两维联动使信任"降得快"
         this.trustEngine.recordBehavior(trustSubject, false, 2.0);
         this.trustEngine.recordContext(trustSubject, false, 1.0);
+        // ── ARTII 构件1/2：登记对抗鲁棒证据（污染路径，计入污染预算 C）──
+        //   负面证据驱动 SEIR 暴露/感染，为后续隔离裁决累积流行病学依据
+        this.artii.observeBlocked(trustSubject, 'behavior', -1.0);
+        this.artii.observeBlocked(trustSubject, 'context', -0.6);
         // 污染指纹登记：仅对注入类攻击登记（输入校验类不视为攻击指纹）
         // 注入类采用 simhash 家族归并，变体攻击归并为同一指纹，抗混淆
         this._registerPollution(this.pollutionTracker, {
@@ -283,6 +300,9 @@ class AgentDispatcher {
       });
 
       if (!pep.allowed) {
+        // ── ARTII：越权提权负证据（RBAC 拒绝属高敏感攻击路径）──
+        this.artii.observeBlocked(trustSubject, 'behavior', -0.8);
+        this.artii.observeBlocked(trustSubject, 'context', -0.4);
         // 污染指纹登记：RBAC 越权 / 敏感操作拒绝 → 越权提权类
         this._registerPollution(this.pollutionTracker, {
           sourceType: SOURCE_TYPES.PRIVILEGE_ESCALATION,
@@ -340,6 +360,9 @@ class AgentDispatcher {
         // 请求被拒 → 负面证据：行为 + 会话
         this.trustEngine.recordBehavior(trustSubject, false, 1.0);
         this.trustEngine.recordContext(trustSubject, false, 0.5);
+        // ── ARTII：信任锁定/降权拦截 → 混淆绕过类负证据 ──
+        this.artii.observeBlocked(trustSubject, 'behavior', -0.5);
+        this.artii.observeBlocked(trustSubject, 'context', -0.3);
         // 污染指纹登记：信任锁定/降权拦截 → 混淆绕过类（信任绕过尝试）
         this._registerPollution(this.pollutionTracker, {
           sourceType: SOURCE_TYPES.CONFUSION_BYPASS,
@@ -348,6 +371,45 @@ class AgentDispatcher {
           reason: trustVerdict.reason,
         });
         return this._errorResponse(state, '信任受限', trustVerdict.reason);
+      }
+
+      // ─── 安全防线 2.6：ARTII 对抗鲁棒信任-感染免疫裁决（新算法）───
+      //   trust-engine 通过后，再由 ARTII 做流行病学免疫复核：
+      //   构件2 SEIR 状态机推进（暴露E/感染I 触发隔离）、构件3 认证下界审计。
+      //   感染态(I) 或鲁棒信任跌破锁定阈值 → 强制隔离；暴露态(E) → 敏感动作受限。
+      const artiiResult = this.artii.verdict(trustSubject, {
+        sensitiveAction: this._isSensitiveAction(action),
+      });
+      state.artii = {
+        state: artiiResult.state,
+        thetaHat: artiiResult.thetaHat,
+        re: artiiResult.re,
+        deltaStar: artiiResult.deltaStar,
+        certifiedLowerBound: artiiResult.certifiedLowerBound,
+        weights: artiiResult.weights,
+      };
+      state.audit.push({
+        phase: 'artii',
+        state: artiiResult.state,
+        thetaHat: artiiResult.thetaHat,
+        re: artiiResult.re,
+        deltaStar: artiiResult.deltaStar,
+        certifiedLowerBound: artiiResult.certifiedLowerBound,
+        allow: artiiResult.allow,
+        restricted: artiiResult.restricted,
+        reason: artiiResult.reason,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (!artiiResult.allow) {
+        // ARTII 触发隔离/锁定：登记混淆绕过指纹（信任操纵尝试）
+        this._registerPollution(this.pollutionTracker, {
+          sourceType: SOURCE_TYPES.CONFUSION_BYPASS,
+          content: text,
+          session: trustSubject,
+          reason: artiiResult.reason,
+        });
+        return this._errorResponse(state, 'ARTII 免疫隔离', artiiResult.reason);
       }
 
       // ─── 规划与执行：路由到对应处理模块 ───
@@ -391,6 +453,10 @@ class AgentDispatcher {
         this.trustEngine.recordBehavior(state.trustSubject, true, 0.2);
         this.trustEngine.recordContext(state.trustSubject, true, 0.3);
         this.trustEngine.recordTerminal(state.trustSubject, true, 0.1);
+        // ── ARTII 构件1：成功交互 → 正向对抗鲁棒证据（驱动 SEIR 恢复 R 态）──
+        this.artii.observeOk(state.trustSubject, 'behavior', 0.2);
+        this.artii.observeOk(state.trustSubject, 'context', 0.15);
+        this.artii.observeOk(state.trustSubject, 'terminal', 0.1);
       }
 
       // 异步记录交互日志与 PEP 决策（不阻塞响应）
@@ -884,6 +950,50 @@ class AgentDispatcher {
       },
       subjects: this.trustEngine.snapshot(),
     };
+  }
+
+  /**
+   * 管理端：ARTII 免疫引擎全景快照（主体 / 流行病学状态 / 鲁棒信任 / Re / δ*）
+   */
+  getArtiiSnapshot() {
+    const subjects = {};
+    const snap = this.artii.seir.snapshot();
+    for (const [subject, state] of Object.entries(snap)) {
+      const rt = this.artii.robustTrust(subject);
+      const re = this.artii.seir.effectiveRegNumber(rt.thetaHat);
+      const cb = this.artii.certifiedBound(subject, 0.1);
+      subjects[subject] = {
+        state,
+        thetaHat: rt.thetaHat,
+        re,
+        deltaStar: cb.deltaStar,
+        certifiedLowerBound: cb.lowerBound,
+        pollution: rt.pollution,
+      };
+    }
+    return {
+      config: {
+        dims: this.artii.dims,
+        weights: this.artii.weights,
+        activeThreshold: this.artii.activeThreshold,
+        lockThreshold: this.artii.lockThreshold,
+        seir: {
+          beta: this.artii.seir.beta,
+          gamma: this.artii.seir.gamma,
+          kappa: this.artii.seir.kappa,
+          mu: this.artii.seir.mu,
+        },
+      },
+      subjects,
+      quarantines: this.artii.quarantines,
+    };
+  }
+
+  /**
+   * 动作是否属敏感操作（暴露态(E)下受限）
+   */
+  _isSensitiveAction(action) {
+    return action === 'check_in' || action === 'security_analyze';
   }
 
   /**

@@ -4,7 +4,7 @@
  * USE_MOCK = false ：请求后端真实接口（D4 联调时切换）
  * 页面代码只调 apiGet / apiPost / doLogin / logout，不感知 mock/真实。
  */
-const USE_MOCK = false;
+const USE_MOCK = true;
 const TOKEN_KEY = 'demo_token';   // 独立 token key，避免与现有管理端 admin_token 冲突
 
 function getToken() { return localStorage.getItem(TOKEN_KEY); }

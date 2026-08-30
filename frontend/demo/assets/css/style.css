@@ -60,6 +60,14 @@ body::after {
 /* 视图切换 */
 .view { position: relative; z-index: 1; width: 100%; min-height: 100vh; }
 .view-center { display: flex; align-items: center; justify-content: center; }
+/* 登录视图强制正中心：显式声明高度与 flex，避免被其它布局干扰 */
+#view-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
 
 /* ============ 登录卡片（毛玻璃） ============ */
 .login-card {

@@ -1580,6 +1580,30 @@
       }
     }
 
+    /* 信任状态提示条（D3 新增：降权橙条/锁定红条） */
+    .trust-notice {
+      width: calc(100% - 40px);
+      margin: 10px 20px 0;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.6;
+      box-sizing: border-box;
+      transition: opacity .3s;
+      z-index: 50;
+    }
+    .trust-hidden { display: none; }
+    .trust-degraded {
+      background: #fff7e6;
+      border: 1px solid #ffa726;
+      color: #b26a00;
+    }
+    .trust-locked {
+      background: #ffecec;
+      border: 1px solid #ff5252;
+      color: #c62828;
+    }
     /* 状态文案区（chat-header 副标题） */
     .chat-header-sub {
       min-height: 18px;
@@ -1687,6 +1711,7 @@
 
   <div id="mainApp">
     <div class="top-banner"><span>✈️</span> 首都机场T3智慧服务 · 全程陪伴</div>
+    <div id="trustNoticeBar" class="trust-notice trust-hidden"></div>
     <div class="main-body">
       <div class="left-panel">
         <div class="left-panel-title">📍 快捷导航</div>
@@ -1937,7 +1962,9 @@
       listening: { text: '🎧 正在听您说话...' },
       thinking: { text: '🤔 思考中...' },
       speaking: { text: '🗣️ 正在回答...' },
-      error: { text: '😅 没听清，能再说一遍吗？' }
+      error: { text: '😅 没听清，能再说一遍吗？' },
+      degraded: { text: '⚠️ 信任降级 · 权限受限' },
+      locked: { text: '🚫 会话已安全锁定' }
     };
     // ============================================================
     // 【新增】本地FAQ知识库数据（Agent 不可用时降级）
@@ -2448,6 +2475,87 @@
     // ============================================================
     // Agent 会话管理
     // ============================================================
+    // 【D3 新增】信任状态轮询与降权提示（旅客端透明化）
+    // 每 5s 轮询 /api/agent/trust/status，按当前 sessionToken 匹配会话状态。
+    // 后端接口未就绪/404/超时 → 静默隐藏，不影响现有功能（D4 接口就绪后自动生效）。
+    // ============================================================
+    let agentTrustLevel = 'normal';   // normal / degraded / locked
+    let agentTrustReason = '';
+    let trustPollTimer = null;
+
+    function getCurrentSessionToken() { return agentSessionToken || ''; }
+
+    async function pollTrustStatus() {
+      const tok = getCurrentSessionToken();
+      if (!tok) return;
+      try {
+        const resp = await fetch('/api/agent/trust/status?sessionToken=' + encodeURIComponent(tok), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!resp.ok) return; // 接口未就绪：静默
+        const json = await resp.json();
+        if (!json || !json.success) return;
+        const d = json.data;
+        let status = null;
+        if (Array.isArray(d)) {
+          // 兼容列表返回：按 sessionToken/sessionId 匹配当前会话
+          for (const s of d) {
+            if (s && (s.sessionToken === tok || s.sessionId === tok)) { status = s; break; }
+          }
+        } else if (d && typeof d === 'object' && d.level) {
+          // 兼容对象返回：直接含 level
+          status = d;
+        }
+        if (status && status.level) {
+          applyTrustNotice(status.level, status.reason || '');
+        }
+      } catch (e) { /* 网络异常：静默，不打扰旅客 */ }
+    }
+
+    function applyTrustNotice(level, reason) {
+      const bar = document.getElementById('trustNoticeBar');
+      if (!bar) return;
+      agentTrustLevel = level;
+      agentTrustReason = reason || '';
+      if (level === 'normal') {
+        bar.className = 'trust-notice trust-hidden';
+        if (window.__trustBlockedInput) setInputBlocked(false);
+        return;
+      }
+      if (level === 'degraded') {
+        bar.className = 'trust-notice trust-degraded';
+        bar.textContent = '⚠️ 当前会话信任降级：' + (reason || '系统检测到异常行为') + '。部分功能可能受限，请规范操作。';
+        setCaptainStatus('degraded');
+        return;
+      }
+      if (level === 'locked') {
+        bar.className = 'trust-notice trust-locked';
+        bar.textContent = '🚫 当前会话已被安全锁定：' + (reason || '检测到恶意行为') + '。请暂停操作，如有疑问请联系机场工作人员。';
+        setCaptainStatus('locked');
+        setInputBlocked(true);
+      }
+    }
+
+    function setInputBlocked(blocked) {
+      window.__trustBlockedInput = blocked;
+      const input = document.getElementById('textInput');
+      const sendBtn = document.getElementById('sendBtn');
+      const micBtn = document.getElementById('micBtn');
+      if (input) {
+        input.disabled = blocked;
+        input.placeholder = blocked ? '会话已锁定，请勿继续操作' : '输入问题,如:帮我查CA1234航班、导航到安检...';
+      }
+      if (sendBtn) sendBtn.disabled = blocked;
+      if (micBtn) micBtn.disabled = blocked;
+    }
+
+    function startTrustPolling() {
+      if (trustPollTimer) clearInterval(trustPollTimer);
+      pollTrustStatus();
+      trustPollTimer = setInterval(pollTrustStatus, 5000);
+    }
+
+    // ============================================================
     async function createAgentSession() {
       try {
         const resp = await fetch('/api/agent/session/create', {
@@ -2459,6 +2567,7 @@
         if (data.success && data.session_token) {
           agentSessionToken = data.session_token;
           addChatMessage('🤖 Agent 助手已就绪,可以语音或打字交互', 'system');
+          startTrustPolling();
         }
       } catch (e) {
         console.warn('Agent session 创建失败,使用匿名模式');
@@ -2470,6 +2579,11 @@
     // 发送消息到 Agent
     // ============================================================
     async function sendToAgent(text) {
+      // D3：锁定状态下阻断发送
+      if (window.__trustBlockedInput || agentTrustLevel === 'locked') {
+        addChatMessage('🚫 会话已被安全锁定，暂时无法继续对话。如有疑问请联系机场工作人员。', 'system');
+        return;
+      }
       if (!text.trim() || isAgentReplying) return;
       isAgentReplying = true;
       setCaptainStatus('thinking');
@@ -2487,6 +2601,7 @@
           body: JSON.stringify({
             text: text,
             session_token: agentSessionToken,
+            terminal_id: agentSessionToken, // D4修复：信任主体与查询token对齐
             flight_no: 'CA1234' // 可从选择中提取
           })
         });
@@ -2583,7 +2698,7 @@
       }
       // 【新增】本地FAQ知识库兜底（Agent 不可用时）
       if (handleFAQ(text)) return;
-      addChatMessage('🤔 没听清, 试试说"值机"、"安检"、"登机口", 或说"老年模式"切换大字模式');
+      addChatMessage('🤔 我没太明白，您能换种方式说吗？');
       speakText('请再说一次');
     }
 
@@ -2644,7 +2759,7 @@
       '交通中心': { lng: 116.611734, lat: 40.077954, type: 'transport', icon: '🚌', desc: 'T3交通中心,机场快轨/大巴/出租' }
     };
     const CMD_MAP = { checkin: '值机柜台', security: '安检区', gate: '登机口A12', restaurant: '餐厅', toilet: '卫生间', shop: '免税店', baggage: '行李提取', lost: '失物招领', special: '特殊旅客', transport: '交通中心' };
-    const KEYWORDS = { checkin: ['值机', '登机牌', '选座'], security: ['安检'], gate: ['登机口', 'A12'], restaurant: ['餐厅', '吃饭'], toilet: ['卫生间', '厕所'], shop: ['免税店'], baggage: ['行李'], lost: ['失物'], special: ['轮椅', '老人服务'], transport: ['交通', '大巴'], elder: ['老人机', '放大字体', '大字', '老年模式', '老人模式'], normal: ['正常模式', '恢复正常'] };
+    const KEYWORDS = { checkin: ['值机', '登机牌', '选座'], security: ['安检'], gate: ['登机口', 'A12'], restaurant: ['餐厅', '吃饭'], toilet: ['卫生间', '厕所'], shop: ['免税店'], baggage: ['行李'], lost: ['失物'], special: ['轮椅', '老人服务'], transport: ['交通', '大巴'], elder: ['老人机', '放大字体', '大字'], normal: ['正常模式'] };
 
     let map = null, routePolyline = null;
     let selectedSeat = null, currentFilter = 'all';
@@ -2819,19 +2934,6 @@
       if (routePolyline) routePolyline.setMap(null);
       routePolyline = new AMap.Polyline({ path: [[from.lng, from.lat], [to.lng, to.lat]], strokeColor: '#f44336', strokeWeight: 6, zIndex: 100 });
       routePolyline.setMap(map);
-    }
-
-    // ===== 老年模式切换 =====
-    function enableElderMode() {
-      document.body.classList.add('elder-mode');
-      addChatMessage('🔔 已切换到 老年模式，字体和按钮已放大');
-      speakText('已切换到老年模式');
-    }
-
-    function disableElderMode() {
-      document.body.classList.remove('elder-mode');
-      addChatMessage('🔔 已退出 老年模式，已恢复普通显示');
-      speakText('已恢复为普通模式');
     }
 
     function initMap() {
@@ -3012,7 +3114,6 @@
       let script = document.createElement('script');
       script.src = 'https://webapi.amap.com/maps?v=2.0&key=37998adb2d5488949647812aebeaf528';
       script.onload = initMap;
-      script.onerror = () => { addChatMessage('⚠️ 地图加载失败，请检查网络或 API Key（可能在本地直接打开文件时会被阻止）'); };
       document.head.appendChild(script);
       initVoice();
       initTextInput();

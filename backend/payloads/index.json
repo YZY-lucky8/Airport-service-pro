@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "schema_version": "1.0",
+    "owner": "段琼馨",
+    "purpose": "智能体劫持信任免疫系统攻击载荷库（量化评测用）",
+    "counts": {
+      "direct": 50,
+      "indirect": 50,
+      "obfuscated": 50
+    }
+  },
+  "total": 150,
+  "files": [
+    "direct.json",
+    "indirect.json",
+    "obfuscated.json"
+  ]
+}

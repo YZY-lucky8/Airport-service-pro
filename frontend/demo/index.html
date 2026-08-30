@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恒盾智航 · 信任免疫平台</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- 登录视图 -->
+<div id="view-login" class="view view-center">
+    <div class="login-card">
+        <div class="login-brand">恒盾智航</div>
+        <div class="login-sub">智能体劫持信任免疫与量化评测系统</div>
+        <form id="login-form" onsubmit="return false;">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+            </div>
+            <div id="login-error" class="login-error" style="display:none;"></div>
+            <button type="button" class="btn btn-primary btn-block" onclick="doLogin()">登 录</button>
+        </form>
+    </div>
+</div>
+
+<!-- 主框架视图 -->
+<div id="view-main" class="view" style="display:none;">
+    <nav class="topbar">
+        <span class="brand">恒盾智航 · 信任免疫平台</span>
+        <div class="nav-links">
+            <a href="#/panel">信任免疫面板</a>
+            <a href="#/overview">态势大屏</a>
+            <a href="#/trace">溯源视图</a>
+        </div>
+        <span class="status"><span class="dot"></span>系统运行正常</span>
+        <span id="topbar-clock">--:--:--</span>
+        <button class="btn btn-ghost" onclick="logout()">退出</button>
+    </nav>
+    <main id="page-container" class="page-container"></main>
+</div>
+
+<script src="lib/echarts.min.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/pages/panel.js"></script>
+<script src="assets/js/pages/overview.js"></script>
+<script src="assets/js/pages/trace.js"></script>
+<script src="assets/js/router.js"></script>
+<script>
+/* 顶栏实时时钟（仅 UI，不影响功能） */
+function tickClock() {
+    var n = new Date();
+    var p = function(x) { return String(x).padStart(2, '0'); };
+    var el = document.getElementById('topbar-clock');
+    if (el) el.textContent = p(n.getHours()) + ':' + p(n.getMinutes()) + ':' + p(n.getSeconds());
+}
+setInterval(tickClock, 1000);
+</script>
+</body>
+</html>

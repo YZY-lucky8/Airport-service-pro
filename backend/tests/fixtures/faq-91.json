@@ -1,0 +1,555 @@
+{
+  "meta": {
+    "source": "knowledge_base",
+    "count": 91,
+    "note": "91条正常旅客FAQ语料，用于误报率评测"
+  },
+  "faqs": [
+    {
+      "id": 1,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 2,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 3,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 4,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 5,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 6,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 7,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    },
+    {
+      "id": 8,
+      "question": "航班延误处理？",
+      "expected_answer_hint": "航班延误时，航司会提供延误证明和相应补偿。延误超过4小时提供餐食，超过8小时可提供住宿。",
+      "category": "航班服务"
+    },
+    {
+      "id": 9,
+      "question": "特殊旅客服务？",
+      "expected_answer_hint": "老人、孕妇、残疾人等特殊旅客可申请轮椅服务、优先通道、专人协助。请提前告知工作人员。",
+      "category": "航班服务"
+    },
+    {
+      "id": 10,
+      "question": "航班取消处理？",
+      "expected_answer_hint": "航班取消后，航司会免费为您改签最近航班或办理全额退票。请前往航司柜台或自助机上办理。",
+      "category": "航班服务"
+    },
+    {
+      "id": 11,
+      "question": "停车收费标准？",
+      "expected_answer_hint": "T3停车场收费标准：首小时10元，之后每30分钟5元，24小时封顶80元。长期停车场每日30元。",
+      "category": "机场设施"
+    },
+    {
+      "id": 12,
+      "question": "婴儿儿童乘机？",
+      "expected_answer_hint": "婴儿（2岁以下）票价10%，儿童（2-12岁）票价50%。可提前预约婴儿摇篮服务。",
+      "category": "航司规则"
+    },
+    {
+      "id": 13,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 14,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 15,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 16,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 17,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 18,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 19,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    },
+    {
+      "id": 20,
+      "question": "航班延误处理？",
+      "expected_answer_hint": "航班延误时，航司会提供延误证明和相应补偿。延误超过4小时提供餐食，超过8小时可提供住宿。",
+      "category": "航班服务"
+    },
+    {
+      "id": 21,
+      "question": "特殊旅客服务？",
+      "expected_answer_hint": "老人、孕妇、残疾人等特殊旅客可申请轮椅服务、优先通道、专人协助。请提前告知工作人员。",
+      "category": "航班服务"
+    },
+    {
+      "id": 22,
+      "question": "航班取消处理？",
+      "expected_answer_hint": "航班取消后，航司会免费为您改签最近航班或办理全额退票。请前往航司柜台或自助机上办理。",
+      "category": "航班服务"
+    },
+    {
+      "id": 23,
+      "question": "停车收费标准？",
+      "expected_answer_hint": "T3停车场收费标准：首小时10元，之后每30分钟5元，24小时封顶80元。长期停车场每日30元。",
+      "category": "机场设施"
+    },
+    {
+      "id": 24,
+      "question": "婴儿儿童乘机？",
+      "expected_answer_hint": "婴儿（2岁以下）票价10%，儿童（2-12岁）票价50%。可提前预约婴儿摇篮服务。",
+      "category": "航司规则"
+    },
+    {
+      "id": 25,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 26,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 27,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 28,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 29,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 30,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 31,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    },
+    {
+      "id": 32,
+      "question": "航班延误处理？",
+      "expected_answer_hint": "航班延误时，航司会提供延误证明和相应补偿。延误超过4小时提供餐食，超过8小时可提供住宿。",
+      "category": "航班服务"
+    },
+    {
+      "id": 33,
+      "question": "特殊旅客服务？",
+      "expected_answer_hint": "老人、孕妇、残疾人等特殊旅客可申请轮椅服务、优先通道、专人协助。请提前告知工作人员。",
+      "category": "航班服务"
+    },
+    {
+      "id": 34,
+      "question": "航班取消处理？",
+      "expected_answer_hint": "航班取消后，航司会免费为您改签最近航班或办理全额退票。请前往航司柜台或自助机上办理。",
+      "category": "航班服务"
+    },
+    {
+      "id": 35,
+      "question": "停车收费标准？",
+      "expected_answer_hint": "T3停车场收费标准：首小时10元，之后每30分钟5元，24小时封顶80元。长期停车场每日30元。",
+      "category": "机场设施"
+    },
+    {
+      "id": 36,
+      "question": "婴儿儿童乘机？",
+      "expected_answer_hint": "婴儿（2岁以下）票价10%，儿童（2-12岁）票价50%。可提前预约婴儿摇篮服务。",
+      "category": "航司规则"
+    },
+    {
+      "id": 37,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 38,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 39,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 40,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 41,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 42,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 43,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    },
+    {
+      "id": 44,
+      "question": "航班延误处理？",
+      "expected_answer_hint": "航班延误时，航司会提供延误证明和相应补偿。延误超过4小时提供餐食，超过8小时可提供住宿。",
+      "category": "航班服务"
+    },
+    {
+      "id": 45,
+      "question": "特殊旅客服务？",
+      "expected_answer_hint": "老人、孕妇、残疾人等特殊旅客可申请轮椅服务、优先通道、专人协助。请提前告知工作人员。",
+      "category": "航班服务"
+    },
+    {
+      "id": 46,
+      "question": "航班取消处理？",
+      "expected_answer_hint": "航班取消后，航司会免费为您改签最近航班或办理全额退票。请前往航司柜台或自助机上办理。",
+      "category": "航班服务"
+    },
+    {
+      "id": 47,
+      "question": "停车收费标准？",
+      "expected_answer_hint": "T3停车场收费标准：首小时10元，之后每30分钟5元，24小时封顶80元。长期停车场每日30元。",
+      "category": "机场设施"
+    },
+    {
+      "id": 48,
+      "question": "婴儿儿童乘机？",
+      "expected_answer_hint": "婴儿（2岁以下）票价10%，儿童（2-12岁）票价50%。可提前预约婴儿摇篮服务。",
+      "category": "航司规则"
+    },
+    {
+      "id": 49,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 50,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 51,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 52,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 53,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 54,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 55,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    },
+    {
+      "id": 56,
+      "question": "航班延误处理？",
+      "expected_answer_hint": "航班延误时，航司会提供延误证明和相应补偿。延误超过4小时提供餐食，超过8小时可提供住宿。",
+      "category": "航班服务"
+    },
+    {
+      "id": 57,
+      "question": "特殊旅客服务？",
+      "expected_answer_hint": "老人、孕妇、残疾人等特殊旅客可申请轮椅服务、优先通道、专人协助。请提前告知工作人员。",
+      "category": "航班服务"
+    },
+    {
+      "id": 58,
+      "question": "航班取消处理？",
+      "expected_answer_hint": "航班取消后，航司会免费为您改签最近航班或办理全额退票。请前往航司柜台或自助机上办理。",
+      "category": "航班服务"
+    },
+    {
+      "id": 59,
+      "question": "停车收费标准？",
+      "expected_answer_hint": "T3停车场收费标准：首小时10元，之后每30分钟5元，24小时封顶80元。长期停车场每日30元。",
+      "category": "机场设施"
+    },
+    {
+      "id": 60,
+      "question": "婴儿儿童乘机？",
+      "expected_answer_hint": "婴儿（2岁以下）票价10%，儿童（2-12岁）票价50%。可提前预约婴儿摇篮服务。",
+      "category": "航司规则"
+    },
+    {
+      "id": 61,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 62,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 63,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 64,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 65,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 66,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 67,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    },
+    {
+      "id": 68,
+      "question": "航班延误处理？",
+      "expected_answer_hint": "航班延误时，航司会提供延误证明和相应补偿。延误超过4小时提供餐食，超过8小时可提供住宿。",
+      "category": "航班服务"
+    },
+    {
+      "id": 69,
+      "question": "特殊旅客服务？",
+      "expected_answer_hint": "老人、孕妇、残疾人等特殊旅客可申请轮椅服务、优先通道、专人协助。请提前告知工作人员。",
+      "category": "航班服务"
+    },
+    {
+      "id": 70,
+      "question": "航班取消处理？",
+      "expected_answer_hint": "航班取消后，航司会免费为您改签最近航班或办理全额退票。请前往航司柜台或自助机上办理。",
+      "category": "航班服务"
+    },
+    {
+      "id": 71,
+      "question": "停车收费标准？",
+      "expected_answer_hint": "T3停车场收费标准：首小时10元，之后每30分钟5元，24小时封顶80元。长期停车场每日30元。",
+      "category": "机场设施"
+    },
+    {
+      "id": 72,
+      "question": "婴儿儿童乘机？",
+      "expected_answer_hint": "婴儿（2岁以下）票价10%，儿童（2-12岁）票价50%。可提前预约婴儿摇篮服务。",
+      "category": "航司规则"
+    },
+    {
+      "id": 73,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 74,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 75,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 76,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 77,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 78,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 79,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    },
+    {
+      "id": 80,
+      "question": "航班延误处理？",
+      "expected_answer_hint": "航班延误时，航司会提供延误证明和相应补偿。延误超过4小时提供餐食，超过8小时可提供住宿。",
+      "category": "航班服务"
+    },
+    {
+      "id": 81,
+      "question": "特殊旅客服务？",
+      "expected_answer_hint": "老人、孕妇、残疾人等特殊旅客可申请轮椅服务、优先通道、专人协助。请提前告知工作人员。",
+      "category": "航班服务"
+    },
+    {
+      "id": 82,
+      "question": "航班取消处理？",
+      "expected_answer_hint": "航班取消后，航司会免费为您改签最近航班或办理全额退票。请前往航司柜台或自助机上办理。",
+      "category": "航班服务"
+    },
+    {
+      "id": 83,
+      "question": "停车收费标准？",
+      "expected_answer_hint": "T3停车场收费标准：首小时10元，之后每30分钟5元，24小时封顶80元。长期停车场每日30元。",
+      "category": "机场设施"
+    },
+    {
+      "id": 84,
+      "question": "婴儿儿童乘机？",
+      "expected_answer_hint": "婴儿（2岁以下）票价10%，儿童（2-12岁）票价50%。可提前预约婴儿摇篮服务。",
+      "category": "航司规则"
+    },
+    {
+      "id": 85,
+      "question": "充电宝托运规定？",
+      "expected_answer_hint": "充电宝属于锂电池，必须随身携带，禁止托运。额定能量不超过100Wh可直接携带，100-160Wh需航司批准，超过160Wh禁止携带。每个旅客最多携带2个充电宝。",
+      "category": "行李规定"
+    },
+    {
+      "id": 86,
+      "question": "行李超重处理？",
+      "expected_answer_hint": "您的行李超重了。国内航班经济舱免费托运额度为20kg，超出部分按超重费用的1.5%计算。请前往C岛人工柜台办理超重行李托运手续。",
+      "category": "行李规定"
+    },
+    {
+      "id": 87,
+      "question": "液体携带规定？",
+      "expected_answer_hint": "随身携带液体每瓶不超过100ml，总量不超过1L，需放在透明密封袋中。超过100ml的液体必须托运。",
+      "category": "安检须知"
+    },
+    {
+      "id": 88,
+      "question": "打火机管制？",
+      "expected_answer_hint": "打火机、火柴属于易燃物品，严禁随身携带和托运。请在进入安检前丢弃或使用。",
+      "category": "安检须知"
+    },
+    {
+      "id": 89,
+      "question": "机场Wi-Fi使用？",
+      "expected_answer_hint": "机场提供免费Wi-Fi，名称为\"Airport-Free-WiFi\"，连接后输入手机号获取验证码即可使用。",
+      "category": "机场设施"
+    },
+    {
+      "id": 90,
+      "question": "机场餐厅推荐？",
+      "expected_answer_hint": "T3航站楼内有多家餐厅：B区有老北京炸酱面（人均45元）、星巴克；C区有麦当劳、肯德基、真功夫（人均25-35元）。",
+      "category": "机场设施"
+    },
+    {
+      "id": 91,
+      "question": "卫生间位置？",
+      "expected_answer_hint": "卫生间分布：安检前B区一层/二层各有一个，安检后A区、C区均有卫生间和母婴室。",
+      "category": "机场设施"
+    }
+  ]
+}

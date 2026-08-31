@@ -299,6 +299,26 @@ async function seedPayloadLibrary(opts = {}) {
   return { total: lib.total, inserted, skipped, types: { direct: lib.direct.length, indirect: lib.indirect.length, obfuscated: lib.obfuscated.length } };
 }
 
+/** 查询污染指纹列表（SOC 溯源中心，按 id 升序，对齐前端 pollution.js 字段契约） */
+async function listPollution() {
+  const rows = await q('SELECT id, source_uid, finger_sm3, finger_simhash, payload_type, intent_tag, hit_count, status, last_seen, payload_len, payload_sample FROM pollution_source ORDER BY id ASC');
+  return rows.map(r => ({
+    id: r.id,
+    source_uid: r.source_uid,
+    fingerprint: r.finger_sm3,
+    simhash: r.finger_simhash,
+    sourceType: r.payload_type,
+    fingerprintType: r.intent_tag,
+    hitCount: r.hit_count || 0,
+    sourceIp: null,
+    crossSessionHits: 0,
+    mergedCount: 0,
+    immune: r.status === 'immunized',
+    lastSeen: r.last_seen,
+    reason: null,
+  }));
+}
+
 /** 统计指纹库概况 */
 async function stats() {
   const total = await q('SELECT COUNT(*) AS c FROM pollution_source');
@@ -320,6 +340,6 @@ module.exports = {
   calcTrustScore, stateFromScore, logLineage,
   getOrCreateSession, updateTrust, checkPollution, registerPollution,
   setImmune, getImmune, isImmune,
-  getLineage, getSessionLineage,
+  getLineage, getSessionLineage, listPollution,
   loadPayloadLibrary, seedPayloadLibrary, stats,
 };

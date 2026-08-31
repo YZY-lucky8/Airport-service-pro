@@ -137,4 +137,15 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// ---------- 5. 污染指纹列表（SOC 溯源中心，演示亮点） ----------
+router.get('/pollution/list', async (req, res) => {
+  try {
+    const list = await trustMemory.listPollution();
+    return ok(res, list, '污染指纹列表查询成功');
+  } catch (e) {
+    console.error('[trust/pollution/list] error:', e);
+    fail(res, '污染指纹列表查询失败: ' + e.message);
+  }
+});
+
 module.exports = { initTrustRouter, router };

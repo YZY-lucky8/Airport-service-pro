@@ -66,12 +66,18 @@ async function connectSQLite() {
 
   // 模拟 mysql2 pool 接口
   pool = {
+    _compatSql(sql) {
+      // MySQL 专属语法 → SQLite 兼容（CURDATE()/DATE() 等）
+      return String(sql)
+        .replace(/CURDATE\(\)/gi, "date('now','localtime')")
+        .replace(/\bNOW\(\)/gi, "datetime('now','localtime')");
+    },
     query(sql, params = []) {
       let stmt;
       try {
-        stmt = sqlite.prepare(sql);
+        stmt = sqlite.prepare(this._compatSql(sql));
       } catch (e) {
-        const cleaned = sql.replace(/\bANY_VALUE\s*\([^)]+\)/gi, '($1)');
+        const cleaned = this._compatSql(sql).replace(/\bANY_VALUE\s*\([^)]+\)/gi, '($1)');
         stmt = sqlite.prepare(cleaned);
       }
       return [stmt.all(...params)];
@@ -79,9 +85,9 @@ async function connectSQLite() {
     execute(sql, params = []) {
       let stmt;
       try {
-        stmt = sqlite.prepare(sql);
+        stmt = sqlite.prepare(this._compatSql(sql));
       } catch (e) {
-        const cleaned = sql.replace(/\bANY_VALUE\s*\([^)]+\)/gi, '($1)');
+        const cleaned = this._compatSql(sql).replace(/\bANY_VALUE\s*\([^)]+\)/gi, '($1)');
         stmt = sqlite.prepare(cleaned);
       }
       const info = stmt.run(...params);
@@ -136,6 +142,7 @@ function initSQLiteSchema(sqlite) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       level TEXT, terminal_id INTEGER,
       content TEXT, status TEXT DEFAULT 'unhandled',
+      handler TEXT, note TEXT,
       time DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -244,6 +251,68 @@ function initSQLiteSchema(sqlite) {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // 信任免疫记忆层表（trust-memory 模块依赖，D3 交付）
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS trust_session (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_token TEXT UNIQUE,
+      passenger_id INTEGER, terminal_id INTEGER,
+      dim_prompt_trust REAL DEFAULT 0.40,
+      dim_behavior_trust REAL DEFAULT 0.35,
+      dim_immune_trust REAL DEFAULT 0.25,
+      trust_score REAL DEFAULT 100,
+      trust_state TEXT DEFAULT 'normal',
+      pollution_hit_count INTEGER DEFAULT 0,
+      last_pollution_at DATETIME,
+      immune_until DATETIME,
+      immune_reason TEXT,
+      threshold_downgrade REAL DEFAULT 60,
+      threshold_lock REAL DEFAULT 40,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS pollution_source (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      source_uid TEXT UNIQUE,
+      finger_sm3 TEXT,
+      finger_simhash TEXT,
+      payload_type TEXT,
+      intent_tag TEXT,
+      payload_len INTEGER,
+      payload_sample TEXT,
+      origin_session_token TEXT,
+      origin_terminal_id TEXT,
+      parent_id INTEGER,
+      first_seen DATETIME,
+      last_seen DATETIME,
+      hit_count INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'active',
+      immune_global_until DATETIME,
+      detail_json TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS lineage_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_type TEXT,
+      session_token TEXT,
+      source_uid TEXT,
+      parent_uid TEXT,
+      detail_json TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // 兼容旧库：若 alerts 表已存在且缺少 handler/note 列，通过 ALTER 补充
+  try {
+    const alertCols = sqlite.prepare('PRAGMA table_info(alerts)').all().map(c => c.name);
+    if (!alertCols.includes('handler')) sqlite.exec('ALTER TABLE alerts ADD COLUMN handler TEXT');
+    if (!alertCols.includes('note')) sqlite.exec('ALTER TABLE alerts ADD COLUMN note TEXT');
+  } catch (e) {
+    console.log('⚠️  alerts 表补充 handler/note 列失败:', e.message);
+  }
 
   // Agent 表
   sqlite.exec(`

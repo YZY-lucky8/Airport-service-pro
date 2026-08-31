@@ -13,7 +13,7 @@ const crypto = require('crypto');
 
 // ── 配置 ──
 const JWT_SECRET = process.env.JWT_SECRET || crypto.createHash('sha256').update('Airport-service-pro-jwt-secret-change-me-in-production').digest('hex');
-const JWT_EXPIRY_SECONDS = parseInt(process.env.JWT_EXPIRY) || 300; // 默认 300 秒
+const JWT_EXPIRY_SECONDS = parseInt(process.env.JWT_EXPIRY) || 1800; // 默认 1800 秒（30 分钟）
 const VALID_ADMIN_USERS = new Map();
 VALID_ADMIN_USERS.set('admin', process.env.ADMIN_PASSWORD || 'admin');
 // 默认管理员，应尽快修改

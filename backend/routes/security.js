@@ -8,24 +8,16 @@
 const express = require('express');
 const router = express.Router();
 
-// ===== 数据库连接池 - 请根据你的项目修改 =====
-// 方法1：如果你的app.js中导出了pool
-try {
-  const app = require('../app');
-  var pool = app.pool;
-} catch (e) {
-  // 方法2：如果上面不行，请直接在这里配置你的数据库连接
-  const mysql = require('mysql2/promise');
-  var pool = mysql.createPool({
-    host: 'localhost',
-    user: 'project_user',      // 修改为你的数据库用户
-    password: 'Airport123!',   // 修改为你的密码
-    database: 'airport_db',    // 修改为你的数据库名
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-  });
-}
+// ===== 数据库连接池 - 与 db-adapter 统一 =====
+let _pool = null;
+function setPool(p) { _pool = p; }
+// 惰性代理：app.js 在 db.connect 完成后注入真实 pool；
+// 注入前如被调用则实时从 db-adapter 获取，避免启动时序/循环依赖问题
+const dbAdapter = require('../db-adapter');
+const pool = {
+  query: (...args) => (_pool ? _pool.query(...args) : dbAdapter.pool.query(...args)),
+  execute: (...args) => (_pool ? _pool.execute(...args) : dbAdapter.pool.execute(...args)),
+};
 // ============================================
 
 // ===== 工具函数 =====
@@ -50,9 +42,9 @@ function sendError(res, error, status = 500) {
  */
 router.get('/overview', async (req, res) => {
   try {
-    // 1. 今日限流拦截数
+    // 1. 今日限流拦截数（rate_limit_logs 时间字段为 window_start）
     const [rateLimitRes] = await pool.query(
-      "SELECT COUNT(*) as count FROM rate_limit_logs WHERE DATE(created_at) = CURDATE()"
+      "SELECT COUNT(*) as count FROM rate_limit_logs WHERE DATE(window_start) = CURDATE()"
     );
     
     // 2. Bloom过滤器统计
@@ -1022,6 +1014,7 @@ router.post('/logout', async (req, res) => {
 
 // ========== 导出路由 ==========
 module.exports = router;
+module.exports.setPool = setPool;
 
 // ============================================
 // 使用说明：

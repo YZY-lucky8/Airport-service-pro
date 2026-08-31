@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>恒盾智航 · 安全运营中心 SOC</title>
+<link rel="stylesheet" href="assets/css/soc.css">
+</head>
+<body>
+
+<!-- ======= 登录视图 ======= -->
+<div id="view-login" class="view view-center">
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="brand-logo">HD</div>
+            <div>
+                <div class="brand-name">恒盾智航</div>
+                <div class="brand-sub">安全运营中心 Security Operation Center</div>
+            </div>
+        </div>
+        <form id="login-form" autocomplete="off">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="请输入管理员账号" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+            </div>
+            <div id="login-error" class="login-error" style="display:none;"></div>
+            <button type="button" class="btn btn-primary btn-block" id="btn-login">登 录</button>
+        </form>
+        <div class="login-foot">默认账号 admin / admin · 鉴权接口 /api/auth/login</div>
+    </div>
+</div>
+
+<!-- ======= 主框架视图 ======= -->
+<div id="view-main" class="view" style="display:none;">
+    <aside class="sidebar" id="sidebar">
+        <div class="side-brand">
+            <span class="brand-logo">HD</span>
+            <span class="side-title">恒盾智航 SOC</span>
+        </div>
+        <nav class="side-nav" id="side-nav">
+            <a href="#/cockpit" data-route="#/cockpit"><span class="nav-ic">◈</span>安全态势总览</a>
+            <a href="#/trust" data-route="#/trust"><span class="nav-ic">▣</span>会话信任监控</a>
+            <a href="#/audit" data-route="#/audit"><span class="nav-ic">▤</span>PEP 授权审计</a>
+            <a href="#/pollution" data-route="#/pollution"><span class="nav-ic">☍</span>污染溯源中心</a>
+            <a href="#/policy" data-route="#/policy"><span class="nav-ic">⚙</span>自适应策略</a>
+            <a href="#/alerts" data-route="#/alerts"><span class="nav-ic">△</span>告警处理中心</a>
+            <a href="#/system" data-route="#/system"><span class="nav-ic">▦</span>系统管理</a>
+        </nav>
+        <div class="side-status">
+            <div class="side-status-dot" id="side-status-dot"></div>
+            <span id="side-status-text">连接中…</span>
+        </div>
+    </aside>
+    <div class="main-wrap">
+        <header class="topbar">
+            <div class="topbar-title" id="topbar-title">安全态势总览</div>
+            <div class="topbar-right">
+                <span class="topbar-clock" id="topbar-clock">--:--:--</span>
+                <span class="topbar-user" id="topbar-user">admin</span>
+                <button class="btn btn-ghost btn-sm" id="btn-logout">退出登录</button>
+            </div>
+        </header>
+        <main id="page-container" class="page-container"></main>
+    </div>
+</div>
+
+<!-- 通用弹窗 -->
+<div id="modal-mask" class="modal-mask" style="display:none;"></div>
+<div id="modal-box" class="modal-box" style="display:none;"></div>
+
+<script src="../demo/lib/echarts.min.js"></script>
+<script src="assets/js/soc/api.js"></script>
+<script src="assets/js/soc/ui.js"></script>
+<script src="assets/js/soc/router.js"></script>
+<script src="assets/js/pages/cockpit.js"></script>
+<script src="assets/js/pages/trust.js"></script>
+<script src="assets/js/pages/audit.js"></script>
+<script src="assets/js/pages/pollution.js"></script>
+<script src="assets/js/pages/policy.js"></script>
+<script src="assets/js/pages/alerts.js"></script>
+<script src="assets/js/pages/system.js"></script>
+<script src="assets/js/soc/app.js"></script>
+</body>
+</html>
